@@ -1,7 +1,13 @@
 import ProjectIndex from '@/core-components/Project';
+import { PaginatedResponse } from '@/types/laravel.type';
+import { ProyekProps } from '@/types/project.type';
 
-const ProjectPage = () => {
-    return <ProjectIndex />;
+interface PropTypes {
+    proyeks: PaginatedResponse<ProyekProps>;
+}
+
+const ProjectPage = ({ proyeks }: PropTypes) => {
+    return <ProjectIndex proyeks={proyeks} />;
 };
 
 export default ProjectPage;
