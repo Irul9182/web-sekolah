@@ -10,7 +10,7 @@ interface AppInputProps extends React.ComponentProps<typeof Input> {
     isType?: React.HTMLInputTypeAttribute;
 }
 
-const AppInput = React.forwardRef<HTMLInputElement, AppInputProps>(({ label, hint, error, className, id, ...props }, ref) => {
+const AppInput = React.forwardRef<HTMLInputElement, AppInputProps>(({ label, isType, hint, error, className, id, ...props }, ref) => {
     const inputId = id ?? label?.toLowerCase().replace(/\s+/g, '-');
 
     return (
@@ -29,7 +29,7 @@ const AppInput = React.forwardRef<HTMLInputElement, AppInputProps>(({ label, hin
                     error &&
                         'border-destructive focus-visible:border-destructive focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--destructive)_20%,transparent)]',
                     className,
-                )} text-[10px] sm:text-sm`}
+                )} text-[10px] sm:text-sm ${isType === 'date' && ''}`}
                 {...props}
             />
 

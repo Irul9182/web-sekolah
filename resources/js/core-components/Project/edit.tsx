@@ -1,3 +1,4 @@
+import AppDatePicker from '@/components/app-day-picker';
 import AppInput from '@/components/app-input';
 import AppSelect from '@/components/app-select';
 import AppLayout from '@/layouts/app-layout';
@@ -41,6 +42,7 @@ const ProjectEditIndex = () => {
                     ]}
                 />
                 <AppInput type="number" placeholder="Masukkan total pagu . . ." label="Total Pagu (IDR)" />
+                <AppDatePicker />
                 <AppInput type="date" placeholder="Masukkan tanggal dimulai . . ." label="Dimulai pada" />
                 <AppInput type="date" placeholder="Masukkan tanggal selesai . . ." label="Selesai pada" />
                 <AppInput type="number" placeholder="Masukkan pajak . . ." label="Pajak (%)" />
