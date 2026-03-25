@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Proyek;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Http\RedirectResponse;
 
 class ProyekController extends Controller
 {
@@ -21,6 +22,7 @@ class ProyekController extends Controller
             'tipe_proyek',
             'pagu_total',
             'status',
+            'tanggal_mulai',
             'pajak_persen',
             'nama_klien',
         ]);
@@ -47,45 +49,117 @@ class ProyekController extends Controller
     public function create()
     {
         //
+
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         //
+        //validate form
+        $data = $request->validate([
+            'nama_proyek' => 'required|string|max:255',
+            'tipe_proyek' => 'required|in:papping,u_ditch,spall,beton,sab',
+            'pagu_total' => 'required|numeric|min:0',
+            'tanggal_mulai' => 'required|date',
+            'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
+            'pajak_persen' => 'required|numeric|min:0|max:100',
+            'uang_bahan_persen' => 'required|numeric|min:0|max:100',
+            'jasa_tukang_persen' => 'required|numeric|min:0|max:100',
+            'biaya_tak_terduga_persen' => 'required|numeric|min:0|max:100',
+            'biaya_staff_perpajakan' => 'required|numeric|min:0',
+            'biaya_staff_entry_data' => 'required|numeric|min:0',
+            'nama_klien' => 'required|string|max:255',
+            'status' => 'required|in:sedang_berjalan,selesai,dibatalkan',
+            'deskripsi_proyek' => 'nullable|string',
+        ]);
+        // if (!$request->jasa_tukang_persen) {
+        //     $defaults = match ($request->tipe_proyek) {
+        //         'papping' => 11,
+        //         'u_ditch' => 15,
+        //         'spall' => 15,
+        //         'beton' => 18,
+        //         'sab' => 18,
+        //         default => 0,
+        //     };
+
+        //     $data['jasa_tukang_persen'] = $defaults;
+        // }
+        Proyek::create($data);
+
+        return redirect()->route('project.index')->with(['success' => 'Proyek baru berhasil disimpan!']);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Proyek $Proyek)
+    public function show($proyek_id)
     {
         //
+        $proyek = Proyek::findOrFail($proyek_id);
+
+        return Inertia::render('project/detail/index', [
+            'proyek' => $proyek
+        ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Proyek $Proyek)
+    public function edit($proyek_id)
     {
-        //
+        $proyek = Proyek::findOrFail($proyek_id);
+
+        return Inertia::render('project/create/index', [
+            'proyek' => $proyek
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Proyek $Proyek)
+    public function update(Request $request, $proyek_id)
     {
         //
+        $proyek = Proyek::findOrFail($proyek_id);
+
+        $data = $request->validate([
+            'nama_proyek' => 'required|string|max:255',
+            'tipe_proyek' => 'required|in:papping,u_ditch,spall,beton,sab',
+            'pagu_total' => 'required|numeric|min:0',
+            'tanggal_mulai' => 'required|date',
+            'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
+            'pajak_persen' => 'required|numeric|min:0|max:100',
+            'uang_bahan_persen' => 'required|numeric|min:0|max:100',
+            'jasa_tukang_persen' => 'required|numeric|min:0|max:100',
+            'biaya_tak_terduga_persen' => 'required|numeric|min:0|max:100',
+            'biaya_staff_perpajakan' => 'required|numeric|min:0',
+            'biaya_staff_entry_data' => 'required|numeric|min:0',
+            'nama_klien' => 'required|string|max:255',
+            'status' => 'required|in:sedang_berjalan,selesai,dibatalkan',
+            'deskripsi_proyek' => 'nullable|string',
+        ]);
+
+        $proyek->update($data);
+
+        return redirect()
+            ->route('project.index')
+            ->with(['success' => 'Proyek berhasil diperbarui!']);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Proyek $Proyek)
+    public function destroy($proyek_id): RedirectResponse
     {
-        //
+        $proyek = Proyek::findOrFail($proyek_id);
+
+        $proyek->delete();
+
+        return redirect()
+            ->route('project.index')
+            ->with(['success' => 'Proyek berhasil dihapus!']);
     }
 }

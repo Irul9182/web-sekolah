@@ -16,7 +16,7 @@ const AppInput = React.forwardRef<HTMLInputElement, AppInputProps>(({ label, isT
     return (
         <div className="flex flex-col gap-1.5">
             {label && (
-                <Label htmlFor={inputId} className={cn('ml-0.5 text-[12px] font-medium sm:text-[1rem]', error && 'text-destructive')}>
+                <Label htmlFor={inputId} className={cn('ml-0.5 text-[12px] font-medium sm:text-sm', error && 'text-destructive')}>
                     {label}
                     {props.required && <span className="text-destructive ml-1 text-[8px] sm:text-[12px]">*</span>}
                 </Label>

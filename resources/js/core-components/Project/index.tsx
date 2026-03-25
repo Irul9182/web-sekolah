@@ -22,14 +22,15 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 interface PropTypes {
     proyeks: PaginatedResponse<ProyekProps>;
+    proyek: any;
 }
 
-const ProjectIndex = ({ proyeks }: PropTypes) => {
+const ProjectIndex = ({ proyeks, proyek }: PropTypes) => {
     const [open, setIsOpen] = useState<boolean>(false);
     const [optionStatus, setOptionStatus] = useState<StatusProyek | null>(null);
     const isMobile = useIsMobile();
 
-    console.log('Data proyeks: ', proyeks);
+    // console.log('Data proyek: ', proyeks);
 
     const columnsProyek: Column<ProyekProps>[] = [
         {
@@ -90,7 +91,7 @@ const ProjectIndex = ({ proyeks }: PropTypes) => {
                 return (
                     <AppSelect
                         tone={
-                            value === 'selesai' ? 'success' : value === 'dibatalkan' ? 'error' : value === 'sedang_berjalan' ? 'warning' : 'default'
+                            value === 'selesai' ? 'success' : value === 'dibatalkan' ? 'error' : value === 'sedang_berjalan' ? 'default' : 'default'
                         }
                         value={value as StatusProyek}
                         options={[
@@ -107,18 +108,24 @@ const ProjectIndex = ({ proyeks }: PropTypes) => {
             key: 'action',
             label: 'Action',
             className: 'text-center',
-            render: () => {
+            render: (_: any, record: ProyekProps) => {
                 return (
                     <AppDropdownMenu
                         openDisplay={<EllipsisVertical />}
                         menuItem={
                             <>
                                 <div className="p-2">
-                                    <DropdownMenuItem className="flex cursor-pointer items-center justify-between p-2">
+                                    <DropdownMenuItem
+                                        onClick={() => router?.visit(`/project/${record?.proyek_id}/detail`)}
+                                        className="flex cursor-pointer items-center justify-between p-2"
+                                    >
                                         <p>Detail</p>
                                         <Eye />
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem className="hover:bg-chart-5! flex cursor-pointer items-center justify-between p-2">
+                                    <DropdownMenuItem
+                                        onClick={() => router?.visit(`/project/${record?.proyek_id}/edit`)}
+                                        className="hover:bg-chart-5! flex cursor-pointer items-center justify-between p-2"
+                                    >
                                         <p>Ubah</p>
                                         <Edit />
                                     </DropdownMenuItem>

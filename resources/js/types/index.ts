@@ -38,3 +38,12 @@ export interface User {
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
 }
+
+export interface AuthProps {
+    created_at: Date;
+    email: string;
+    email_verified_at: Date;
+    id: number;
+    name: string;
+    update_at: Date;
+}

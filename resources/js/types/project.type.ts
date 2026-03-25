@@ -1,13 +1,14 @@
 export interface ProyekProps {
+    [key: string]: any;
     proyek_id: string;
 
     nama_proyek: string;
-    tipe_proyek: TipeProyek;
+    tipe_proyek: TipeProyek | null;
 
     pagu_total: number;
 
     tanggal_mulai: string;
-    tangga_selesai?: string | null;
+    tanggal_selesai?: string | null;
 
     pajak_persen: number;
     uang_bahan_persen: number;
@@ -15,6 +16,7 @@ export interface ProyekProps {
 
     biaya_staff_perpajakan: number;
     biaya_staff_entry_data: number;
+    biaya_tak_terduga_persen: number;
 
     nama_klien: string;
 
@@ -25,7 +27,34 @@ export interface ProyekProps {
     created_at?: string;
     updated_at?: string;
 }
+export const initialProyek: ProyekProps = {
+    proyek_id: '',
 
+    nama_proyek: '',
+    tipe_proyek: 'papping', // default
+
+    pagu_total: 0,
+
+    tanggal_mulai: '',
+    tanggal_selesai: null,
+
+    pajak_persen: 0,
+    uang_bahan_persen: 0,
+    jasa_tukang_persen: 0,
+
+    biaya_staff_perpajakan: 0,
+    biaya_staff_entry_data: 0,
+    biaya_tak_terduga_persen: 0,
+
+    nama_klien: '',
+
+    status: 'sedang_berjalan', // default
+
+    deskripsi_proyek: null,
+
+    created_at: '',
+    updated_at: '',
+};
 export type TipeProyek = 'papping' | 'u_ditch' | 'spall' | 'beton' | 'sab';
 
 export type StatusProyek = 'sedang_berjalan' | 'selesai' | 'dibatalkan';

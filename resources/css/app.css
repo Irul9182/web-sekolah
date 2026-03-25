@@ -2,7 +2,7 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/geist';
-
+@import '@fontsource/poppins';
 @plugin 'tailwindcss-animate';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -50,6 +50,7 @@
     --color-chart-3: var(--chart-3);
     --color-chart-4: var(--chart-4);
     --color-chart-5: var(--chart-5);
+    --color-chart-6: var(--chart-6);
 
     --color-sidebar: var(--sidebar-background);
     --color-sidebar-foreground: var(--sidebar-foreground);
@@ -59,16 +60,14 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+    --color-success: var(--color-success);
+    --color-error: var(--color-error);
+    --color-warning: var(--color-warning);
+    --color-info: var(--color-info);
+    --color-gold: var(--color-gold);
+    --color-default: var(--color-default);
 }
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
 @layer base {
     *,
     ::after,
@@ -81,111 +80,200 @@
         @apply border-border outline-ring/50;
     }
     body {
-        @apply bg-background text-foreground;
+        @apply bg-background text-foreground font-sans;
     }
     html {
         @apply font-sans;
     }
 }
+
 input[type='number']::-webkit-inner-spin-button {
     display: none;
 }
+
+/*
+ * ═══════════════════════════════════════════════════════
+ *  PALETTE STRATEGY — Finance × Earth Teal
+ *
+ *  PRIMARY RAMP (palette yang diberikan, hue ~100–200°)
+ *    #cad2c5  Ash Grey          → background light, muted
+ *    #84a98c  Muted Teal        → secondary, primary dark-mode
+ *    #52796f  Deep Teal         → primary light-mode, ring
+ *    #354f52  Dark Slate Grey   → card dark, sidebar dark
+ *    #2f3e46  Charcoal Blue     → background dark, foreground dark
+ *
+ *  BACKGROUND LIGHT — warm parchment agar tidak abu-abu flat
+ *    #f5f0e8  Warm Parchment    → background (bukan putih/abu biasa)
+ *
+ *  COMPLEMENTARY (hue jauh — warm side ~20–50°)
+ *    #c9a84c  Saffron Gold      → accent, color-gold (wealth)
+ *    #d4501a  Burnt Sienna      → warning, color-warning (risk/caution)
+ *    #b03a3a  Deep Crimson      → destructive, color-error (loss)
+ *
+ *  SPLIT-COMPLEMENTARY (untuk chart variasi)
+ *    #3a7a52  Forest Green      → chart-3, color-success (profit)
+ *    #7a5c9e  Muted Violet      → chart-6 (premium/wealth tier)
+ *
+ * ═══════════════════════════════════════════════════════
+ */
+
 :root {
-    --background: #f7fafc;
-    --foreground: #264653;
+    /* ── Surface ── */
+    --background: #f5f0e8; /* Warm Parchment — hangat, tidak flat */
+    --foreground: #1c2b2e; /* lebih gelap dari charcoal-blue */
+
+    /* ── Card & Popover ── */
     --card: #ffffff;
-    --card-foreground: #264653;
+    --card-foreground: #1c2b2e;
     --popover: #ffffff;
-    --popover-foreground: #264653;
-    --primary: #2a9d8f;
-    --primary-foreground: #f7fafc;
-    --secondary: #e8f4f3;
-    --secondary-foreground: #264653;
-    --muted: #edf4f7;
-    --muted-foreground: #4a6d7c;
-    --accent: #e8f4f3;
-    --accent-foreground: #264653;
-    --destructive: #e76f51;
-    --destructive-foreground: #f7fafc;
-    --border: #c8dde5;
-    --input: #bed4dc;
-    --ring: #2a9d8f;
-    --chart-1: #2a9d8f;
-    --chart-2: #264653;
-    --chart-3: #e76f51;
-    --chart-4: #52b788;
-    --chart-5: #f4a261;
+    --popover-foreground: #1c2b2e;
+
+    /* ── Primary — Deep Teal ── */
+    --primary: #52796f;
+    --primary-foreground: #ffffff;
+
+    /* ── Secondary — Muted Teal wash ── */
+    --secondary: #d6e4df; /* #84a98c @ ~20% opacity di white */
+    --secondary-foreground: #2f3e46;
+
+    /* ── Muted — Ash Grey wash ── */
+    --muted: #e8ede6; /* #cad2c5 sedikit lebih terang */
+    --muted-foreground: #52796f;
+
+    /* ── Accent — Saffron Gold ── */
+    --accent: #fdf3d8; /* gold wash, kontras hue dari teal */
+    --accent-foreground: #6b4c10;
+
+    /* ── Destructive — Deep Crimson ── */
+    --destructive: #b03a3a;
+    --destructive-foreground: #fff0f0;
+
+    /* ── Border & Input ── */
+    --border: #b8cbc5; /* antara ash-grey dan muted-teal */
+    --input: #a8bfb8;
+    --ring: #52796f;
+
+    /* ── Chart — 6 warna, hue nyata berbeda ── */
+    --chart-1: #52796f; /* deep teal     — ekuitas */
+    --chart-2: #c9a84c; /* saffron gold  — komoditas */
+    --chart-3: #3a7a52; /* forest green  — profit/growth */
+    --chart-4: #b03a3a; /* deep crimson  — loss/deficit */
+    --chart-5: #d4501a; /* burnt sienna  — risiko/warning */
+    --chart-6: #7a5c9e; /* muted violet  — premium/wealth */
+
+    /* ── Radius ── */
     --radius: 0.5rem;
-    --sidebar-background: #edf4f7;
-    --sidebar-foreground: #264653;
-    --sidebar-primary: #2a9d8f;
-    --sidebar-primary-foreground: #f7fafc;
-    --sidebar-accent: #daecef;
-    --sidebar-accent-foreground: #264653;
-    --sidebar-border: #c8dde5;
-    --sidebar-ring: #2a9d8f;
-    --color-info: #2a9d8f;
-    --color-success: #52b788;
-    --color-warning: #f4a261;
-    --color-error: #e76f51;
-    --color-default: #264653;
+
+    /* ── Sidebar ── */
+    --sidebar-background: #e4ece8; /* muted-teal wash */
+    --sidebar-foreground: #1c2b2e;
+    --sidebar-primary: #52796f;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #d6e4df;
+    --sidebar-accent-foreground: #2f3e46;
+    --sidebar-border: #b8cbc5;
+    --sidebar-ring: #52796f;
+
+    /* ── Semantic finance tokens ── */
+    --color-info: #52796f; /* deep teal */
+    --color-success: #3a7a52; /* forest green — profit */
+    --color-warning: #d4501a; /* burnt sienna — caution */
+    --color-error: #b03a3a; /* deep crimson — loss */
+    --color-gold: #c9a84c; /* saffron — premium/wealth */
+    --color-default: #1c2b2e;
+
+    --color-success-bg: color-mix(in srgb, var(--color-success) 12%, var(--popover));
+    --color-error-bg: color-mix(in srgb, var(--color-error) 12%, var(--popover));
+    --color-warning-bg: color-mix(in srgb, var(--color-warning) 14%, var(--popover));
+    --color-info-bg: color-mix(in srgb, var(--color-info) 12%, var(--popover));
+    --color-default-bg: var(--popover);
 }
 
+/* ═══════════════════════════════════════════════════════
+   DARK MODE
+   Background: charcoal-blue (#2f3e46) dari palette
+   Primary naik ke muted-teal (#84a98c) agar terlihat
+   Teks: ash-grey (#cad2c5) — sudah ada di palette!
+   ═══════════════════════════════════════════════════════ */
 .dark {
-    --background: #0d1f26;
-    --foreground: #e8f4f3;
-    --card: #112830;
-    --card-foreground: #e8f4f3;
-    --popover: #112830;
-    --popover-foreground: #e8f4f3;
-    --primary: #2a9d8f;
-    --primary-foreground: #0d1f26;
-    --secondary: #1a3540;
-    --secondary-foreground: #e8f4f3;
-    --muted: #152d38;
-    --muted-foreground: #7abfb8;
-    --accent: #1a3540;
-    --accent-foreground: #e8f4f3;
-    --destructive: #e76f51;
-    --destructive-foreground: #f7fafc;
-    --border: #1e3d4a;
-    --input: #1e3d4a;
-    --ring: #2a9d8f;
-    --chart-1: #3bbfb0;
-    --chart-2: #52b788;
-    --chart-3: #e76f51;
-    --chart-4: #f4a261;
-    --chart-5: #76c8d4;
-    --sidebar-background: #0a1a20;
-    --sidebar-foreground: #b0d4d0;
-    --sidebar-primary: #2a9d8f;
-    --sidebar-primary-foreground: #f7fafc;
-    --sidebar-accent: #1a3540;
-    --sidebar-accent-foreground: #e8f4f3;
-    --sidebar-border: #1e3d4a;
-    --sidebar-ring: #2a9d8f;
-    --color-info: #3bbfb0;
-    --color-success: #52b788;
-    --color-warning: #f4a261;
-    --color-error: #e76f51;
-    --color-default: #b0d4d0;
+    /* ── Surface ── */
+    --background: #2f3e46; /* Charcoal Blue — dari palette */
+    --foreground: #cad2c5; /* Ash Grey — dari palette */
+
+    /* ── Card & Popover ── */
+    --card: #354f52; /* Dark Slate Grey — dari palette */
+    --card-foreground: #cad2c5;
+    --popover: #354f52;
+    --popover-foreground: #cad2c5;
+
+    /* ── Primary — naik ke Muted Teal ── */
+    --primary: #84a98c; /* Muted Teal — dari palette */
+    --primary-foreground: #1c2b2e;
+
+    /* ── Secondary ── */
+    --secondary: #354f52;
+    --secondary-foreground: #cad2c5;
+
+    /* ── Muted ── */
+    --muted: #3a4f56;
+    --muted-foreground: #84a98c; /* Muted Teal */
+
+    /* ── Accent — gold tetap hangat di dark bg ── */
+    --accent: #3d3420;
+    --accent-foreground: #e8c45a;
+
+    /* ── Destructive ── */
+    --destructive: #d45050;
+    --destructive-foreground: #fff0f0;
+
+    /* ── Border & Input ── */
+    --border: #3e5a5e;
+    --input: #3e5a5e;
+    --ring: #84a98c;
+
+    /* ── Chart — satu stop lebih cerah di dark bg ── */
+    --chart-1: #84a98c; /* muted teal   — ekuitas */
+    --chart-2: #e8c45a; /* bright gold  — komoditas */
+    --chart-3: #4caf78; /* bright green — profit */
+    --chart-4: #d45050; /* bright red   — loss */
+    --chart-5: #e06040; /* bright sienna — risiko */
+    --chart-6: #9b7ece; /* bright violet — premium */
+
+    /* ── Sidebar ── */
+    --sidebar-background: #263238; /* lebih gelap dari charcoal-blue */
+    --sidebar-foreground: #a8c4bc;
+    --sidebar-primary: #84a98c;
+    --sidebar-primary-foreground: #1c2b2e;
+    --sidebar-accent: #354f52;
+    --sidebar-accent-foreground: #cad2c5;
+    --sidebar-border: #3e5a5e;
+    --sidebar-ring: #84a98c;
+
+    /* ── Semantic finance tokens ── */
+    --color-info: #84a98c;
+    --color-success: #4caf78;
+    --color-warning: #e06040;
+    --color-error: #d45050;
+    --color-gold: #e8c45a;
+    --color-default: #cad2c5;
+
+    --color-success-bg: color-mix(in srgb, var(--color-success) 12%, var(--popover));
+    --color-error-bg: color-mix(in srgb, var(--color-error) 12%, var(--popover));
+    --color-warning-bg: color-mix(in srgb, var(--color-warning) 14%, var(--popover));
+    --color-info-bg: color-mix(in srgb, var(--color-info) 12%, var(--popover));
+    --color-default-bg: var(--popover);
 }
+
 @layer base {
     * {
         @apply border-border;
         transition: all ease 0.5s color;
     }
-
-    body {
-        @apply bg-background text-foreground;
-    }
 }
-/*
-  ---break---
-*/
+
 @theme inline {
     --font-heading: var(--font-sans);
-    --font-sans: 'Geist Variable', sans-serif;
+    --font-sans: 'Poppins', sans-serif;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -194,6 +282,7 @@ input[type='number']::-webkit-inner-spin-button {
     --color-sidebar-primary: var(--sidebar-primary);
     --color-sidebar-foreground: var(--sidebar-foreground);
     --color-sidebar: var(--sidebar);
+    --color-chart-6: var(--chart-6);
     --color-chart-5: var(--chart-5);
     --color-chart-4: var(--chart-4);
     --color-chart-3: var(--chart-3);
@@ -224,4 +313,62 @@ input[type='number']::-webkit-inner-spin-button {
     --radius-2xl: calc(var(--radius) * 1.8);
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer components {
+    .cn-toast {
+        background: var(--color-default-bg) !important;
+        color: var(--color-default) !important;
+        border: 1px solid var(--border) !important;
+        animation: toast-in 0.25s ease forwards !important;
+    }
+    .cn-toast[data-state='closed'] {
+        animation: toast-out 0.2s ease forwards !important;
+    }
+
+    .cn-toast[data-type='success'] {
+        background: var(--color-success-bg) !important;
+        color: var(--color-success) !important;
+        border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent) !important;
+    }
+
+    .cn-toast[data-type='error'] {
+        background: var(--color-error-bg) !important;
+        color: var(--color-error) !important;
+        border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent) !important;
+    }
+
+    .cn-toast[data-type='warning'] {
+        background: var(--color-warning-bg) !important;
+        color: var(--color-warning) !important;
+        border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent) !important;
+    }
+
+    .cn-toast[data-type='info'] {
+        background: var(--color-info-bg) !important;
+        color: var(--color-info) !important;
+        border: 1px solid color-mix(in srgb, var(--color-info) 30%, transparent) !important;
+    }
+}
+
+@keyframes toast-in {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes toast-out {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+    }
 }

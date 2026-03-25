@@ -26,9 +26,11 @@ class Proyek extends Model
         'jasa_tukang_persen',
         'biaya_staff_perpajakan',
         'biaya_staff_entry_data',
+        'biaya_tak_terduga_persen',
         'nama_klien',
         'status',
         'deskripsi_proyek',
+
     ];
 
     protected $casts = [
@@ -36,6 +38,7 @@ class Proyek extends Model
         'pajak_persen' => 'decimal:2',
         'uang_bahan_persen' => 'decimal:2',
         'jasa_tukang_persen' => 'decimal:2',
+        'biaya_tak_terduga_persen' => 'decimal:2',
         'biaya_staff_perpajakan' => 'decimal:2',
         'biaya_staff_entry_data' => 'decimal:2',
         'tanggal_mulai' => 'date',

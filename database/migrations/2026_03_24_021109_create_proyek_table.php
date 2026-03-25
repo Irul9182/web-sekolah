@@ -33,6 +33,7 @@ return new class extends Migration
             $table->decimal('pajak_persen', 15, 2);
             $table->decimal('uang_bahan_persen', 15, 2);
             $table->decimal('jasa_tukang_persen', 15, 2);
+            $table->decimal('biaya_tak_terduga_persen', 15, 2);
 
             $table->decimal('biaya_staff_perpajakan', 15, 2);
             $table->decimal('biaya_staff_entry_data', 15, 2);

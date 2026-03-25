@@ -177,7 +177,7 @@ const AppSelect = ({
                 >
                     {label}
                     {required && (
-                        <span className="ml-1" style={{ color: 'var(--tone-border)' }}>
+                        <span className="ml-1" style={{ color: 'var(--destructive)' }}>
                             *
                         </span>
                     )}
@@ -188,9 +188,9 @@ const AppSelect = ({
                 <SelectTrigger
                     id={id}
                     className={cn(
-                        'border transition-all duration-200',
+                        'border font-semibold transition-all duration-200',
                         'focus:ring-0 focus:outline-none',
-                        'cursor-pointer text-[10px] font-semibold sm:text-sm',
+                        'cursor-pointer text-[10px] sm:text-sm',
                         triggerClassName,
                     )}
                     style={
@@ -213,7 +213,7 @@ const AppSelect = ({
                     {isGrouped(options)
                         ? options.map((group) => (
                               <SelectGroup key={group.group}>
-                                  <SelectLabel className="text-[10px] font-semibold! sm:text-sm">{group.group}</SelectLabel>
+                                  <SelectLabel className="text-[10px] sm:text-sm">{group.group}</SelectLabel>
                                   {group.options.map((opt) => (
                                       <SelectItem style={toneStyles[tone]} key={opt.value} value={opt.value} disabled={opt.disabled}>
                                           {opt.label}
@@ -224,7 +224,7 @@ const AppSelect = ({
                         : (options as SelectOption[]).map((opt) => (
                               <SelectItem
                                   style={toneStyles[tone]}
-                                  className="cursor-pointer text-[10px] font-semibold! sm:text-sm"
+                                  className="cursor-pointer text-[10px] font-semibold sm:text-sm"
                                   key={opt.value}
                                   value={opt.value}
                                   disabled={opt.disabled}
