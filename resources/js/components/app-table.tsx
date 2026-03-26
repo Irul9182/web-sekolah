@@ -25,11 +25,30 @@ export interface Column<T> {
     render?: (value: unknown, row: T) => React.ReactNode;
 }
 
+/** Meta pagination dari response API Laravel (format paginate()) */
+export interface PaginationMeta {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from: number | null;
+    to: number | null;
+}
+
 export interface DataTableProps<T> {
     data: T[];
     columns: Column<T>[];
+
+    // ── Server-side pagination (opsional) ──────────────────────────────────────
+    // Jika diisi → mode server-side aktif; DataTable tidak melakukan slicing sendiri.
+    pagination?: PaginationMeta;
+    onPageChange?: (page: number) => void;
+    onPageSizeChange?: (pageSize: number) => void;
+
+    // ── Client-side (dipakai saat `pagination` tidak diisi) ───────────────────
     pageSize?: number;
     pageSizeOptions?: number[];
+
     className?: string;
     emptyMessage?: string;
     loading?: boolean;
@@ -37,7 +56,6 @@ export interface DataTableProps<T> {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-// cast row ke Record agar bisa akses dengan string key
 function getRowValue(row: unknown, key: string): unknown {
     if (row !== null && typeof row === 'object') {
         return (row as Record<string, unknown>)[key];
@@ -58,18 +76,32 @@ function SortIcon({ direction }: { direction: SortDirection }) {
 export function DataTable<T extends object>({
     data,
     columns,
+    pagination,
+    onPageChange,
+    onPageSizeChange,
     pageSize: initialPageSize = 10,
     pageSizeOptions = [5, 10, 20, 50],
     className,
     emptyMessage = 'Tidak ada data.',
     loading = false,
 }: DataTableProps<T>) {
-    const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(initialPageSize);
+    // ── State (hanya dipakai saat client-side) ────────────────────────────────
+    const [clientPage, setClientPage] = useState(1);
+    const [clientPageSize, setClientPageSize] = useState(initialPageSize);
     const [sortKey, setSortKey] = useState<string | null>(null);
     const [sortDir, setSortDir] = useState<SortDirection>(null);
 
-    // ── Sorting ──
+    const isServerSide = pagination !== undefined;
+
+    // ── Derived pagination values ─────────────────────────────────────────────
+    const currentPage = isServerSide ? pagination!.current_page : clientPage;
+    const totalPages = isServerSide ? pagination!.last_page : Math.max(1, Math.ceil(data.length / clientPageSize));
+    const pageSize = isServerSide ? pagination!.per_page : clientPageSize;
+    const totalItems = isServerSide ? pagination!.total : data.length;
+    const fromItem = isServerSide ? (pagination!.from ?? 0) : (clientPage - 1) * clientPageSize + 1;
+    const toItem = isServerSide ? (pagination!.to ?? 0) : Math.min(clientPage * clientPageSize, data.length);
+
+    // ── Sorting (hanya client-side) ───────────────────────────────────────────
     const handleSort = (key: string) => {
         if (sortKey !== key) {
             setSortKey(key);
@@ -79,29 +111,50 @@ export function DataTable<T extends object>({
             setSortKey(null);
             setSortDir(null);
         }
-        setCurrentPage(1);
+        if (!isServerSide) setClientPage(1);
     };
 
-    const sortedData = [...data].sort((a, b) => {
-        if (!sortKey || !sortDir) return 0;
-        const aVal = String(getRowValue(a, sortKey) ?? '');
-        const bVal = String(getRowValue(b, sortKey) ?? '');
-        const cmp = aVal.localeCompare(bVal, undefined, { numeric: true });
-        return sortDir === 'asc' ? cmp : -cmp;
-    });
+    const sortedData = isServerSide
+        ? data // server sudah mengurutkan
+        : [...data].sort((a, b) => {
+              if (!sortKey || !sortDir) return 0;
+              const aVal = String(getRowValue(a, sortKey) ?? '');
+              const bVal = String(getRowValue(b, sortKey) ?? '');
+              const cmp = aVal.localeCompare(bVal, undefined, { numeric: true });
+              return sortDir === 'asc' ? cmp : -cmp;
+          });
 
-    // ── Pagination ──
-    const totalPages = Math.max(1, Math.ceil(sortedData.length / pageSize));
-    const safePage = Math.min(currentPage, totalPages);
-    const start = (safePage - 1) * pageSize;
-    const pageData = sortedData.slice(start, start + pageSize);
-    const goTo = (page: number) => setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+    // ── Slicing (hanya client-side) ───────────────────────────────────────────
+    const pageData = isServerSide
+        ? sortedData // server sudah memotong
+        : sortedData.slice((clientPage - 1) * clientPageSize, clientPage * clientPageSize);
 
-    const pageNumbers = (() => {
+    // ── Navigation ────────────────────────────────────────────────────────────
+    const goTo = (page: number) => {
+        const safe = Math.max(1, Math.min(page, totalPages));
+        if (isServerSide) {
+            onPageChange?.(safe);
+        } else {
+            setClientPage(safe);
+        }
+    };
+
+    const handlePageSizeChange = (val: string) => {
+        const n = Number(val);
+        if (isServerSide) {
+            onPageSizeChange?.(n);
+        } else {
+            setClientPageSize(n);
+            setClientPage(1);
+        }
+    };
+
+    // ── Page number list ──────────────────────────────────────────────────────
+    const pageNumbers: (number | '…')[] = (() => {
         if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
-        if (safePage <= 4) return [1, 2, 3, 4, 5, '…', totalPages];
-        if (safePage >= totalPages - 3) return [1, '…', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-        return [1, '…', safePage - 1, safePage, safePage + 1, '…', totalPages];
+        if (currentPage <= 4) return [1, 2, 3, 4, 5, '…', totalPages];
+        if (currentPage >= totalPages - 3) return [1, '…', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+        return [1, '…', currentPage - 1, currentPage, currentPage + 1, '…', totalPages];
     })();
 
     return (
@@ -109,7 +162,7 @@ export function DataTable<T extends object>({
             {/* ── Table ── */}
             <div className="border-border bg-card overflow-hidden rounded-xl border">
                 <Table>
-                    <TableHeader className="bg-muted/60">
+                    <TableHeader className="!bg-muted/60">
                         <TableRow className="border-border hover:bg-transparent">
                             {columns.map((col) => {
                                 const key = String(col.key);
@@ -119,15 +172,15 @@ export function DataTable<T extends object>({
                                         key={key}
                                         onClick={() => col.sortable && handleSort(key)}
                                         className={cn(
-                                            'text-muted-foreground font-medium select-none',
-                                            col.sortable && 'group hover:text-foreground cursor-pointer transition-colors',
-                                            isActive && 'text-foreground',
+                                            'text-background bg-sidebar-accent-foreground p-4 font-semibold select-none',
+                                            col.sortable && 'group hover:text-muted/80! cursor-pointer transition-colors',
+                                            isActive && 'text-background',
                                             col.className,
                                         )}
                                     >
                                         <div className="flex items-center gap-1.5">
                                             {col.label}
-                                            {col.sortable && <SortIcon direction={isActive ? sortDir : null} />}
+                                            {/* {col.sortable && <SortIcon direction={isActive ? sortDir : null} />} */}
                                         </div>
                                     </TableHead>
                                 );
@@ -154,7 +207,7 @@ export function DataTable<T extends object>({
                             </TableRow>
                         ) : (
                             pageData.map((row, rowIdx) => (
-                                <TableRow key={rowIdx} className="border-border hover:bg-muted/40 transition-colors duration-100">
+                                <TableRow key={rowIdx} className="border-border hover:bg-muted/80! transition-colors duration-100">
                                     {columns.map((col) => {
                                         const key = String(col.key);
                                         const value = getRowValue(row, key);
@@ -175,20 +228,10 @@ export function DataTable<T extends object>({
             <div className="text-muted-foreground flex flex-col items-center gap-3 text-sm sm:flex-row sm:justify-between">
                 {/* Info + page size */}
                 <div className="flex items-center gap-3">
-                    <span>
-                        {data.length === 0
-                            ? 'Tidak ada hasil'
-                            : `${start + 1}–${Math.min(start + pageSize, sortedData.length)} dari ${sortedData.length}`}
-                    </span>
+                    <span>{totalItems === 0 ? 'Tidak ada hasil' : `${fromItem}–${toItem} dari ${totalItems}`}</span>
                     <div className="flex items-center gap-2">
                         <span className="text-xs">Tampil</span>
-                        <Select
-                            value={String(pageSize)}
-                            onValueChange={(val: string) => {
-                                setPageSize(Number(val));
-                                setCurrentPage(1);
-                            }}
-                        >
+                        <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
                             <SelectTrigger className="border-input bg-muted focus:border-primary h-7 w-16 px-2 text-xs focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_25%,transparent)] focus:ring-0 focus:outline-none">
                                 <SelectValue />
                             </SelectTrigger>
@@ -209,8 +252,8 @@ export function DataTable<T extends object>({
                         <PaginationItem>
                             <PaginationLink
                                 onClick={() => goTo(1)}
-                                aria-disabled={safePage === 1}
-                                className={cn('h-8 w-8 cursor-pointer', safePage === 1 && 'pointer-events-none opacity-40')}
+                                aria-disabled={currentPage === 1}
+                                className={cn('h-8 w-8 cursor-pointer', currentPage === 1 && 'pointer-events-none opacity-40')}
                             >
                                 <ChevronsLeft className="h-4 w-4" />
                             </PaginationLink>
@@ -218,9 +261,9 @@ export function DataTable<T extends object>({
 
                         <PaginationItem>
                             <PaginationPrevious
-                                onClick={() => goTo(safePage - 1)}
-                                aria-disabled={safePage === 1}
-                                className={cn('h-8 cursor-pointer gap-1 px-2', safePage === 1 && 'pointer-events-none opacity-40')}
+                                onClick={() => goTo(currentPage - 1)}
+                                aria-disabled={currentPage === 1}
+                                className={cn('h-8 cursor-pointer gap-1 px-2', currentPage === 1 && 'pointer-events-none opacity-40')}
                             />
                         </PaginationItem>
 
@@ -233,10 +276,10 @@ export function DataTable<T extends object>({
                                 <PaginationItem key={p}>
                                     <PaginationLink
                                         onClick={() => goTo(Number(p))}
-                                        isActive={p === safePage}
+                                        isActive={p === currentPage}
                                         className={cn(
                                             'h-8 w-8 cursor-pointer',
-                                            p === safePage && 'shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_20%,transparent)]',
+                                            p === currentPage && 'shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_20%,transparent)]',
                                         )}
                                     >
                                         {p}
@@ -247,17 +290,17 @@ export function DataTable<T extends object>({
 
                         <PaginationItem>
                             <PaginationNext
-                                onClick={() => goTo(safePage + 1)}
-                                aria-disabled={safePage === totalPages}
-                                className={cn('h-8 cursor-pointer gap-1 px-2', safePage === totalPages && 'pointer-events-none opacity-40')}
+                                onClick={() => goTo(currentPage + 1)}
+                                aria-disabled={currentPage === totalPages}
+                                className={cn('h-8 cursor-pointer gap-1 px-2', currentPage === totalPages && 'pointer-events-none opacity-40')}
                             />
                         </PaginationItem>
 
                         <PaginationItem>
                             <PaginationLink
                                 onClick={() => goTo(totalPages)}
-                                aria-disabled={safePage === totalPages}
-                                className={cn('h-8 w-8 cursor-pointer', safePage === totalPages && 'pointer-events-none opacity-40')}
+                                aria-disabled={currentPage === totalPages}
+                                className={cn('h-8 w-8 cursor-pointer', currentPage === totalPages && 'pointer-events-none opacity-40')}
                             >
                                 <ChevronsRight className="h-4 w-4" />
                             </PaginationLink>

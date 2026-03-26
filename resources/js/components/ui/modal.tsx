@@ -7,6 +7,7 @@ export interface ModalProps {
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
     children: React.ReactNode;
+    onCloseModal?: () => void;
 }
 
 export interface ModalContentProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {

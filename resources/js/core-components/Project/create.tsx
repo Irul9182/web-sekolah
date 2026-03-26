@@ -45,9 +45,11 @@ const ProjectCreateIndex = () => {
         const errors: string[] = [];
 
         if (!data.nama_proyek?.trim()) errors.push('Nama proyek tidak boleh kosong');
+
         if (!data.nama_klien?.trim()) errors.push('Nama klien tidak boleh kosong');
 
         if (!data.tipe_proyek) errors.push('Tipe proyek harus dipilih');
+
         if (!data.status) errors.push('Status proyek harus dipilih');
 
         if (!data.pagu_total || data.pagu_total <= 0) errors.push('Pagu total harus lebih dari 0');
@@ -69,7 +71,7 @@ const ProjectCreateIndex = () => {
         if (!data.tanggal_mulai) errors.push('Tanggal mulai tidak boleh kosong');
 
         if (data.tanggal_selesai && data.tanggal_selesai < data.tanggal_mulai) errors.push('Tanggal selesai tidak boleh sebelum tanggal mulai');
-        // ── RETURN ──
+
         if (errors.length > 0) {
             errors.forEach((err) => {
                 toast.error(err);
@@ -120,11 +122,20 @@ const ProjectCreateIndex = () => {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={projectId !== null ? 'Ubah proyek' : 'Buat Proyek Baru'} />
             <div className="mt-2 flex w-full items-center justify-end gap-4 px-4">
-                <Button disabled={loading} onClick={() => router.visit('/project')} className={`"transition-all duration-150"`} variant={'secondary'}>
-                    <p className={`${cn(loading ? 'animate-spin' : 'animate-none')}`}>{loading ? <Loader2 /> : 'Kembali'}</p>
+                <Button
+                    disabled={loading || processing}
+                    onClick={() => router.visit('/project')}
+                    className={`"transition-all duration-150"`}
+                    variant={'secondary'}
+                >
+                    <p className={`${cn(loading || processing ? 'animate-spin' : 'animate-none')}`}>
+                        {loading || processing ? <Loader2 /> : 'Kembali'}
+                    </p>
                 </Button>
-                <Button disabled={loading} className={`"transition-all duration-150"`} onClick={(e) => handleSubmitProyek(e)}>
-                    <p className={`${cn(loading ? 'animate-spin' : 'animate-none')}`}>{loading ? <Loader2 /> : 'Simpan'}</p>
+                <Button disabled={loading || processing} className={`"transition-all duration-150"`} onClick={(e) => handleSubmitProyek(e)}>
+                    <p className={`${cn(loading || processing ? 'animate-spin' : 'animate-none')}`}>
+                        {loading || processing ? <Loader2 /> : 'Simpan'}
+                    </p>
                 </Button>
             </div>
             <div className="grid grid-cols-1 items-center gap-4 px-4 py-2 sm:grid-cols-2">
@@ -138,6 +149,7 @@ const ProjectCreateIndex = () => {
                 <AppSelect
                     defaultValue={dataProyek?.tipe_proyek || ''}
                     label="Tipe Proyek"
+                    placeholder="Pilih opsi . . ."
                     required={true}
                     onValueChange={(value) => setData('tipe_proyek', value as TipeProyek)}
                     options={[
@@ -164,8 +176,9 @@ const ProjectCreateIndex = () => {
                     ]}
                 />
                 <AppSelect
-                    defaultValue={dataProyek?.status || 'status_berjalan'}
+                    defaultValue={(dataProyek?.status ?? 'sedang_berjalan') as StatusProyek}
                     label="Status Proyek"
+                    placeholder="Pilih opsi . . ."
                     required={true}
                     onValueChange={(value) => setData('status', value as StatusProyek)}
                     options={[
@@ -260,7 +273,7 @@ const ProjectCreateIndex = () => {
             <div className="px-4 pb-7">
                 <AppTextArea
                     className="min-h-50 px-3 py-4"
-                    defaultValue={dataProyek?.deskripsi_proyek || 0}
+                    defaultValue={dataProyek?.deskripsi_proyek || ''}
                     onChange={(e) => setData('deskripsi_proyek', e.target.value)}
                     placeholder="Masukkan deskripsi proyek . . ."
                     label="Deskripsi"

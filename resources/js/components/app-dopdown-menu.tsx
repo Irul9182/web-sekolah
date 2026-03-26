@@ -12,7 +12,7 @@ const AppDropdownMenu = ({ menuItem, menuLabel, openDisplay = 'open' }: PropType
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="secondary">{openDisplay}</Button>
+                <Button variant="outline">{openDisplay}</Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
                 <DropdownMenuGroup>

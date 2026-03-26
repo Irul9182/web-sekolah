@@ -32,11 +32,11 @@ class ProyekController extends Controller
                 $q->where('nama_proyek', 'like', "%$search%");
             });
         }
+        $proyeks = Proyek::paginate($request->input('per_page', 10));
 
-        $proyek = $query->paginate(10)->withQueryString();
 
         return Inertia::render('project/index', [
-            'proyeks' => $proyek,
+            'proyeks' => $proyeks,
             'filters' => [
                 'search' => $search
             ]
@@ -146,6 +146,27 @@ class ProyekController extends Controller
 
         return redirect()
             ->route('project.index')
+            ->with(['success' => 'Proyek berhasil diperbarui!']);
+    }
+
+    // Patch status
+    public function updateStatus(Request $request, $proyek_id)
+    {
+        //
+        $proyek = Proyek::findOrFail($proyek_id);
+
+
+        $validated = $request->validate([
+            'status' => 'required|in:sedang_berjalan,selesai,dibatalkan',
+        ]);
+
+        $proyek->update($validated);
+
+        return redirect()
+            ->route('project.index', [
+                'page'     => $request->query('page', 1),
+                'per_page' => $request->query('per_page', 10),
+            ])
             ->with(['success' => 'Proyek berhasil diperbarui!']);
     }
 
