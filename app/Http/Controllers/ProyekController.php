@@ -6,16 +6,24 @@ use App\Models\Proyek;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Http\RedirectResponse;
+use App\Services\FinanceService;
 
 class ProyekController extends Controller
+
 {
+
+    protected FinanceService $financeService;
+
+    public function __construct(FinanceService $financeService)
+    {
+        $this->financeService = $financeService;
+    }
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
         $search = $request->query('search');
-
         $query = Proyek::select([
             'proyek_id',
             'nama_proyek',
@@ -33,6 +41,7 @@ class ProyekController extends Controller
             });
         }
         $proyeks = Proyek::paginate($request->input('per_page', 10));
+
 
 
         return Inertia::render('project/index', [
@@ -99,9 +108,12 @@ class ProyekController extends Controller
     {
         //
         $proyek = Proyek::findOrFail($proyek_id);
-
+        $anggaran = $this->financeService->hitungAnggaranProyek($proyek);
+        $realisasi = $this->financeService->hitungRealisasiPerKategori($proyek);
         return Inertia::render('project/detail/index', [
-            'proyek' => $proyek
+            'proyek' => $proyek,
+            'anggaran' => $anggaran,
+            'realisasi' => $realisasi,
         ]);
     }
 

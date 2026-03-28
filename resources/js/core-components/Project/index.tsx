@@ -25,10 +25,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 interface PropTypes {
     proyeks: PaginatedResponse<ProyekProps>;
-    proyek: any;
 }
 
-const ProjectIndex = ({ proyeks, proyek }: PropTypes) => {
+const ProjectIndex = ({ proyeks }: PropTypes) => {
     const [open, setIsOpen] = useState<boolean>(false);
     const { appearance } = useAppearance();
     // const [optionStatus, setOptionStatus] = useState<StatusProyek | null>(null);

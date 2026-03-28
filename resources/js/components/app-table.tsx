@@ -22,7 +22,7 @@ export interface Column<T> {
     label: string;
     sortable?: boolean;
     className?: string;
-    render?: (value: unknown, row: T) => React.ReactNode;
+    render?: (value: unknown, row: T, index: number) => React.ReactNode;
 }
 
 /** Meta pagination dari response API Laravel (format paginate()) */
@@ -199,21 +199,21 @@ export function DataTable<T extends object>({
                                     ))}
                                 </TableRow>
                             ))
-                        ) : pageData.length === 0 ? (
+                        ) : pageData?.length === 0 ? (
                             <TableRow className="border-0 hover:bg-transparent">
                                 <TableCell colSpan={columns.length} className="text-muted-foreground py-12 text-center text-[10px] sm:text-sm">
                                     {emptyMessage}
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            pageData.map((row, rowIdx) => (
+                            pageData?.map((row, rowIdx) => (
                                 <TableRow key={rowIdx} className="border-border hover:bg-muted/80! transition-colors duration-100">
                                     {columns.map((col) => {
                                         const key = String(col.key);
                                         const value = getRowValue(row, key);
                                         return (
                                             <TableCell key={key} className={cn('text-foreground', col.className)}>
-                                                {col.render ? col.render(value, row) : String(value ?? '—')}
+                                                {col.render ? col.render(value, row, rowIdx) : String(value ?? '—')}
                                             </TableCell>
                                         );
                                     })}
@@ -267,7 +267,7 @@ export function DataTable<T extends object>({
                             />
                         </PaginationItem>
 
-                        {pageNumbers.map((p, i) =>
+                        {pageNumbers?.map((p, i) =>
                             p === '…' ? (
                                 <PaginationItem key={`e-${i}`}>
                                     <PaginationEllipsis className="h-8 w-8" />

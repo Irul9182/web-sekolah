@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, ChartBar, Folder, LayoutGrid, Pickaxe, UtilityPoleIcon } from 'lucide-react';
+import { BookOpen, ChartBar, Folder, LayoutGrid, Pickaxe, UtilityPoleIcon, Wallet } from 'lucide-react';
 import AppLogo from './app-logo';
 import { NavFooter } from './nav-footer';
 
@@ -17,6 +17,11 @@ const mainNavItems: NavItem[] = [
         title: 'Proyek',
         url: '/project',
         icon: Pickaxe,
+    },
+    {
+        title: 'Transaksi',
+        url: '/transaction',
+        icon: Wallet,
     },
     {
         title: 'Cashflow',
