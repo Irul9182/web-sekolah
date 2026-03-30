@@ -15,16 +15,14 @@ interface PageProps extends InertiaPageProps {
 }
 const TransactionDetailIndex = () => {
     const { props } = usePage<PageProps>();
-    console.log('Props:', props);
     const transaksi = props?.transaksi;
     const anggaran = props?.anggaran;
 
-    console.log('transaksi: ', transaksi);
     const transaksid = props?.transaksi_id ?? null;
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Detail transaksi',
-            href: `/transaksi/${transaksid}/detail`,
+            href: `/transaction/${transaksid}/detail`,
         },
     ];
 
@@ -34,7 +32,7 @@ const TransactionDetailIndex = () => {
 
             <div className="mt-4 flex w-full items-center justify-end px-4">
                 <div className="flex items-center gap-2">
-                    <Button onClick={() => router.visit('/transaksi')} className={`"transition-all duration-150"`} variant={'secondary'}>
+                    <Button onClick={() => router.visit('/transaction')} className={`"transition-all duration-150"`} variant={'secondary'}>
                         <p>{'Kembali'}</p>
                     </Button>
                 </div>

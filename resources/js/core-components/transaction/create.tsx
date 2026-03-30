@@ -1,6 +1,6 @@
 import AppDatePicker from '@/components/app-day-picker';
 import AppInput from '@/components/app-input';
-import AppSelect from '@/components/app-select';
+import AppSelect, { SelectOption } from '@/components/app-select';
 import AppSelectSearch from '@/components/app-select-search';
 import AppTextArea from '@/components/app-textare';
 import { Button } from '@/components/ui/button';
@@ -8,25 +8,34 @@ import { useInertiaSearch } from '@/hooks/user-inertia-search';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { BreadcrumbItem } from '@/types';
+import { ProyekProps } from '@/types/project.type';
 import { initialTransaksi, KategoriTransaksi, TransaksiProps } from '@/types/transaction.type';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { formatDate } from 'date-fns';
 import { Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface PageProps extends InertiaPageProps {
     transaksi?: TransaksiProps;
+    proyek?: ProyekProps;
+    usedKategory?: string[];
 }
 
 const TransactionCreateIndex = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const { props } = usePage<PageProps>();
-    const { transaksi: dataTransaksi } = props;
+    const { transaksi: dataTransaksi, proyek: dataProyek, usedKategori: dataUsedKategori } = props;
     const transaksiId = dataTransaksi?.transaksi_id ?? null;
     const [mode, setMode] = useState<'persen' | 'jumlah'>('persen');
-    type SatuanOptionType = 'idr' | 'persen';
-    const [satuanOption, setSatuanOption] = useState<SatuanOptionType | null>(null);
+    // type SatuanOptionType = 'idr' | 'persen';
+    // const [satuanOption, setSatuanOption] = useState<SatuanOptionType | null>(null);
+    const [usedKategori, setUsedKategori] = useState<string[]>((dataUsedKategori as string[]) ?? []);
+    const [namaProyekOptions, setNamaProyekOptions] = useState<SelectOption[]>(
+        dataProyek ? [{ value: dataProyek.proyek_id, label: dataProyek.nama_proyek }] : [],
+    );
+    const [loadingKategori, setLoadingKategori] = useState(false);
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: transaksiId !== null ? 'Ubah Transaksi' : 'Buat Transaksi Baru',
@@ -37,23 +46,114 @@ const TransactionCreateIndex = () => {
     const form = useForm<TransaksiProps>(initialTransaksi);
     console.log('props: ', props);
     const { data, setData, post, processing, errors, put } = form;
-    const {
-        options: namaProyekOptions,
-        loading: namaProyekLoading,
-        search: searchNamaProyek,
-    } = useInertiaSearch({
+    console.log('data saat ini: ', data);
+    const { loading: namaProyekLoading, search: searchNamaProyek } = useInertiaSearch({
         url: route('transaction.search-nama-proyek'),
-        mapFn: (item) => ({
-            value: String(item.proyek_id),
-            label: item.nama_proyek,
-        }),
+        mapFn: (item) => ({ value: String(item.proyek_id), label: item.nama_proyek }),
+        onResult: (results) => {
+            setNamaProyekOptions(results);
+        },
     });
+    useEffect(() => {
+        if (transaksiId && dataTransaksi) {
+            setData({
+                ...dataTransaksi,
+                jumlah: parseFloat(String(dataTransaksi.jumlah)),
+                persen: parseFloat(String(dataTransaksi.persen)),
+                tanggal: dataTransaksi.tanggal ? new Date(dataTransaksi.tanggal).toISOString().split('T')[0] : '',
+            });
+        }
+    }, [transaksiId]);
+    useEffect(() => {
+        if (transaksiId || dataTransaksi) {
+            if (dataTransaksi?.jumlah !== 0) {
+                setMode('jumlah');
+            } else {
+                setMode('persen');
+            }
+        }
+    }, [transaksiId, dataTransaksi]);
 
-    // useEffect(() => {
-    //     if (transaksiId && dataTransaksi) {
-    //         setData(props.proyek as TransaksiProps);
-    //     }
-    // }, [transaksiId, dataTransaksi]);
+    const handleProyekChange = async (proyekId: string) => {
+        setData('proyek_id', proyekId);
+        setData('kategori', '');
+
+        if (!proyekId) {
+            setUsedKategori([]);
+            return;
+        }
+
+        setLoadingKategori(true);
+        try {
+            const res = await fetch(route('transaction.used-kategori', { proyek_id: proyekId }), {
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '',
+                },
+            });
+            const json = await res.json();
+            setUsedKategori(json);
+        } catch {
+            setUsedKategori([]);
+        } finally {
+            setLoadingKategori(false);
+        }
+    };
+    const kategoriOptions = [
+        { value: 'material', label: 'Material' },
+        { value: 'operasional', label: 'Operasional' },
+        { value: 'jasa_tukang', label: 'Jasa Tukang' },
+        { value: 'mandor', label: 'Mandor' },
+        { value: 'staff_perpajakan', label: 'Staff Perpajakan' },
+        { value: 'staff_entry_data', label: 'Staff Entry Data' },
+        { value: 'biaya_tak_terduga', label: 'Biaya Tak Terduga' },
+    ].map((opt) => ({
+        ...opt,
+        label: usedKategori.includes(opt.value) ? `${opt.label} ✓` : opt.label,
+        disabled: usedKategori.includes(opt.value),
+    }));
+    const handleSubmitTransaksi = async (e: React.FormEvent) => {
+        e.preventDefault();
+        console.log('Data terkirim: ', data);
+        if (transaksiId !== null) {
+            put(`/transaction/${transaksiId}`, {
+                preserveState: false,
+                onStart: () => setLoading(true),
+
+                onSuccess: () => {
+                    toast.success('Berhasil memperbarui transaksi.', { position: 'top-right' });
+                    router.reload({ only: ['list_transaksi'] });
+                },
+
+                onError: (err) => {
+                    toast.error('Gagal memperbarui transaksi.', { position: 'top-right' });
+                    console.log('Error: ', err);
+                },
+
+                onFinish: () => setLoading(false),
+            });
+        } else {
+            post('/transaction', {
+                onStart: () => setLoading(true),
+
+                onSuccess: (success) => {
+                    toast.success('Berhasil membuat transaksi baru.', { position: 'top-right' });
+                    console.log('Success: ', success);
+                },
+
+                onError: (err: any) => {
+                    toast.error('Gagal membuat transaksi baru.', {
+                        position: 'top-right',
+                        description: errors?.jumlah || errors?.kategori || errors?.tanggal || errors?.proyek_id || errors?.persen,
+                    });
+                    console.log('Error: ', err);
+                },
+
+                onFinish: () => setLoading(false),
+            });
+        }
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -63,21 +163,17 @@ const TransactionCreateIndex = () => {
                 <Button
                     disabled={loading || processing}
                     onClick={() => router.visit('/transaction')}
-                    className={`"transition-all duration-150"`}
+                    className={`"transition-all relative" duration-150`}
                     variant={'secondary'}
                 >
-                    <p className={`${cn(loading || processing ? 'animate-spin' : 'animate-none')}`}>
-                        {loading || processing ? <Loader2 /> : 'Kembali'}
-                    </p>
+                    <span className={loading || processing ? 'invisible' : ''}>Kembali</span>
+
+                    {loading || (processing && <Loader2 className="absolute inset-0 m-auto animate-spin" />)}
                 </Button>
-                <Button
-                    disabled={loading || processing}
-                    className={`"transition-all duration-150"`}
-                    // onClick={(e) => handleSubmitProyek(e)}
-                >
-                    <p className={`${cn(loading || processing ? 'animate-spin' : 'animate-none')}`}>
-                        {loading || processing ? <Loader2 /> : 'Simpan'}
-                    </p>
+                <Button onClick={(e) => handleSubmitTransaksi(e)} disabled={loading || processing} className="relative transition-all duration-150">
+                    <span className={loading || processing ? 'invisible' : ''}>Simpan</span>
+
+                    {loading || (processing && <Loader2 className="absolute inset-0 m-auto animate-spin" />)}
                 </Button>
             </div>
             <div className="grid grid-cols-1 items-center gap-4 px-4 py-2 sm:grid-cols-2">
@@ -91,7 +187,8 @@ const TransactionCreateIndex = () => {
                     loading={namaProyekLoading}
                     onSearch={searchNamaProyek}
                     value={data.proyek_id}
-                    onValueChange={(val) => setData('proyek_id', val)}
+                    defaultValue={dataProyek?.proyek_id}
+                    onValueChange={handleProyekChange}
                     error={errors.proyek_id}
                 />
 
@@ -99,38 +196,14 @@ const TransactionCreateIndex = () => {
                     defaultValue={dataTransaksi?.kategori || ''}
                     label="Kategori"
                     placeholder="Pilih opsi . . ."
+                    disabled={!dataProyek?.proyek_id && !data?.proyek_id}
                     required={true}
-                    onValueChange={(value) => setData('kategori', value as KategoriTransaksi)}
-                    options={[
-                        {
-                            value: 'material',
-                            label: 'Material',
-                        },
-                        {
-                            value: 'operasional',
-                            label: 'Operasional',
-                        },
-                        {
-                            value: 'jasa_tukang',
-                            label: 'Jasa Tukang',
-                        },
-                        {
-                            value: 'mandor',
-                            label: 'Mandor',
-                        },
-                        {
-                            value: 'staff_perpajakan',
-                            label: 'Staff Perpajakan',
-                        },
-                        {
-                            value: 'staff_entry_data',
-                            label: 'Staff Entry Data',
-                        },
-                        {
-                            value: 'biaya_tak_terduga',
-                            label: 'Biaya Tak Terduga',
-                        },
-                    ]}
+                    value={data.kategori}
+                    onValueChange={(val) => setData('kategori', val as KategoriTransaksi)}
+                    options={kategoriOptions}
+                    error={errors.kategori}
+                    // hint={}
+                    tooltip={transaksiId === null ? (!data.proyek_id ? 'Pilih proyek terlebih dahulu' : undefined) : undefined}
                 />
 
                 <div className="flex flex-col gap-1.5">
@@ -171,7 +244,7 @@ const TransactionCreateIndex = () => {
                         min={0}
                         max={mode === 'persen' ? 100 : undefined}
                         required
-                        placeholder={mode === 'persen' ? 'Masukkan persen...' : 'Masukkan jumlah...'}
+                        placeholder={mode === 'persen' ? 'Masukkan persen . . .' : 'Masukkan jumlah . . .'}
                         onChange={(e) => {
                             const val = parseFloat(e.target.value) || 0;
                             if (mode === 'persen') {
@@ -182,23 +255,27 @@ const TransactionCreateIndex = () => {
                                 setData('persen', 0);
                             }
                         }}
+                        value={mode === 'jumlah' ? data.jumlah || 0 : data.persen || 0}
+                        error={errors?.jumlah || errors?.persen}
                     />
                 </div>
 
                 <AppDatePicker
-                    defaultValue={dataTransaksi?.tanggal_mulai ? new Date(dataTransaksi.tanggal_mulai) : undefined}
+                    value={data.tanggal ? new Date(data.tanggal) : undefined}
                     required
-                    label="Dimulai pada"
-                    onChange={(e) => setData('tanggal_mulai', e ? formatDate(e, 'yyyy-MM-dd') : '')}
+                    label="Tanggal"
+                    error={errors?.tanggal}
+                    onChange={(e) => setData('tanggal', e ? formatDate(e, 'yyyy-MM-dd') : '')}
                 />
             </div>
             <div className="px-4 pb-7">
                 <AppTextArea
                     className="min-h-50 px-3 py-4"
-                    defaultValue={dataTransaksi?.keterangan || ''}
+                    value={data?.keterangan || ''}
                     onChange={(e) => setData('keterangan', e.target.value)}
                     placeholder="Masukkan keterangan transaksi . . ."
                     label="Keterangan Transaksi"
+                    error={errors?.keterangan}
                 />
             </div>
         </AppLayout>

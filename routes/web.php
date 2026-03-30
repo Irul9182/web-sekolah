@@ -32,9 +32,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/transaction', [TransaksiController::class, 'index'])->name('transaction.index');
     Route::get('/transaction/create', [TransaksiController::class, 'create'])->name('transaction.create');
     Route::get('/transaction/search-nama-proyek', [TransaksiController::class, 'search'])->name('transaction.search-nama-proyek');
+    Route::get('/transaction/used-kategori', [TransaksiController::class, 'usedKategori'])
+        ->name('transaction.used-kategori');
+    Route::post('/transaction', [TransaksiController::class, 'store'])->name('transaction.store');
 
-
-
+    Route::get('/transaction/{id}/edit', [TransaksiController::class, 'edit'])->name('transaction.edit');
+    Route::put('/transaction/{transaksi}', [TransaksiController::class, 'update'])
+        ->name('transaction.update');
     Route::get('/transaction/{id}/detail', [TransaksiController::class, 'show'])->name('transaction.show');
     Route::delete('/transaction/{id}', [TransaksiController::class, 'destroy'])->name('transaction.destroy');
 });

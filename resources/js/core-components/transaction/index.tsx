@@ -1,5 +1,6 @@
 import DetailItem from '@/components/app-detail-item';
 import AppDropdownMenu from '@/components/app-dopdown-menu';
+import AppSearchInput from '@/components/app-input-search';
 import { Column, DataTable } from '@/components/app-table';
 import { DropdownMenuItem } from '@/components/ui-shadcn/dropdown-menu';
 import { Modal, ModalBody, ModalClose, ModalContent, ModalFooter, ModalHeader, ModalTitle } from '@/components/ui-shadcn/modal';
@@ -14,7 +15,7 @@ import { TransaksiProps } from '@/types/transaction.type';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { Edit, EllipsisVertical, Eye, Plus, Trash } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -25,27 +26,33 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 interface PageProps extends InertiaPageProps {
     list_transaksi?: PaginatedResponse<TransaksiProps>;
+    filters: {
+        search: string;
+        per_page: number;
+    };
 }
 
 type ModalType = 'detail' | 'delete';
-const TransactionIndex = () => {
+const TransactionIndex = ({ filters, list_transaksi }: PageProps) => {
     const { props } = usePage<PageProps>();
-    const { list_transaksi } = props;
+    const { errors } = props;
     const [open, setIsOpen] = useState<boolean>(false);
     const [modalType, setModalType] = useState<ModalType | null>(null);
     const [selectedTransaksiId, setSelectedTransaksiId] = useState<string | null>(null);
     const [selectedDataTransaksi, setSelectedDataTransaksi] = useState<TransaksiProps | null>(null);
     const currentPage = new URLSearchParams(window.location.search).get('page') ?? '1';
     const currentPerPage = new URLSearchParams(window.location.search).get('per_page') ?? '10';
+    const [search, setSearch] = useState(filters.search ?? '');
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     console.log('Transaksi response: ', list_transaksi);
     const form = useForm();
     const { processing } = form;
     // const { processing } = form;
     const isMobile = useIsMobile();
     useEffect(() => {
-        const findedDataProyek = list_transaksi?.data?.find((item) => item.transaksi_id === selectedTransaksiId);
+        const findedDataTransaksi = list_transaksi?.data?.find((item) => item.transaksi_id === selectedTransaksiId);
 
-        setSelectedDataTransaksi(findedDataProyek as TransaksiProps);
+        setSelectedDataTransaksi(findedDataTransaksi as TransaksiProps);
     }, [selectedTransaksiId]);
 
     const OpenModal = (transaksi_id: string, modalType: ModalType | null) => {
@@ -62,7 +69,18 @@ const TransactionIndex = () => {
             setIsOpen(true);
         }
     };
+    const handleSearch = (val: string) => {
+        setSearch(val);
 
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+            router.get(
+                route('transaction.index'),
+                { ...route().params, search: val, per_page: filters.per_page },
+                { preserveState: true, replace: true },
+            );
+        }, 400);
+    };
     const closeModal = () => {
         setSelectedTransaksiId(null);
         setSelectedDataTransaksi(null);
@@ -91,6 +109,14 @@ const TransactionIndex = () => {
 
             onFinish: () => closeModal(),
         });
+    };
+
+    const handlePageChange = (page: number) => {
+        router.get('/transaction', { ...route().params, page, per_page: currentPerPage }, { preserveState: true, preserveScroll: true });
+    };
+
+    const handlePageSizeChange = (perPage: number) => {
+        router.get('/transaction', { ...route().params, page: 1, per_page: perPage }, { preserveState: true, preserveScroll: true });
     };
     const columnsTransaksi: Column<TransaksiProps>[] = [
         {
@@ -148,10 +174,8 @@ const TransactionIndex = () => {
             label: 'Jumlah',
             sortable: true,
             render: (value, record: TransaksiProps) => {
-                const isPemasukan = record.tipe === 'pemasukan';
                 return (
                     <span className={cn('font-semibold', 'text-blue-500')}>
-                        {isPemasukan ? '+' : '-'}
                         {new Intl.NumberFormat('id-ID', {
                             style: 'currency',
                             currency: 'IDR',
@@ -202,7 +226,7 @@ const TransactionIndex = () => {
 
                                     {/* Ubah */}
                                     <DropdownMenuItem
-                                        onClick={() => router?.visit(`/transaksi/${record?.transaksi_id}/edit`)}
+                                        onClick={() => router?.visit(`/transaction/${record?.transaksi_id}/edit`)}
                                         className={cn('group hover:bg-muted! flex cursor-pointer items-center justify-between p-2')}
                                     >
                                         <p className={cn('text-foreground! group-hover:text-chart-2!')}>Ubah</p>
@@ -231,7 +255,15 @@ const TransactionIndex = () => {
             <Head title="Transaksi" />
 
             <div className="p-4">
-                <div className="flex w-full justify-end">
+                <div className="flex w-full justify-between">
+                    <AppSearchInput
+                        placeholder="Cari transaksi dengan nama proyek . . ."
+                        value={search}
+                        className="w-84!"
+                        onChange={(e) => handleSearch(e.target.value)}
+                        clearable={false}
+                    />
+
                     <Button
                         className="cursor-pointer"
                         // disabled={processing}
@@ -247,6 +279,7 @@ const TransactionIndex = () => {
                     emptyMessage="Tidak ada proyek saat ini"
                     data={list_transaksi?.data as TransaksiProps[]}
                     columns={columnsTransaksi}
+                    key={list_transaksi?.data?.length}
                     pagination={{
                         current_page: list_transaksi?.current_page as number,
                         last_page: list_transaksi?.last_page as number,
@@ -255,8 +288,8 @@ const TransactionIndex = () => {
                         from: list_transaksi?.from as number,
                         to: list_transaksi?.to as number,
                     }}
-                    // onPageChange={handlePageChange}
-                    // onPageSizeChange={handlePageSizeChange}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
                 />
             </div>
             <Modal open={open} key={selectedTransaksiId}>

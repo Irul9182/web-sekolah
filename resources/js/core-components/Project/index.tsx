@@ -1,10 +1,10 @@
 import AppDropdownMenu from '@/components/app-dopdown-menu';
+import AppSearchInput from '@/components/app-input-search';
 import AppSelect from '@/components/app-select';
 import { Column, DataTable } from '@/components/app-table';
 import { DropdownMenuItem } from '@/components/ui-shadcn/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Modal, ModalBody, ModalClose, ModalContent, ModalFooter, ModalHeader, ModalTitle } from '@/components/ui/modal';
-import { useAppearance } from '@/hooks/use-appearance';
 import { useIsMobile } from '@/hooks/use-mobile';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
@@ -13,7 +13,7 @@ import { PaginatedResponse } from '@/types/laravel.type';
 import { initialProyek, ProyekProps, StatusProyek, TipeProyek } from '@/types/project.type';
 import { Head, router, useForm } from '@inertiajs/react';
 import { Edit, EllipsisVertical, Eye, Plus, Trash } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -25,11 +25,14 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 interface PropTypes {
     proyeks: PaginatedResponse<ProyekProps>;
+    filters: {
+        search: string;
+        per_page: number;
+    };
 }
 
-const ProjectIndex = ({ proyeks }: PropTypes) => {
+const ProjectIndex = ({ proyeks, filters }: PropTypes) => {
     const [open, setIsOpen] = useState<boolean>(false);
-    const { appearance } = useAppearance();
     // const [optionStatus, setOptionStatus] = useState<StatusProyek | null>(null);
     const [selectedProyekId, setSelectedProyekId] = useState<string | null>(null);
     const [selectedDataProyek, setSelectedDataProyek] = useState<ProyekProps | null>(null);
@@ -37,9 +40,10 @@ const ProjectIndex = ({ proyeks }: PropTypes) => {
     // const [loading, setLoading] = useState<boolean>(false);
     const form = useForm<ProyekProps>(initialProyek);
     const { processing } = form;
-    console.log('Data proyek: ', proyeks);
     const currentPage = new URLSearchParams(window.location.search).get('page') ?? '1';
     const currentPerPage = new URLSearchParams(window.location.search).get('per_page') ?? '10';
+    const [search, setSearch] = useState(filters?.search ?? '');
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     useEffect(() => {
         const findedDataProyek = proyeks?.data?.find((item) => item.proyek_id === selectedProyekId);
 
@@ -57,12 +61,26 @@ const ProjectIndex = ({ proyeks }: PropTypes) => {
         setSelectedDataProyek(null);
         setIsOpen(false);
     };
+    const handleSearch = (val: string) => {
+        setSearch(val);
 
-    const handleClearState = () => {
-        setSelectedProyekId(null);
-        setSelectedDataProyek(null);
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+
+        debounceRef.current = setTimeout(() => {
+            router.get(
+                route('project.index'),
+                {
+                    ...route().params,
+                    search: val,
+                    page: 1,
+                },
+                {
+                    preserveState: true,
+                    replace: true,
+                },
+            );
+        }, 400);
     };
-
     const handleUpdateOptionStatus = (proyek_id: string, status: StatusProyek, nama_proyek: string) => {
         if (!proyek_id) return;
         const currentPage = new URLSearchParams(window.location.search).get('page') ?? '1';
@@ -102,11 +120,11 @@ const ProjectIndex = ({ proyeks }: PropTypes) => {
     };
 
     const handlePageChange = (page: number) => {
-        router.get('/project', { page, per_page: currentPerPage }, { preserveState: true, preserveScroll: true });
+        router.get('/project', { ...route().params, page, per_page: currentPerPage }, { preserveState: true, preserveScroll: true });
     };
 
     const handlePageSizeChange = (perPage: number) => {
-        router.get('/project', { page: 1, per_page: perPage }, { preserveState: true, preserveScroll: true });
+        router.get('/project', { ...route().params, page: 1, per_page: perPage }, { preserveState: true, preserveScroll: true });
     };
     const columnsProyek: Column<ProyekProps>[] = [
         {
@@ -232,7 +250,14 @@ const ProjectIndex = ({ proyeks }: PropTypes) => {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Proyek" />
             <div className="p-4">
-                <div className="flex w-full justify-end">
+                <div className="flex w-full justify-between">
+                    <AppSearchInput
+                        placeholder="Cari proyek dengan nama . . ."
+                        value={search}
+                        className="w-84!"
+                        onChange={(e) => handleSearch(e.target.value)}
+                        clearable={false}
+                    />
                     <Button
                         className="cursor-pointer"
                         disabled={processing}

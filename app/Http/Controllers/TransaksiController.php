@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use Illuminate\Http\RedirectResponse;
 use App\Models\Proyek;
 use App\Services\FinanceService;
+use Illuminate\Validation\Rule;
 
 class TransaksiController extends Controller
 {
@@ -23,32 +24,27 @@ class TransaksiController extends Controller
      */
     public function index(Request $request)
     {
-        //
-        $search = $request->query('search');
+        $search  = $request->query('search', '');
+        $perPage = $request->query('per_page', 10);
 
-        $query = Transaksi::select([
-            'kategori',
-            'jumlah',
-            'tanggal',
-            "persen",
-            'tanggal_mulai',
-            // 'keterangan',
-        ]);
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nama_proyek', 'like', "%$search%");
-            });
-        }
-        $transaksi = Transaksi::with('proyek')
-            ->paginate($request->input('per_page', 10));
-
+        $transaksis = Transaksi::query()->latest()
+            ->with('proyek:proyek_id,nama_proyek,pagu_total,tanggal_mulai')
+            ->when($search, function ($q) use ($search) {
+                // search berdasarkan nama proyek
+                $q->whereHas('proyek', function ($q) use ($search) {
+                    $q->where('nama_proyek', 'like', "%{$search}%");
+                });
+            })
+            ->latest('tanggal')
+            ->paginate($perPage)
+            ->withQueryString();
 
         return Inertia::render('transaction/index', [
-            'list_transaksi' => $transaksi,
-            'filters' => [
-                'search' => $search
-            ]
+            'list_transaksi' => $transaksis,
+            'filters'        => [
+                'search'   => $search,
+                'per_page' => $perPage,
+            ],
         ]);
     }
 
@@ -65,13 +61,31 @@ class TransaksiController extends Controller
         return response()->json($proyeks);
     }
 
+    // usedKategori
+    public function usedKategori(Request $request)
+    {
+        $proyek = Proyek::findOrFail($request->query('proyek_id'));
+
+        $used = $proyek->transaksi()
+            ->pluck('kategori')
+            ->toArray();
+
+        return response()->json($used);
+    }
+
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Proyek $proyek)
     {
-        //
-        return Inertia::render('transaction/create/index');
+        $usedKategori = $proyek->transaksi()
+            ->pluck('kategori')
+            ->toArray();
+
+        return Inertia::render('transaction/create/index', [
+            'proyek'       => $proyek,
+            'usedKategori' => $usedKategori,
+        ]);
     }
 
     /**
@@ -79,7 +93,73 @@ class TransaksiController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'proyek_id' => [
+                'required',
+                'string',
+                Rule::exists('proyek', 'proyek_id'),
+            ],
+            'kategori' => [
+                'required',
+                'string',
+                Rule::in(Transaksi::KATEGORI),
+                // pastikan kategori belum dipakai di proyek ini
+                Rule::unique('transaksi')
+                    ->where('proyek_id', $request->proyek_id),
+            ],
+            'tanggal'    => ['required', 'date'],
+            'persen'     => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'jumlah'     => ['nullable', 'numeric', 'min:0'],
+            'keterangan' => ['nullable', 'string', 'max:500'],
+        ], [
+            'proyek_id.required'  => 'Proyek wajib dipilih.',
+            'proyek_id.exists'    => 'Proyek tidak ditemukan.',
+            'kategori.required'   => 'Kategori wajib dipilih.',
+            'kategori.in'         => 'Kategori tidak valid.',
+            'kategori.unique'     => 'Kategori ini sudah digunakan pada proyek tersebut.',
+            'tanggal.required'    => 'Tanggal wajib diisi.',
+            'tanggal.date'        => 'Format tanggal tidak valid.',
+            'persen.numeric'      => 'Persen harus berupa angka.',
+            'persen.min'          => 'Persen tidak boleh kurang dari 0.',
+            'persen.max'          => 'Persen tidak boleh lebih dari 100.',
+            'jumlah.numeric'      => 'Jumlah harus berupa angka.',
+            'jumlah.min'          => 'Jumlah tidak boleh kurang dari 0.',
+            'keterangan.max'      => 'Keterangan maksimal 500 karakter.',
+        ]);
+
+        // pastikan salah satu diisi
+        if (empty($validated['persen']) && empty($validated['jumlah'])) {
+            return back()->withErrors([
+                'jumlah' => 'Persen atau jumlah wajib diisi salah satu.',
+            ])->withInput();
+        }
+
+        // hitung jumlah dari persen jika jumlah tidak diisi
+        if (!empty($validated['persen']) && empty($validated['jumlah'])) {
+            $proyek = Proyek::find($validated['proyek_id']);
+            $validated['jumlah'] = $proyek->pagu_total * ($validated['persen'] / 100);
+        }
+
+        // hitung persen dari jumlah jika persen tidak diisi
+        if (!empty($validated['jumlah']) && empty($validated['persen'])) {
+            $proyek = Proyek::find($validated['proyek_id']);
+            $validated['persen'] = $proyek->pagu_total > 0
+                ? ($validated['jumlah'] / $proyek->pagu_total) * 100
+                : 0;
+        }
+
+        Transaksi::create([
+            'proyek_id'    => $validated['proyek_id'],
+            'kategori'     => $validated['kategori'],
+            'tanggal'      => $validated['tanggal'],
+            'persen'       => $validated['persen'],
+            'jumlah'       => $validated['jumlah'],
+            'keterangan'   => $validated['keterangan'] ?? null,
+        ]);
+
+        return redirect()
+            ->route('transaction.index')
+            ->with('success', 'Transaksi berhasil ditambahkan.');
     }
 
     /**
@@ -99,17 +179,108 @@ class TransaksiController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(transaksi $transaksi)
+    public function edit($transaksi_id)
     {
-        //
+        $transaksi = Transaksi::findOrFail($transaksi_id);
+
+        $proyek = Proyek::findOrFail($transaksi->proyek_id);
+
+        $usedKategori = $proyek->transaksi()
+            ->where('transaksi_id', '!=', $transaksi_id)
+            ->pluck('kategori')
+            ->toArray();
+
+        return Inertia::render('transaction/create/index', [
+            'transaksi'    => $transaksi,
+            'proyek'       => $proyek,
+            'usedKategori'   => $proyek->transaksi()
+                ->where('transaksi_id', '!=', $transaksi_id)
+                ->pluck('kategori')
+                ->toArray(),
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, transaksi $transaksi)
+    public function update(Request $request, Transaksi $transaksi)
     {
-        //
+        logger($request->all());
+        $validated = $request->validate([
+            'proyek_id' => [
+                'required',
+                'string',
+                Rule::exists('proyek', 'proyek_id'),
+            ],
+            'kategori' => [
+                'required',
+                'string',
+                Rule::in(Transaksi::KATEGORI),
+                // unique tapi exclude transaksi yang sedang diedit
+                Rule::unique('transaksi')
+                    ->where('proyek_id', $request->proyek_id)
+                    ->ignore($transaksi->transaksi_id, 'transaksi_id'),
+            ],
+            'tanggal'    => ['required', 'date'],
+            'persen'     => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'jumlah'     => ['nullable', 'numeric', 'min:0'],
+            'keterangan' => ['nullable', 'string', 'max:500'],
+        ], [
+            'proyek_id.required'  => 'Proyek wajib dipilih.',
+            'proyek_id.exists'    => 'Proyek tidak ditemukan.',
+            'kategori.required'   => 'Kategori wajib dipilih.',
+            'kategori.in'         => 'Kategori tidak valid.',
+            'kategori.unique'     => 'Kategori ini sudah digunakan pada proyek tersebut.',
+            'tanggal.required'    => 'Tanggal wajib diisi.',
+            'tanggal.date'        => 'Format tanggal tidak valid.',
+            'persen.numeric'      => 'Persen harus berupa angka.',
+            'persen.min'          => 'Persen tidak boleh kurang dari 0.',
+            'persen.max'          => 'Persen tidak boleh lebih dari 100.',
+            'jumlah.numeric'      => 'Jumlah harus berupa angka.',
+            'jumlah.min'          => 'Jumlah tidak boleh kurang dari 0.',
+            'keterangan.max'      => 'Keterangan maksimal 500 karakter.',
+        ]);
+
+        $proyek = Proyek::find($validated['proyek_id']);
+        // pastikan salah satu diisi
+        // selalu kalkulasi keduanya berdasarkan yang diisi
+        if (!empty($validated['persen'])) {
+            $validated['jumlah'] = $proyek->pagu_total * ($validated['persen'] / 100);
+        } elseif (!empty($validated['jumlah'])) {
+            $validated['persen'] = $proyek->pagu_total > 0
+                ? ($validated['jumlah'] / $proyek->pagu_total) * 100
+                : 0;
+        } else {
+            return back()->withErrors([
+                'jumlah' => 'Persen atau jumlah wajib diisi salah satu.',
+            ])->withInput();
+        }
+
+
+        // hitung jumlah dari persen jika jumlah tidak diisi
+        if (!empty($validated['persen']) && empty($validated['jumlah'])) {
+            $validated['jumlah'] = $proyek->pagu_total * ($validated['persen'] / 100);
+        }
+
+        // hitung persen dari jumlah jika persen tidak diisi
+        if (!empty($validated['jumlah']) && empty($validated['persen'])) {
+            $validated['persen'] = $proyek->pagu_total > 0
+                ? ($validated['jumlah'] / $proyek->pagu_total) * 100
+                : 0;
+        }
+
+        $transaksi->update([
+            'proyek_id'  => $validated['proyek_id'],
+            'kategori'   => $validated['kategori'],
+            'tanggal'    => $validated['tanggal'],
+            'persen'     => $validated['persen'],
+            'jumlah'     => $validated['jumlah'],
+            'keterangan' => $validated['keterangan'] ?? null,
+        ]);
+
+        return redirect()
+            ->route('transaction.index')
+            ->with('success', 'Transaksi berhasil diperbarui.');
     }
 
     /**

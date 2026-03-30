@@ -4,9 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 
 class Transaksi extends Model
 {
+    use HasUlids;
     protected $table = 'transaksi';
     protected $primaryKey = 'transaksi_id';
     protected $keyType = 'string';
@@ -50,7 +52,10 @@ class Transaksi extends Model
         return $this->belongsTo(Proyek::class, 'proyek_id', 'proyek_id');
     }
 
-
+    public function getRouteKeyName(): string
+    {
+        return 'transaksi_id';
+    }
 
     // Scope filter per proyek
     // public function scopeForProyek($query, string $proyekId)

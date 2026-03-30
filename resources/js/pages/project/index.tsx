@@ -4,10 +4,14 @@ import { ProyekProps } from '@/types/project.type';
 
 interface PropTypes {
     proyeks: PaginatedResponse<ProyekProps>;
+    filters: {
+        search: string;
+        per_page: number;
+    };
 }
 
-const ProjectPage = ({ proyeks }: PropTypes) => {
-    return <ProjectIndex proyeks={proyeks} />;
+const ProjectPage = ({ proyeks, filters }: PropTypes) => {
+    return <ProjectIndex proyeks={proyeks} filters={filters} />;
 };
 
 export default ProjectPage;

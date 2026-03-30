@@ -6,9 +6,10 @@ interface UseInertiaSearchProps {
     url: string;
     mapFn: (item: any) => SelectOption;
     debounce?: number;
+    onResult?: (results: SelectOption[]) => void;
 }
 
-export function useInertiaSearch({ url, mapFn, debounce: debounceMs = 400 }: UseInertiaSearchProps) {
+export function useInertiaSearch({ url, mapFn, debounce: debounceMs = 400, onResult }: UseInertiaSearchProps) {
     const [options, setOptions] = React.useState<SelectOption[]>([]);
     const [loading, setLoading] = React.useState(false);
     const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -45,6 +46,8 @@ export function useInertiaSearch({ url, mapFn, debounce: debounceMs = 400 }: Use
                     if (!res.ok) throw new Error('Request failed');
                     const data = await res.json();
                     setOptions(data.map(mapFn));
+                    const mapped = data.map(mapFn);
+                    onResult?.(mapped);
                 } catch (err: any) {
                     if (err.name !== 'AbortError') setOptions([]);
                 } finally {

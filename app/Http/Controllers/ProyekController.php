@@ -24,6 +24,7 @@ class ProyekController extends Controller
     public function index(Request $request)
     {
         $search = $request->query('search');
+
         $query = Proyek::select([
             'proyek_id',
             'nama_proyek',
@@ -40,7 +41,9 @@ class ProyekController extends Controller
                 $q->where('nama_proyek', 'like', "%$search%");
             });
         }
-        $proyeks = Proyek::paginate($request->input('per_page', 10));
+        $proyeks = $query
+            ->paginate($request->input('per_page', 10))
+            ->withQueryString();
 
 
 

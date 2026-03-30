@@ -1,6 +1,15 @@
 import TransactionIndex from '@/core-components/transaction';
-
-const TransactionPage = () => {
-    return <TransactionIndex />;
+import { PaginatedResponse } from '@/types/laravel.type';
+import { TransaksiProps } from '@/types/transaction.type';
+import { PageProps as InertiaPageProps } from '@inertiajs/core';
+interface PageProps extends InertiaPageProps {
+    list_transaksi?: PaginatedResponse<TransaksiProps>;
+    filters: {
+        search: string;
+        per_page: number;
+    };
+}
+const TransactionPage = ({ filters, list_transaksi }: PageProps) => {
+    return <TransactionIndex filters={filters} list_transaksi={list_transaksi} />;
 };
 export default TransactionPage;

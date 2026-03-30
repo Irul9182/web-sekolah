@@ -2,7 +2,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import * as SelectPrimitive from '@radix-ui/react-select';
+import { Info } from 'lucide-react';
 import * as React from 'react';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui-shadcn/tooltip';
 
 export interface SelectOption {
     label: string;
@@ -138,6 +140,7 @@ interface AppSelectProps extends React.ComponentPropsWithoutRef<typeof SelectPri
     options: SelectOptions;
     label?: string;
     hint?: string;
+    tooltip?: string;
     /**
      * @deprecated Use `tone="error"` + `hint` instead.
      * Still supported for backward compatibility — when provided it forces tone="error".
@@ -152,6 +155,7 @@ interface AppSelectProps extends React.ComponentPropsWithoutRef<typeof SelectPri
 const AppSelect = ({
     options,
     label,
+    tooltip,
     hint,
     error,
     placeholder = 'Pilih opsi...',
@@ -169,21 +173,36 @@ const AppSelect = ({
 
     return (
         <div className="flex flex-col gap-1.5" style={toneStyles[tone]}>
-            {label && (
-                <Label
-                    htmlFor={id}
-                    className={cn('ml-0.5 text-sm font-medium transition-colors', disabled && 'opacity-50')}
-                    style={{ color: 'var(--tone-label)' }}
-                >
-                    {label}
-                    {required && (
-                        <span className="ml-1" style={{ color: 'var(--destructive)' }}>
-                            *
-                        </span>
-                    )}
-                </Label>
-            )}
-
+            <div className="flex items-center gap-2">
+                {label && (
+                    <Label
+                        htmlFor={id}
+                        className={cn('ml-0.5 text-sm font-medium transition-colors', disabled && 'opacity-50')}
+                        style={{ color: 'var(--tone-label)' }}
+                    >
+                        {label}
+                        {required && (
+                            <span className="ml-1" style={{ color: 'var(--destructive)' }}>
+                                *
+                            </span>
+                        )}
+                    </Label>
+                )}
+                {tooltip && (
+                    <>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div className="animate-bounce cursor-pointer rounded-full">
+                                    <Info size={17} />
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>{tooltip}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </>
+                )}
+            </div>
             <Select disabled={disabled} required={required} {...props}>
                 <SelectTrigger
                     id={id}
