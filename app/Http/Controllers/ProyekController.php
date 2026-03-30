@@ -42,6 +42,7 @@ class ProyekController extends Controller
             });
         }
         $proyeks = $query
+            ->latest()
             ->paginate($request->input('per_page', 10))
             ->withQueryString();
 

@@ -16,43 +16,50 @@ class FinanceService
     {
         $pagu = (float) $proyek->pagu_total;
 
-        // 1. Potong pajak dulu
+        // Pajak tetap dari proyek
         $nilai_pajak        = $pagu * ($proyek->pajak_persen / 100);
         $dana_setelah_pajak = $pagu - $nilai_pajak;
 
-        // 2. Hitung komponen dari dana setelah pajak
-        $uang_bahan         = $dana_setelah_pajak * ($proyek->uang_bahan_persen / 100);
-        $jasa_tukang        = $dana_setelah_pajak * ($proyek->jasa_tukang_persen / 100);
-        $biaya_tak_terduga  = $dana_setelah_pajak * ($proyek->biaya_tak_terduga_persen / 100);
+        $kategoriTotals = Transaksi::where('proyek_id', $proyek->proyek_id)
+            ->selectRaw("
+            SUM(CASE WHEN kategori = 'material' THEN jumlah ELSE 0 END) as material,
+            SUM(CASE WHEN kategori = 'jasa_tukang' THEN jumlah ELSE 0 END) as jasa_tukang,
+            SUM(CASE WHEN kategori = 'biaya_tak_terduga' THEN jumlah ELSE 0 END) as biaya_tak_terduga,
+            SUM(CASE WHEN kategori = 'mandor' THEN jumlah ELSE 0 END) as mandor,
+            SUM(CASE WHEN kategori = 'staff_perpajakan' THEN jumlah ELSE 0 END) as staff_perpajakan,
+            SUM(CASE WHEN kategori = 'staff_entry_data' THEN jumlah ELSE 0 END) as staff_entry_data
+        ")
+            ->first();
 
-        // 3. Mandor = 1.5% dari jasa tukang
-        $biaya_mandor       = $jasa_tukang * 0.015;
+        $material        = (float) $kategoriTotals->material;
+        $jasa_tukang       = (float) $kategoriTotals->jasa_tukang;
+        $biaya_tak_terduga = (float) $kategoriTotals->biaya_tak_terduga;
+        $mandor      = (float) $kategoriTotals->mandor;
 
-        // 4. Biaya staff (fixed, bukan persentase)
-        $biaya_staff        = (float) $proyek->biaya_staff_perpajakan
-            + (float) $proyek->biaya_staff_entry_data;
+        $biaya_staff =
+            (float) $kategoriTotals->staff_perpajakan +
+            (float) $kategoriTotals->staff_entry_data;
 
-        // 5. Total pengeluaran yang dianggarkan
-        $total_pengeluaran  = $jasa_tukang
-            + $uang_bahan
-            + $biaya_tak_terduga
-            + $biaya_mandor
-            + $biaya_staff;
+        $total_pengeluaran =
+            $material +
+            $jasa_tukang +
+            $biaya_tak_terduga +
+            $mandor +
+            $biaya_staff;
 
-        // 6. Netto = dana setelah pajak - semua pengeluaran
-        $netto              = $dana_setelah_pajak - $total_pengeluaran;
+        $netto = $dana_setelah_pajak - $total_pengeluaran;
 
         return [
-            'pagu_total'            => $pagu,
-            'nilai_pajak'           => $nilai_pajak,
-            'dana_setelah_pajak'    => $dana_setelah_pajak,
-            'uang_bahan'            => $uang_bahan,
-            'jasa_tukang'           => $jasa_tukang,
-            'biaya_tak_terduga'     => $biaya_tak_terduga,
-            'biaya_mandor'          => $biaya_mandor,
-            'biaya_staff'           => $biaya_staff,
-            'total_pengeluaran'     => $total_pengeluaran,
-            'netto'                 => $netto,
+            'pagu_total'         => $pagu,
+            'nilai_pajak'        => $nilai_pajak,
+            'dana_setelah_pajak' => $dana_setelah_pajak,
+            'material'         => $material,
+            'jasa_tukang'        => $jasa_tukang,
+            'biaya_tak_terduga'  => $biaya_tak_terduga,
+            'mandor'             => $mandor,
+            'biaya_staff'        => $biaya_staff,
+            'total_pengeluaran'  => $total_pengeluaran,
+            'netto'              => $netto,
         ];
     }
 
@@ -109,37 +116,37 @@ class FinanceService
             'jasa_tukang' => [
                 'rencana' => $rencana['jasa_tukang'],
                 'aktual'  => $aktual['jasa_tukang']['jumlah'] ?? 0,
-                'items'   => $aktual['jasa_tukang']['items'] ?? [],
+                'items' => $aktual['jasa_tukang']['items'][0] ?? null,
                 'selisih' => $rencana['jasa_tukang'] - ($aktual['jasa_tukang']['jumlah'] ?? 0),
             ],
-            'uang_bahan' => [
-                'rencana' => $rencana['uang_bahan'],
+            'material' => [
+                'rencana' => $rencana['material'],
                 'aktual'  => $aktual['material']['jumlah'] ?? 0,
-                'items'   => $aktual['material']['items'] ?? [],
-                'selisih' => $rencana['uang_bahan'] - ($aktual['material']['jumlah'] ?? 0),
+                'items' => $aktual['material']['items'][0] ?? null,
+                'selisih' => $rencana['material'] - ($aktual['material']['jumlah'] ?? 0),
             ],
             'mandor' => [
-                'rencana' => $rencana['biaya_mandor'],
+                'rencana' => $rencana['mandor'],
                 'aktual'  => $aktual['mandor']['jumlah'] ?? 0,
-                'items'   => $aktual['mandor']['items'] ?? [],
-                'selisih' => $rencana['biaya_mandor'] - ($aktual['mandor']['jumlah'] ?? 0),
+                'items' => $aktual['mandor']['items'][0] ?? null,
+                'selisih' => $rencana['mandor'] - ($aktual['mandor']['jumlah'] ?? 0),
             ],
             'staff_perpajakan' => [
                 'rencana' => (float) $proyek->biaya_staff_perpajakan,
                 'aktual'  => $aktual['staff_perpajakan']['jumlah'] ?? 0,
-                'items'   => $aktual['staff_perpajakan']['items'] ?? [],
+                'items' => $aktual['staff_perpajakan']['items'][0] ?? null,
                 'selisih' => (float) $proyek->biaya_staff_perpajakan - ($aktual['staff_perpajakan']['jumlah'] ?? 0),
             ],
             'staff_entry_data' => [
                 'rencana' => (float) $proyek->biaya_staff_entry_data,
                 'aktual'  => $aktual['staff_entry_data']['jumlah'] ?? 0,
-                'items'   => $aktual['staff_entry_data']['items'] ?? [],
+                'items' => $aktual['staff_entry_data']['items'][0] ?? null,
                 'selisih' => (float) $proyek->biaya_staff_entry_data - ($aktual['staff_entry_data']['jumlah'] ?? 0),
             ],
             'biaya_tak_terduga' => [
                 'rencana' => $rencana['biaya_tak_terduga'],
                 'aktual'  => $aktual['biaya_tak_terduga']['jumlah'] ?? 0,
-                'items'   => $aktual['biaya_tak_terduga']['items'] ?? [],
+                'items' => $aktual['biaya_tak_terduga']['items'][0] ?? null,
                 'selisih' => $rencana['biaya_tak_terduga'] - ($aktual['biaya_tak_terduga']['jumlah'] ?? 0),
             ],
         ];

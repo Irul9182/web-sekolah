@@ -6,6 +6,7 @@ import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { AnggaranProps } from '@/types/anggaran.type';
 import { ProyekProps } from '@/types/project.type';
+import { RealisasiProps } from '@/types/realisasi.type';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Head, router, usePage } from '@inertiajs/react';
 import { saveAs } from 'file-saver';
@@ -15,12 +16,14 @@ import * as XLSX from 'xlsx';
 interface PageProps extends InertiaPageProps {
     proyek?: ProyekProps;
     anggaran?: AnggaranProps;
+    realisasi?: RealisasiProps;
 }
 const ProjectDetailIndex = () => {
     const { props } = usePage<PageProps>();
     console.log('Props:', props);
     const proyek = props?.proyek;
     const anggaran = props?.anggaran;
+    const realisasi = props?.realisasi;
 
     console.log('Proyek: ', proyek);
     const projectId = props?.proyek_id ?? null;
@@ -112,7 +115,7 @@ const ProjectDetailIndex = () => {
                     <DetailItem label="Tanggal Selesai" value={formatDate(proyek?.tanggal_selesai as string)} />
                     <DetailItem label="Pajak (%)" value={formatPercent(proyek?.pajak_persen)} />
                     <DetailItem label="Total Dana Setelah Pajak" value={formatCurrency(anggaran?.dana_setelah_pajak || '-')} />
-                    <DetailItem label="Total Netto" value={formatCurrency(anggaran?.netto || '-')} />
+
                     {/* <DetailItem label="Uang Bahan (%)" value={formatPercent(proyek?.uang_bahan_persen)} />
                     <DetailItem label="Jasa Tukang (%)" value={formatPercent(proyek?.jasa_tukang_persen)} />
                     <DetailItem label="Biaya Tak Terduga (%)" value={formatPercent(proyek?.biaya_tak_terduga_persen)} />
@@ -120,6 +123,27 @@ const ProjectDetailIndex = () => {
                     <DetailItem label="Biaya Staff Entry Data" value={formatCurrency(proyek?.biaya_staff_entry_data)} /> */}
                     <DetailItem label="Nama Klien" value={proyek?.nama_klien} />
                     <DetailItem label="Deskripsi Proyek" value={proyek?.deskripsi_proyek ?? '-'} />
+                </CardContent>
+            </Card>
+            <Card className="mx-4 mt-2 mb-2">
+                <CardHeader>
+                    <CardTitle className="xl font-bold">Transaksi</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y">
+                    <DetailItem label="Jasa Tukang" value={formatPercent(realisasi?.jasa_tukang?.items?.persen) || '-'} />
+                    <DetailItem label="Biaya Mandor" value={formatPercent(realisasi?.mandor?.items?.persen) || '-'} />
+                    <DetailItem label="Material" value={formatPercent(realisasi?.material?.items?.persen) || '-'} />
+                    <DetailItem label="Staff Entry Data" value={formatCurrency(realisasi?.staff_entry_data?.aktual) || '-'} />
+                    <DetailItem label="Staff Perpajakan" value={formatCurrency(realisasi?.staff_perpajakan?.aktual) || '-'} />
+                    <DetailItem label="Biaya Tak Terduga" value={formatPercent(realisasi?.biaya_tak_terduga?.items?.persen) || '-'} />
+                </CardContent>
+            </Card>
+            <Card className="mx-4 mt-2 mb-4">
+                <CardHeader>
+                    <CardTitle className="xl font-bold">Total Netto</CardTitle>
+                </CardHeader>
+                <CardContent className="flex items-center justify-center">
+                    <h4 className="text-2xl font-bold">{formatCurrency(anggaran?.netto || '')}</h4>
                 </CardContent>
             </Card>
         </AppLayout>

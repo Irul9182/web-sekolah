@@ -218,7 +218,7 @@ const ProjectCreateIndex = () => {
                     placeholder="Masukkan pajak . . ."
                     label="Pajak (%)"
                 />
-                <AppInput
+                {/* <AppInput
                     required
                     type="number"
                     defaultValue={dataProyek?.jasa_tukang_persen || 0}
@@ -251,7 +251,7 @@ const ProjectCreateIndex = () => {
                     onChange={(e) => setData('uang_bahan_persen', parseFloat(e.target.value))}
                     placeholder="Masukkan uang bahan . . ."
                     label="Uang Bahan (%)"
-                />
+                /> */}
                 <AppInput
                     required
                     defaultValue={dataProyek?.nama_klien || ''}
@@ -259,7 +259,7 @@ const ProjectCreateIndex = () => {
                     placeholder="Masukkan nama client . . ."
                     label="Nama Client"
                 />
-                <AppInput
+                {/* <AppInput
                     min={0}
                     max={100}
                     required
@@ -268,7 +268,7 @@ const ProjectCreateIndex = () => {
                     onChange={(e) => setData('biaya_tak_terduga_persen', parseFloat(e.target.value))}
                     placeholder="Masukkan nama biaya tak terduga . . ."
                     label="Biaya tak terduga (%)"
-                />
+                /> */}
             </div>
             <div className="px-4 pb-7">
                 <AppTextArea
