@@ -114,10 +114,14 @@ class ProyekController extends Controller
         $proyek = Proyek::findOrFail($proyek_id);
         $anggaran = $this->financeService->hitungAnggaranProyek($proyek);
         $realisasi = $this->financeService->hitungRealisasiPerKategori($proyek);
+        $laba_rugi = $this->financeService->hitungLabaRugi($proyek);
+        $cashflow = $this->financeService->hitungCashflowAktual($proyek);
         return Inertia::render('project/detail/index', [
             'proyek' => $proyek,
             'anggaran' => $anggaran,
             'realisasi' => $realisasi,
+            'laba_rugi' => $laba_rugi,
+            'cashflow' => $cashflow,
         ]);
     }
 

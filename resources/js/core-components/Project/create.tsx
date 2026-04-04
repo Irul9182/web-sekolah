@@ -54,19 +54,19 @@ const ProjectCreateIndex = () => {
 
         if (!data.pagu_total || data.pagu_total <= 0) errors.push('Pagu total harus lebih dari 0');
 
-        if (data.pajak_persen == null || data.pajak_persen < 0 || data.pajak_persen > 100) errors.push('Pajak harus di antara 0 - 100');
+        // if (data.pajak_persen == null || data.pajak_persen < 0 || data.pajak_persen > 100) errors.push('Pajak harus di antara 0 - 100');
 
-        if (data.uang_bahan_persen == null || data.uang_bahan_persen < 0 || data.uang_bahan_persen > 100)
-            errors.push('Uang bahan harus di antara 0 - 100');
+        // if (data.uang_bahan_persen == null || data.uang_bahan_persen < 0 || data.uang_bahan_persen > 100)
+        //     errors.push('Uang bahan harus di antara 0 - 100');
 
-        if (data.jasa_tukang_persen == null || data.jasa_tukang_persen < 0 || data.jasa_tukang_persen > 100)
-            errors.push('Jasa tukang harus di antara 0 - 100');
+        // if (data.jasa_tukang_persen == null || data.jasa_tukang_persen < 0 || data.jasa_tukang_persen > 100)
+        //     errors.push('Jasa tukang harus di antara 0 - 100');
 
-        if (data.biaya_staff_perpajakan == null || data.biaya_staff_perpajakan < 0) errors.push('Biaya staff perpajakan tidak valid');
+        // if (data.biaya_staff_perpajakan == null || data.biaya_staff_perpajakan < 0) errors.push('Biaya staff perpajakan tidak valid');
 
-        if (data.biaya_staff_entry_data == null || data.biaya_staff_entry_data < 0) errors.push('Biaya staff entry data tidak valid');
+        // if (data.biaya_staff_entry_data == null || data.biaya_staff_entry_data < 0) errors.push('Biaya staff entry data tidak valid');
 
-        if (data.biaya_tak_terduga_persen == null || data.biaya_tak_terduga_persen < 0) errors.push('Biaya tak terduga tidak valid');
+        // if (data.biaya_tak_terduga_persen == null || data.biaya_tak_terduga_persen < 0) errors.push('Biaya tak terduga tidak valid');
 
         if (!data.tanggal_mulai) errors.push('Tanggal mulai tidak boleh kosong');
 

@@ -63,6 +63,49 @@ class FinanceService
         ];
     }
 
+    // Laba rugi per proyek
+    public function hitungLabaRugi(Proyek $proyek): array
+    {
+        $pemasukan   = (float) $proyek->pagu_total;
+        $pengeluaran = $proyek->transaksi->sum('jumlah');
+        $selisih     = $pemasukan - $pengeluaran;
+
+        return [
+            'pemasukan'   => $pemasukan,
+            'pengeluaran' => $pengeluaran,
+            'selisih'     => $selisih,
+            'status'      => $selisih >= 0 ? 'laba' : 'rugi',
+        ];
+    }
+
+    // Laporan keuangan perusahaan
+    public function laporanKeuanganPerusahaan(): array
+    {
+        $proyeks = Proyek::with('transaksi')->get();
+
+        $detail = $proyeks->map(function ($proyek) {
+            $labaRugi = $this->hitungLabaRugi($proyek);
+            return [
+                'proyek_id'   => $proyek->proyek_id,
+                'nama_proyek' => $proyek->nama_proyek,
+                'tipe_proyek' => $proyek->tipe_proyek,
+                'status'      => $proyek->status,
+                'pemasukan'   => $labaRugi['pemasukan'],
+                'pengeluaran' => $labaRugi['pengeluaran'],
+                'selisih'     => $labaRugi['selisih'],
+                'laba_rugi'   => $labaRugi['status'],
+            ];
+        });
+
+        return [
+            'total_pemasukan'   => $detail->sum('pemasukan'),
+            'total_pengeluaran' => $detail->sum('pengeluaran'),
+            'total_selisih'     => $detail->sum('selisih'),
+            'status_perusahaan' => $detail->sum('selisih') >= 0 ? 'laba' : 'rugi',
+            'detail_proyek'     => $detail,
+        ];
+    }
+
     /**
      * Hitung cashflow aktual proyek dari tabel transaksi.
      * Sumber: transaksi yang sudah diinput staff finance.

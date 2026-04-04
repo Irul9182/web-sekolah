@@ -1,32 +1,46 @@
 import DetailItem from '@/components/app-detail-item';
+import CashFlowCard from '@/components/cashflow-card';
+import FadeUpWrapper from '@/components/fade-up-wrapper';
+import LabaRugiCard from '@/components/laba-rugi-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui-shadcn/card';
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDate, formatPercent } from '@/helpers/format';
+import { useCountUp } from '@/hooks/use-count';
+import { useMounted } from '@/hooks/use-mounted';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { AnggaranProps } from '@/types/anggaran.type';
+import { LabaRugiProps } from '@/types/laba_rugi.type';
 import { ProyekProps } from '@/types/project.type';
 import { RealisasiProps } from '@/types/realisasi.type';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Head, router, usePage } from '@inertiajs/react';
 import { saveAs } from 'file-saver';
-import { Download } from 'lucide-react';
+import { ArrowLeft, Download, FileSpreadsheet } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 interface PageProps extends InertiaPageProps {
     proyek?: ProyekProps;
     anggaran?: AnggaranProps;
     realisasi?: RealisasiProps;
+    laba_rugi?: LabaRugiProps;
+    cashflow?: {
+        pemasukan?: number;
+        total_pengeluaran?: number;
+        cashflow?: number;
+        breakdown?: Record<string, number>;
+    };
 }
+
 const ProjectDetailIndex = () => {
     const { props } = usePage<PageProps>();
-    console.log('Props:', props);
     const proyek = props?.proyek;
     const anggaran = props?.anggaran;
     const realisasi = props?.realisasi;
-
-    console.log('Proyek: ', proyek);
+    const laba_rugi = props?.laba_rugi;
+    const cashflow = props?.cashflow;
     const projectId = props?.proyek_id ?? null;
+    console.log('Anggaran: ', anggaran);
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Detail Proyek',
@@ -54,9 +68,7 @@ const ProjectDetailIndex = () => {
         ];
 
         const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-        const wsCols = [{ wch: 25 }, { wch: 40 }];
-        ws['!cols'] = wsCols;
+        ws['!cols'] = [{ wch: 25 }, { wch: 40 }];
 
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Proyek');
@@ -66,86 +78,130 @@ const ProjectDetailIndex = () => {
         saveAs(blob, `${proyek?.nama_proyek || 'proyek'}.xlsx`);
     };
 
+    const getStatusTone = (status?: string) => {
+        if (status === 'selesai') return 'success';
+        if (status === 'dibatalkan') return 'error';
+        if (status === 'sedang_berjalan') return 'info';
+        return 'default';
+    };
+
+    const getStatusLabel = (status?: string) => {
+        if (status === 'sedang_berjalan') return 'Sedang Berjalan';
+        if (status === 'dibatalkan') return 'Dibatalkan';
+        if (status === 'selesai') return 'Selesai';
+        return '-';
+    };
+    const isMounted = useMounted();
+
+    const animatedValueNetto = useCountUp(anggaran?.netto as number, 1600, isMounted);
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Detail Proyek" />
 
-            <div className="mt-4 flex w-full items-center justify-end px-4">
+            {/* Action Bar */}
+            <div className="mt-4 flex w-full items-center justify-between px-4">
                 <div className="flex items-center gap-2">
-                    <Button onClick={() => router.visit('/project')} className={`"transition-all duration-150"`} variant={'secondary'}>
-                        <p>{'Kembali'}</p>
+                    <div className="bg-primary h-1 w-6 rounded-full" />
+                    <h2 className="text-foreground text-sm font-semibold tracking-wide uppercase opacity-60">Ringkasan Proyek</h2>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button
+                        onClick={() => router.visit('/project')}
+                        variant="outline"
+                        size="sm"
+                        className="border-border text-muted-foreground hover:text-foreground gap-2"
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                        Kembali
                     </Button>
-                    <Button className="flex items-center gap-3" onClick={() => exportToExcel()}>
-                        <p>Download Excel</p>
-                        <Download />
+                    <Button onClick={exportToExcel} size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
+                        <FileSpreadsheet className="h-4 w-4" />
+                        Download Excel
+                        <Download className="h-3.5 w-3.5 opacity-70" />
                     </Button>
                 </div>
             </div>
-            <Card className="m-4">
-                <CardHeader>
-                    <CardTitle className="xl font-bold">Detail Proyek</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                    <DetailItem label="Nama Proyek" value={proyek?.nama_proyek} />
-                    <DetailItem label="Tipe Proyek" value={proyek?.tipe_proyek?.toLocaleUpperCase()} />
-                    <DetailItem
-                        isStatus
-                        toneStatus={
-                            proyek?.status === 'selesai'
-                                ? 'success'
-                                : proyek?.status === 'dibatalkan'
-                                  ? 'error'
-                                  : proyek?.status === 'sedang_berjalan'
-                                    ? 'default'
-                                    : 'default'
-                        }
-                        label="Status"
-                        value={
-                            proyek?.status === 'sedang_berjalan'
-                                ? 'Sedang Berjalan'
-                                : proyek?.status === 'dibatalkan'
-                                  ? 'Dibatalkan'
-                                  : proyek?.status === 'selesai'
-                                    ? 'Selesai'
-                                    : ''
-                        }
-                    />
-                    <DetailItem label="Pagu Total" value={formatCurrency(proyek?.pagu_total)} />
-                    <DetailItem label="Tanggal Mulai" value={formatDate(proyek?.tanggal_mulai)} />
-                    <DetailItem label="Tanggal Selesai" value={formatDate(proyek?.tanggal_selesai as string)} />
-                    <DetailItem label="Pajak (%)" value={formatPercent(proyek?.pajak_persen)} />
-                    <DetailItem label="Total Dana Setelah Pajak" value={formatCurrency(anggaran?.dana_setelah_pajak || '-')} />
-
-                    {/* <DetailItem label="Uang Bahan (%)" value={formatPercent(proyek?.uang_bahan_persen)} />
-                    <DetailItem label="Jasa Tukang (%)" value={formatPercent(proyek?.jasa_tukang_persen)} />
-                    <DetailItem label="Biaya Tak Terduga (%)" value={formatPercent(proyek?.biaya_tak_terduga_persen)} />
-                    <DetailItem label="Biaya Staff Perpajakan" value={formatCurrency(proyek?.biaya_staff_perpajakan)} />
-                    <DetailItem label="Biaya Staff Entry Data" value={formatCurrency(proyek?.biaya_staff_entry_data)} /> */}
-                    <DetailItem label="Nama Klien" value={proyek?.nama_klien} />
-                    <DetailItem label="Deskripsi Proyek" value={proyek?.deskripsi_proyek ?? '-'} />
-                </CardContent>
-            </Card>
-            <Card className="mx-4 mt-2 mb-2">
-                <CardHeader>
-                    <CardTitle className="xl font-bold">Transaksi</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y">
-                    <DetailItem label="Jasa Tukang" value={formatPercent(realisasi?.jasa_tukang?.items?.persen) || '-'} />
-                    <DetailItem label="Biaya Mandor" value={formatPercent(realisasi?.mandor?.items?.persen) || '-'} />
-                    <DetailItem label="Material" value={formatPercent(realisasi?.material?.items?.persen) || '-'} />
-                    <DetailItem label="Staff Entry Data" value={formatCurrency(realisasi?.staff_entry_data?.aktual) || '-'} />
-                    <DetailItem label="Staff Perpajakan" value={formatCurrency(realisasi?.staff_perpajakan?.aktual) || '-'} />
-                    <DetailItem label="Biaya Tak Terduga" value={formatPercent(realisasi?.biaya_tak_terduga?.items?.persen) || '-'} />
-                </CardContent>
-            </Card>
-            <Card className="mx-4 mt-2 mb-4">
-                <CardHeader>
-                    <CardTitle className="xl font-bold">Total Netto</CardTitle>
-                </CardHeader>
-                <CardContent className="flex items-center justify-center">
-                    <h4 className="text-2xl font-bold">{formatCurrency(anggaran?.netto || '')}</h4>
-                </CardContent>
-            </Card>
+            <FadeUpWrapper delay={200}>
+                <Card className="border-border bg-card m-4">
+                    <CardHeader className="border-border border-b pb-3">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-md">
+                                <div className="bg-primary h-3 w-3 rounded-sm" />
+                            </div>
+                            <CardTitle className="text-card-foreground text-base font-bold">Detail Proyek</CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-0 pt-4">
+                        <DetailItem label="Nama Proyek" value={proyek?.nama_proyek} />
+                        <DetailItem label="Tipe Proyek" value={proyek?.tipe_proyek?.toLocaleUpperCase()} />
+                        <DetailItem isStatus toneStatus={getStatusTone(proyek?.status)} label="Status" value={getStatusLabel(proyek?.status)} />
+                        <DetailItem label="Pagu Total" value={formatCurrency(proyek?.pagu_total)} />
+                        <DetailItem label="Tanggal Mulai" value={formatDate(proyek?.tanggal_mulai)} />
+                        <DetailItem label="Tanggal Selesai" value={formatDate(proyek?.tanggal_selesai as string)} />
+                        <DetailItem label="Pajak (%)" value={formatPercent(proyek?.pajak_persen)} />
+                        <DetailItem label="Total Dana Setelah Pajak" value={formatCurrency(anggaran?.dana_setelah_pajak || '-')} />
+                        <DetailItem label="Nama Klien" value={proyek?.nama_klien} />
+                        <div className="border-border flex flex-col gap-1 border-b py-3 last:border-b-0">
+                            <span className="text-foreground text-sm font-semibold">Deskripsi Proyek</span>
+                            <p className="bg-muted text-muted-foreground rounded-md px-3 py-2 text-sm font-normal">
+                                {proyek?.deskripsi_proyek || '-'}
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+            </FadeUpWrapper>
+            <FadeUpWrapper delay={200}>
+                <Card className="border-border bg-card mx-4 mt-0 mb-2">
+                    <CardHeader className="border-border border-b pb-3">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-chart-2/10 flex h-8 w-8 items-center justify-center rounded-md">
+                                <div className="bg-chart-2 h-3 w-3 rounded-sm" />
+                            </div>
+                            <CardTitle className="text-card-foreground text-base font-bold">Transaksi</CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-0 pt-4">
+                        <DetailItem label="Jasa Tukang" value={formatPercent(realisasi?.jasa_tukang?.items?.persen) || '-'} />
+                        <DetailItem label="Biaya Mandor" value={formatPercent(realisasi?.mandor?.items?.persen) || '-'} />
+                        <DetailItem label="Material" value={formatPercent(realisasi?.material?.items?.persen) || '-'} />
+                        <DetailItem label="Staff Entry Data" value={formatCurrency(realisasi?.staff_entry_data?.aktual) || '-'} />
+                        <DetailItem label="Staff Perpajakan" value={formatCurrency(realisasi?.staff_perpajakan?.aktual) || '-'} />
+                        <DetailItem label="Biaya Tak Terduga" value={formatPercent(realisasi?.biaya_tak_terduga?.items?.persen) || '-'} />
+                    </CardContent>
+                </Card>
+            </FadeUpWrapper>
+            <FadeUpWrapper delay={200}>
+                <LabaRugiCard
+                    pemasukan={laba_rugi?.pemasukan}
+                    pengeluaran={laba_rugi?.pengeluaran}
+                    selisih={laba_rugi?.selisih}
+                    status={laba_rugi?.status}
+                />
+            </FadeUpWrapper>
+            <FadeUpWrapper delay={200}>
+                <CashFlowCard
+                    breakdown={cashflow?.breakdown}
+                    kasKeluar={cashflow?.total_pengeluaran}
+                    kasMasuk={cashflow?.pemasukan}
+                    netCash={cashflow?.cashflow}
+                />
+            </FadeUpWrapper>
+            <FadeUpWrapper delay={200}>
+                <Card className="border-primary/20 bg-card mx-4 mt-2 mb-4">
+                    <CardHeader className="border-border border-b pb-3">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-md">
+                                <div className="bg-primary h-3 w-3 rounded-full" />
+                            </div>
+                            <CardTitle className="text-card-foreground text-base font-bold">Total Netto</CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="flex flex-col items-center justify-center gap-1 py-6">
+                        <p className="text-muted-foreground text-xs font-medium tracking-widest uppercase">Nilai Bersih Proyek</p>
+                        <h4 className="text-primary text-3xl font-bold tracking-tight">{formatCurrency(animatedValueNetto || '')}</h4>
+                    </CardContent>
+                </Card>
+            </FadeUpWrapper>
         </AppLayout>
     );
 };
