@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\JenisProyek;
+use App\Models\KategoriProyek;
 use App\Models\Proyek;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -25,10 +27,11 @@ class ProyekController extends Controller
     {
         $search = $request->query('search');
 
-        $query = Proyek::select([
+        $query = Proyek::with(['kategori', 'jenis'])->select([
             'proyek_id',
             'nama_proyek',
-            'tipe_proyek',
+            'kategori_proyek_id',
+            'jenis_proyek_id',
             'pagu_total',
             'status',
             'tanggal_mulai',
@@ -63,6 +66,16 @@ class ProyekController extends Controller
     {
         //
 
+        $kategori_proyeks = KategoriProyek::all();
+        $jenis_proyeks = JenisProyek::all();
+
+        return Inertia::render('project/create/index', [
+            'kategori_proyeks' => $kategori_proyeks,
+            'jenis_proyeks' => $jenis_proyeks,
+            // 'filters' => [
+            //     'search' => $search
+            // ]
+        ]);
     }
 
     /**
@@ -74,16 +87,18 @@ class ProyekController extends Controller
         //validate form
         $data = $request->validate([
             'nama_proyek' => 'required|string|max:255',
-            'tipe_proyek' => 'required|in:papping,u_ditch,spall,beton,sab',
+            // 'tipe_proyek' => 'required|in:papping,u_ditch,spall,beton,sab',
             'pagu_total' => 'required|numeric|min:0',
+            'kategori_proyek_id' => 'required|numeric|min:1',
+            'jenis_proyek_id' => 'required|numeric|min:1',
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
             'pajak_persen' => 'required|numeric|min:0|max:100',
-            'uang_bahan_persen' => 'required|numeric|min:0|max:100',
-            'jasa_tukang_persen' => 'required|numeric|min:0|max:100',
-            'biaya_tak_terduga_persen' => 'required|numeric|min:0|max:100',
-            'biaya_staff_perpajakan' => 'required|numeric|min:0',
-            'biaya_staff_entry_data' => 'required|numeric|min:0',
+            // 'uang_bahan_persen' => 'required|numeric|min:0|max:100',
+            // 'jasa_tukang_persen' => 'required|numeric|min:0|max:100',
+            // 'biaya_tak_terduga_persen' => 'required|numeric|min:0|max:100',
+            // 'biaya_staff_perpajakan' => 'required|numeric|min:0',
+            // 'biaya_staff_entry_data' => 'required|numeric|min:0',
             'nama_klien' => 'required|string|max:255',
             'status' => 'required|in:sedang_berjalan,selesai,dibatalkan',
             'deskripsi_proyek' => 'nullable|string',
@@ -111,7 +126,8 @@ class ProyekController extends Controller
     public function show($proyek_id)
     {
         //
-        $proyek = Proyek::findOrFail($proyek_id);
+        $proyek = Proyek::with(['kategori', 'jenis'])
+            ->findOrFail($proyek_id);
         $anggaran = $this->financeService->hitungAnggaranProyek($proyek);
         $realisasi = $this->financeService->hitungRealisasiPerKategori($proyek);
         $laba_rugi = $this->financeService->hitungLabaRugi($proyek);
@@ -131,9 +147,12 @@ class ProyekController extends Controller
     public function edit($proyek_id)
     {
         $proyek = Proyek::findOrFail($proyek_id);
-
+        $kategori_proyeks = KategoriProyek::all();
+        $jenis_proyeks = JenisProyek::all();
         return Inertia::render('project/create/index', [
-            'proyek' => $proyek
+            'proyek' => $proyek,
+            'kategori_proyeks' => $kategori_proyeks,
+            'jenis_proyeks' => $jenis_proyeks,
         ]);
     }
 
@@ -147,16 +166,18 @@ class ProyekController extends Controller
 
         $data = $request->validate([
             'nama_proyek' => 'required|string|max:255',
-            'tipe_proyek' => 'required|in:papping,u_ditch,spall,beton,sab',
+            // 'tipe_proyek' => 'required|in:papping,u_ditch,spall,beton,sab',
             'pagu_total' => 'required|numeric|min:0',
+            'kategori_proyek_id' => 'required|numeric|min:1',
+            'jenis_proyek_id' => 'required|numeric|min:1',
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
             'pajak_persen' => 'required|numeric|min:0|max:100',
-            'uang_bahan_persen' => 'required|numeric|min:0|max:100',
-            'jasa_tukang_persen' => 'required|numeric|min:0|max:100',
-            'biaya_tak_terduga_persen' => 'required|numeric|min:0|max:100',
-            'biaya_staff_perpajakan' => 'required|numeric|min:0',
-            'biaya_staff_entry_data' => 'required|numeric|min:0',
+            // 'uang_bahan_persen' => 'required|numeric|min:0|max:100',
+            // 'jasa_tukang_persen' => 'required|numeric|min:0|max:100',
+            // 'biaya_tak_terduga_persen' => 'required|numeric|min:0|max:100',
+            // 'biaya_staff_perpajakan' => 'required|numeric|min:0',
+            // 'biaya_staff_entry_data' => 'required|numeric|min:0',
             'nama_klien' => 'required|string|max:255',
             'status' => 'required|in:sedang_berjalan,selesai,dibatalkan',
             'deskripsi_proyek' => 'nullable|string',

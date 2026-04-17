@@ -17,9 +17,7 @@ Route::middleware(['auth'])->group(function () {
     // Project =====================
     Route::get('/project', [ProyekController::class, 'index'])->name('project.index');
     Route::get('/project/{id}/detail', [ProyekController::class, 'show'])->name('project.detail');
-    Route::get('/project/create', function () {
-        return Inertia::render('project/create/index');
-    });
+    Route::get('/project/create', [ProyekController::class, 'create'])->name('project.create');
     Route::post('/project', [ProyekController::class, 'store'])->name('project.store');
     Route::get('/project/{id}/edit', [ProyekController::class, 'edit'])->name(('project.edit'));
 

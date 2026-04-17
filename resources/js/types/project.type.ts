@@ -1,9 +1,17 @@
+import { JenisProyek } from './jenis_proyek.type';
+import { KategoriProyek } from './kategori_proyek.type';
+
 export interface ProyekProps {
     [key: string]: any;
     proyek_id: string;
 
     nama_proyek: string;
     tipe_proyek: TipeProyek | null;
+    kategori_proyek_id?: number;
+    jenis_proyek_id?: number;
+
+    kategori?: KategoriProyek;
+    jenis?: JenisProyek;
 
     pagu_total: number;
 
@@ -32,7 +40,8 @@ export const initialProyek: ProyekProps = {
 
     nama_proyek: '',
     tipe_proyek: 'papping', // default
-
+    jenis_proyek_id: 0,
+    kategori_proyek_id: 0,
     pagu_total: 0,
 
     tanggal_mulai: '',

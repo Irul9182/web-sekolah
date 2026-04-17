@@ -22,8 +22,8 @@ export interface TransaksiProps {
 
     persen?: number;
 
-    jumlah: number | string; // karena dari Laravel decimal sering jadi string
-    tanggal: string; // format: YYYY-MM-DD
+    jumlah: number | string;
+    tanggal: string;
 
     keterangan?: string | null;
 

@@ -40,7 +40,7 @@ const ProjectDetailIndex = () => {
     const laba_rugi = props?.laba_rugi;
     const cashflow = props?.cashflow;
     const projectId = props?.proyek_id ?? null;
-    console.log('Anggaran: ', anggaran);
+    console.log('Proyek: ', proyek);
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Detail Proyek',
@@ -133,7 +133,8 @@ const ProjectDetailIndex = () => {
                     </CardHeader>
                     <CardContent className="space-y-0 pt-4">
                         <DetailItem label="Nama Proyek" value={proyek?.nama_proyek} />
-                        <DetailItem label="Tipe Proyek" value={proyek?.tipe_proyek?.toLocaleUpperCase()} />
+                        <DetailItem label="Kategori" value={proyek?.kategori?.nama?.toLocaleUpperCase()} />
+                        <DetailItem label="Jenis" value={proyek?.jenis?.nama} />
                         <DetailItem isStatus toneStatus={getStatusTone(proyek?.status)} label="Status" value={getStatusLabel(proyek?.status)} />
                         <DetailItem label="Pagu Total" value={formatCurrency(proyek?.pagu_total)} />
                         <DetailItem label="Tanggal Mulai" value={formatDate(proyek?.tanggal_mulai)} />

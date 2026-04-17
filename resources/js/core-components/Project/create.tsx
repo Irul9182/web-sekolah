@@ -1,12 +1,14 @@
 import AppDatePicker from '@/components/app-day-picker';
 import AppInput from '@/components/app-input';
-import AppSelect from '@/components/app-select';
+import AppSelect, { SelectOption } from '@/components/app-select';
 import AppTextArea from '@/components/app-textare';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { BreadcrumbItem } from '@/types';
-import { initialProyek, ProyekProps, StatusProyek, TipeProyek } from '@/types/project.type';
+import { JenisProyek } from '@/types/jenis_proyek.type';
+import { KategoriProyek } from '@/types/kategori_proyek.type';
+import { initialProyek, ProyekProps, StatusProyek } from '@/types/project.type';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { format } from 'date-fns';
@@ -16,12 +18,19 @@ import { toast } from 'sonner';
 
 interface PageProps extends InertiaPageProps {
     proyek?: ProyekProps;
+    kategori_proyeks?: KategoriProyek[];
+    jenis_proyeks?: JenisProyek[];
 }
 
 const ProjectCreateIndex = () => {
     const { props } = usePage<PageProps>();
-    const { proyek: dataProyek } = props;
+    const { proyek: dataProyek, jenis_proyeks, kategori_proyeks } = props;
     const projectId = dataProyek?.proyek_id ?? null;
+    const { flash } = usePage().props;
+    console.log(flash);
+    console.log('Data proyek: ', dataProyek);
+    // console.log('Kategori proyek: ', kategori_proyeks);
+    // console.log('Jenis proyek: ', jenis_proyeks);
     const [loading, setLoading] = useState<boolean>(false);
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -40,6 +49,19 @@ const ProjectCreateIndex = () => {
             setData(props.proyek as ProyekProps);
         }
     }, [projectId, dataProyek]);
+    const KategoriProyekOptions: SelectOption[] = (kategori_proyeks ?? []).map((item) => ({
+        value: String(item.id),
+        label: item.nama,
+    }));
+
+    const jenisProyekOptions = (data: JenisProyek[], kategori_proyek_id: number): SelectOption[] => {
+        return (data ?? [])
+            .filter((item) => item.kategori_proyek_id === kategori_proyek_id)
+            .map((item) => ({
+                value: String(item.id),
+                label: item.nama,
+            }));
+    };
 
     const validateProyek = (data: ProyekProps) => {
         const errors: string[] = [];
@@ -48,7 +70,9 @@ const ProjectCreateIndex = () => {
 
         if (!data.nama_klien?.trim()) errors.push('Nama klien tidak boleh kosong');
 
-        if (!data.tipe_proyek) errors.push('Tipe proyek harus dipilih');
+        if (!data.kategori_proyek_id) errors.push('Kategori proyek harus dipilih');
+
+        if (!data.jenis_proyek_id) errors.push('Jenis proyek harus dipilih');
 
         if (!data.status) errors.push('Status proyek harus dipilih');
 
@@ -147,33 +171,21 @@ const ProjectCreateIndex = () => {
                     onChange={(e) => setData('nama_proyek', e.target.value)}
                 />
                 <AppSelect
-                    defaultValue={dataProyek?.tipe_proyek || ''}
-                    label="Tipe Proyek"
+                    defaultValue={dataProyek?.kategori_proyek_id?.toString() || ''}
+                    label="Kategori Proyek"
                     placeholder="Pilih opsi . . ."
                     required={true}
-                    onValueChange={(value) => setData('tipe_proyek', value as TipeProyek)}
-                    options={[
-                        {
-                            value: 'papping',
-                            label: 'PAPPING',
-                        },
-                        {
-                            value: 'u_ditch',
-                            label: 'U-DITCH',
-                        },
-                        {
-                            value: 'spall',
-                            label: 'SPALL',
-                        },
-                        {
-                            value: 'beton',
-                            label: 'BETON',
-                        },
-                        {
-                            value: 'sab',
-                            label: 'SAB',
-                        },
-                    ]}
+                    onValueChange={(value) => setData('kategori_proyek_id', Number(value))}
+                    options={KategoriProyekOptions}
+                />
+                <AppSelect
+                    defaultValue={dataProyek?.jenis_proyek_id?.toString() || ''}
+                    label="Jenis Proyek"
+                    placeholder="Pilih opsi . . ."
+                    required={true}
+                    disabled={data?.kategori_proyek_id === 0}
+                    onValueChange={(value) => setData('jenis_proyek_id', Number(value))}
+                    options={jenisProyekOptions(jenis_proyeks as JenisProyek[], data?.kategori_proyek_id as number)}
                 />
                 <AppSelect
                     defaultValue={(dataProyek?.status ?? 'sedang_berjalan') as StatusProyek}

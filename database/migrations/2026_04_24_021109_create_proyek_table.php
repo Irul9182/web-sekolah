@@ -17,13 +17,11 @@ return new class extends Migration
 
             $table->string('nama_proyek');
 
-            $table->enum('tipe_proyek', [
-                'papping',
-                'u_ditch',
-                'spall',
-                'beton',
-                'sab'
-            ]);
+            $table->foreignId('kategori_proyek_id')
+                ->constrained('kategori_proyek');
+
+            $table->foreignId('jenis_proyek_id')
+                ->constrained('jenis_proyek');
 
             $table->decimal('pagu_total', 15, 2);
 
@@ -31,12 +29,12 @@ return new class extends Migration
             $table->date('tanggal_selesai')->nullable();
 
             $table->decimal('pajak_persen', 15, 2);
-            $table->decimal('uang_bahan_persen', 15, 2);
-            $table->decimal('jasa_tukang_persen', 15, 2);
-            $table->decimal('biaya_tak_terduga_persen', 15, 2);
+            // $table->decimal('uang_bahan_persen', 15, 2);
+            // $table->decimal('jasa_tukang_persen', 15, 2);
+            // $table->decimal('biaya_tak_terduga_persen', 15, 2);
 
-            $table->decimal('biaya_staff_perpajakan', 15, 2);
-            $table->decimal('biaya_staff_entry_data', 15, 2);
+            // $table->decimal('biaya_staff_perpajakan', 15, 2);
+            // $table->decimal('biaya_staff_entry_data', 15, 2);
 
             $table->string('nama_klien');
             $table->enum('status', [

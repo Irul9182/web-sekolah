@@ -25,19 +25,6 @@ function isGrouped(options: SelectOptions): options is SelectOptionGroup[] {
     return options.length > 0 && 'group' in options[0];
 }
 
-// Per-tone CSS variable overrides injected as inline style on the wrapper.
-// Each tone defines:
-//   --tone-bg          → trigger background
-//   --tone-border      → trigger border + focus border
-//   --tone-ring        → focus ring color
-//   --tone-text        → trigger selected-value text color
-//   --tone-placeholder → trigger placeholder text color (slightly muted)
-//   --tone-label       → label text color
-//   --tone-hint        → hint/message text color
-// Tone backgrounds: light mode pakai tint 15% dari chart color di atas white,
-// dark mode pakai shade gelap agar tetap terbaca.
-// Teks selalu derived dari chart color — gelap di light, terang di dark.
-
 const toneStyles: Record<SelectTone, React.CSSProperties> = {
     default: {
         '--tone-bg': 'var(--muted)',
