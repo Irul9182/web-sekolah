@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import { SelectTone } from './app-select';
 import { Badge } from './ui-shadcn/badge';
 
@@ -6,6 +7,10 @@ type DetailItemProps = {
     value: string | number | undefined | null;
     isStatus?: boolean;
     toneStatus?: SelectTone;
+    isBordered?: boolean;
+    className?: string;
+    labelClassName?: string;
+    valueClassName?: string;
 };
 
 /**
@@ -44,12 +49,21 @@ const toneStyles: Record<SelectTone, React.CSSProperties> = {
     } as React.CSSProperties,
 };
 
-const DetailItem: React.FC<DetailItemProps> = ({ label, value, isStatus = false, toneStatus = 'default' }) => {
+const DetailItem: React.FC<DetailItemProps> = ({
+    label,
+    value,
+    isStatus = false,
+    toneStatus = 'default',
+    isBordered = true,
+    className,
+    labelClassName,
+    valueClassName,
+}) => {
     const tone: SelectTone = toneStatus;
 
     return (
-        <div className="border-border flex items-center justify-between border-b py-2.5 last:border-b-0">
-            <span className="text-foreground text-sm font-semibold">{label}</span>
+        <div className={cn(isBordered && 'border-border border-b last:border-b-0', 'flex items-center justify-between py-2.5', className)}>
+            <span className={cn(`text-foreground text-sm font-semibold`, labelClassName)}>{label}</span>
 
             {isStatus ? (
                 <Badge
@@ -65,7 +79,7 @@ const DetailItem: React.FC<DetailItemProps> = ({ label, value, isStatus = false,
                     {value}
                 </Badge>
             ) : (
-                <span className="text-foreground/80 text-sm">{value ?? '-'}</span>
+                <span className={cn(`text-foreground/80 text-sm`, valueClassName)}>{value ?? '-'}</span>
             )}
         </div>
     );

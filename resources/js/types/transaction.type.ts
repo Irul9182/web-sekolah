@@ -29,6 +29,8 @@ export interface TransaksiProps {
 
     proyek?: ProyekProps;
 
+    items?: TransaksiItem[];
+
     created_at?: string | null;
     updated_at?: string | null;
 }
@@ -48,3 +50,17 @@ export const initialTransaksi: TransaksiProps = {
     created_at: null,
     updated_at: null,
 };
+
+export interface TransaksiItem {
+    item_id: string;
+    transaksi_id: string;
+    tanggal: string;
+    nama_item: string;
+    satuan: string;
+    qty: string;
+    harga_satuan: string;
+    subtotal: string;
+    keterangan: string;
+    created_at: string;
+    updated_at: string;
+}
