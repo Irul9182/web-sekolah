@@ -22,7 +22,7 @@ const TransactionDetailIndex = () => {
     const transaksi = props?.transaksi;
     const anggaran = props?.anggaran;
     const transaksid = props?.transaksi_id ?? null;
-
+    console.log('props: ', props);
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Detail Transaksi',
@@ -57,7 +57,7 @@ const TransactionDetailIndex = () => {
                         <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-md">
                             <Receipt className="text-primary h-4 w-4" />
                         </div>
-                        <CardTitle className="text-card-foreground text-base font-bold">Detail Transaksi</CardTitle>
+                        <CardTitle className="text-card-foreground text-base font-bold">Rincian Transaksi</CardTitle>
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-0 pt-4">
@@ -89,7 +89,16 @@ const TransactionDetailIndex = () => {
                     <DetailItem label="Keterangan" value={transaksi?.keterangan} />
                 </CardContent>
             </Card>
-
+            <Card className="border-primary/20 bg-card mx-4 mt-0 mb-4 shadow-sm">
+                <CardHeader className="border-border border-b pb-3">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-md">
+                            <Receipt className="text-primary h-4 w-4" />
+                        </div>
+                        <CardTitle className="text-card-foreground text-base font-bold">List Material Yang dibeli</CardTitle>
+                    </div>
+                </CardHeader>
+            </Card>
             <Card className="border-primary/20 bg-card mx-4 mt-0 mb-4 shadow-sm">
                 <CardContent className="flex flex-col items-center justify-center gap-1 py-6">
                     <p className="text-muted-foreground text-xs font-medium tracking-widest uppercase">Total Transaksi</p>

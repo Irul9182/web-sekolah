@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\ProyekController;
 use App\Http\Controllers\TransaksiController;
+use App\Http\Controllers\ItemTransaksiController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -39,6 +40,15 @@ Route::middleware(['auth'])->group(function () {
         ->name('transaction.update');
     Route::get('/transaction/{id}/detail', [TransaksiController::class, 'show'])->name('transaction.show');
     Route::delete('/transaction/{id}', [TransaksiController::class, 'destroy'])->name('transaction.destroy');
+
+    // Transaction Item ===================
+
+    Route::prefix('transaction/{id}/items')->name('transaction.items.')->group(function () {
+        Route::get('/',             [ItemTransaksiController::class, 'index'])->name('index');
+        Route::post('/',            [ItemTransaksiController::class, 'store'])->name('store');
+        Route::put('/{item_id}',    [ItemTransaksiController::class, 'update'])->name('update');
+        Route::delete('/{item_id}', [ItemTransaksiController::class, 'destroy'])->name('destroy');
+    });
 });
 
 require __DIR__ . '/settings.php';

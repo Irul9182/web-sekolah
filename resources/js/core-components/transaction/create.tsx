@@ -184,7 +184,7 @@ const TransactionCreateIndex = () => {
                     placeholder="Pilih Proyek..."
                     searchPlaceholder="Ketik nama proyek ..."
                     options={namaProyekOptions}
-                    loading={namaProyekLoading}
+                    loading={namaProyekLoading || loadingKategori}
                     onSearch={searchNamaProyek}
                     value={data.proyek_id}
                     defaultValue={dataProyek?.proyek_id}

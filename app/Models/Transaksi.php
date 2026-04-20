@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use App\Models\ItemTransaksi;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Transaksi extends Model
 {
@@ -31,10 +33,20 @@ class Transaksi extends Model
 
     ];
 
-    // Konstanta biar tidak typo saat dipakai di controller/service
     const TIPE_PEMASUKAN   = 'pemasukan';
     const TIPE_PENGELUARAN = 'pengeluaran';
+    const KATEGORI_DENGAN_ITEM = [
+        'material',
+        'operasional',
+        'biaya_tak_terduga',
+    ];
 
+    const KATEGORI_LANGSUNG = [
+        'jasa_tukang',
+        'mandor',
+        'staff_perpajakan',
+        'staff_entry_data',
+    ];
     const KATEGORI = [
         'material',
         'operasional',
@@ -79,5 +91,10 @@ class Transaksi extends Model
     {
         return $query->whereYear('tanggal', $year)
             ->whereMonth('tanggal', $month);
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(ItemTransaksi::class, 'transaksi_id', 'transaksi_id');
     }
 }

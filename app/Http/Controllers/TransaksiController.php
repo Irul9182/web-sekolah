@@ -126,25 +126,23 @@ class TransaksiController extends Controller
             'jumlah.min'          => 'Jumlah tidak boleh kurang dari 0.',
             'keterangan.max'      => 'Keterangan maksimal 500 karakter.',
         ]);
+        $proyek   = Proyek::find($validated['proyek_id']);
+        $anggaran = $this->financeService->hitungAnggaranProyek($proyek);
+        $dana     = $anggaran['dana_setelah_pajak']; // ← basis yang benar
 
-        // pastikan salah satu diisi
         if (empty($validated['persen']) && empty($validated['jumlah'])) {
             return back()->withErrors([
                 'jumlah' => 'Persen atau jumlah wajib diisi salah satu.',
             ])->withInput();
         }
 
-        // hitung jumlah dari persen jika jumlah tidak diisi
         if (!empty($validated['persen']) && empty($validated['jumlah'])) {
-            $proyek = Proyek::find($validated['proyek_id']);
-            $validated['jumlah'] = $proyek->pagu_total * ($validated['persen'] / 100);
+            $validated['jumlah'] = $dana * ($validated['persen'] / 100);
         }
 
-        // hitung persen dari jumlah jika persen tidak diisi
         if (!empty($validated['jumlah']) && empty($validated['persen'])) {
-            $proyek = Proyek::find($validated['proyek_id']);
-            $validated['persen'] = $proyek->pagu_total > 0
-                ? ($validated['jumlah'] / $proyek->pagu_total) * 100
+            $validated['persen'] = $dana > 0
+                ? ($validated['jumlah'] / $dana) * 100
                 : 0;
         }
 
@@ -167,7 +165,8 @@ class TransaksiController extends Controller
      */
     public function show($transaksi_id)
     {
-        $transaksi = Transaksi::with('proyek')->findOrFail($transaksi_id);
+        $transaksi = Transaksi::with(['proyek', 'items'])
+            ->findOrFail($transaksi_id);
         $anggaran  = $this->financeService->hitungAnggaranProyek($transaksi->proyek);
 
         return Inertia::render('transaction/detail/index', [
@@ -241,32 +240,20 @@ class TransaksiController extends Controller
             'keterangan.max'      => 'Keterangan maksimal 500 karakter.',
         ]);
 
-        $proyek = Proyek::find($validated['proyek_id']);
-        // pastikan salah satu diisi
-        // selalu kalkulasi keduanya berdasarkan yang diisi
+        $proyek   = Proyek::find($validated['proyek_id']);
+        $anggaran = $this->financeService->hitungAnggaranProyek($proyek);
+        $dana     = $anggaran['dana_setelah_pajak'];
+
         if (!empty($validated['persen'])) {
-            $validated['jumlah'] = $proyek->pagu_total * ($validated['persen'] / 100);
+            $validated['jumlah'] = $dana * ($validated['persen'] / 100);
         } elseif (!empty($validated['jumlah'])) {
-            $validated['persen'] = $proyek->pagu_total > 0
-                ? ($validated['jumlah'] / $proyek->pagu_total) * 100
+            $validated['persen'] = $dana > 0
+                ? ($validated['jumlah'] / $dana) * 100
                 : 0;
         } else {
             return back()->withErrors([
                 'jumlah' => 'Persen atau jumlah wajib diisi salah satu.',
             ])->withInput();
-        }
-
-
-        // hitung jumlah dari persen jika jumlah tidak diisi
-        if (!empty($validated['persen']) && empty($validated['jumlah'])) {
-            $validated['jumlah'] = $proyek->pagu_total * ($validated['persen'] / 100);
-        }
-
-        // hitung persen dari jumlah jika persen tidak diisi
-        if (!empty($validated['jumlah']) && empty($validated['persen'])) {
-            $validated['persen'] = $proyek->pagu_total > 0
-                ? ($validated['jumlah'] / $proyek->pagu_total) * 100
-                : 0;
         }
 
         $transaksi->update([
