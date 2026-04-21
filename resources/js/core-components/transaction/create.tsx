@@ -17,6 +17,7 @@ import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import ItemTable from './assets/components/ItemTable';
+import ListAddItem from './assets/components/ListAddItem';
 import { KATEGORI_DENGAN_ITEM } from './assets/transaksi-assets';
 
 interface PageProps extends InertiaPageProps {
@@ -198,7 +199,7 @@ const TransactionCreateIndex = () => {
                 <AppDatePicker
                     value={data.tanggal ? new Date(data.tanggal) : undefined}
                     required
-                    label="Tanggal"
+                    label="Tanggal Rampung"
                     error={errors?.tanggal}
                     onChange={(e) => setData('tanggal', e ? formatDate(e, 'yyyy-MM-dd') : '')}
                 />
@@ -285,6 +286,25 @@ const TransactionCreateIndex = () => {
                         <ItemTable
                             errors={errors as Record<string, string>}
                             items={data?.items as TransaksiItem[]}
+                            onChange={(items) => setData('items', items as TransaksiItem[])}
+                        />
+                    </div>
+                </div>
+            )}
+
+            {!dataProyek?.proyek_id && !data?.proyek_id ? (
+                <> </>
+            ) : (
+                <div
+                    className={`max-w-[390px] transition-all duration-500 ease-in-out sm:max-w-[700px] lg:max-w-full ${
+                        KATEGORI_DENGAN_ITEM.includes(data.kategori) ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+                    }`}
+                >
+                    <div className="my-4 w-full px-4">
+                        <ListAddItem
+                            errors={errors as Record<string, string>}
+                            items={data?.items as TransaksiItem[]}
+                            kategori={data?.kategori}
                             onChange={(items) => setData('items', items as TransaksiItem[])}
                         />
                     </div>
