@@ -10,7 +10,7 @@ import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { BreadcrumbItem } from '@/types';
 import { PaginatedResponse } from '@/types/laravel.type';
-import { initialProyek, ProyekProps, StatusProyek, TipeProyek } from '@/types/project.type';
+import { initialProyek, ProyekProps, StatusProyek } from '@/types/project.type';
 import { Head, router, useForm } from '@inertiajs/react';
 import { Edit, EllipsisVertical, Eye, Plus, Trash } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -44,6 +44,9 @@ const ProjectIndex = ({ proyeks, filters }: PropTypes) => {
     const currentPerPage = new URLSearchParams(window.location.search).get('per_page') ?? '10';
     const [search, setSearch] = useState(filters?.search ?? '');
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    console.log('Proyeks: ', proyeks);
+
     useEffect(() => {
         const findedDataProyek = proyeks?.data?.find((item) => item.proyek_id === selectedProyekId);
 
@@ -133,48 +136,48 @@ const ProjectIndex = ({ proyeks, filters }: PropTypes) => {
             sortable: true,
         },
         {
-            key: 'tipe_proyek',
-            label: 'Tipe',
-            render: (value) => {
-                const map: Record<TipeProyek, string> = {
-                    papping: 'Papping',
-                    u_ditch: 'U-Ditch',
-                    spall: 'Spall',
-                    beton: 'Beton',
-                    sab: 'SAB',
-                };
+            key: 'kategori',
+            label: 'Kategori',
+            render: (_: any, record: ProyekProps) => {
                 return (
                     <span className="bg-secondary text-secondary-foreground rounded-md px-2 py-0.5 text-sm font-semibold uppercase">
-                        {map[value as TipeProyek] ?? value}
+                        {record?.kategori?.nama}
                     </span>
                 );
             },
         },
         {
-            key: 'pagu_total',
-            label: 'Pagu Total',
-            sortable: true,
-            render: (value) => (
-                <span>
-                    {new Intl.NumberFormat('id-ID', {
-                        style: 'currency',
-                        currency: 'IDR',
-                        maximumFractionDigits: 0,
-                    }).format(value as number)}
-                </span>
-            ),
+            key: 'jenis',
+            label: 'Jenis Proyek',
+            render: (_: any, record: ProyekProps) => {
+                return <span className="bg-secondary text-secondary-foreground rounded-md py-0.5 text-sm font-semibold">{record?.jenis?.nama}</span>;
+            },
         },
-        {
-            key: 'tanggal_mulai',
-            label: 'Tanggal Mulai',
-            sortable: true,
-            render: (value) =>
-                new Date(value as string).toLocaleDateString('id-ID', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                }),
-        },
+        // {
+        //     key: 'pagu_total',
+        //     label: 'Pagu Total',
+        //     sortable: true,
+        //     render: (value) => (
+        //         <span>
+        //             {new Intl.NumberFormat('id-ID', {
+        //                 style: 'currency',
+        //                 currency: 'IDR',
+        //                 maximumFractionDigits: 0,
+        //             }).format(value as number)}
+        //         </span>
+        //     ),
+        // },
+        // {
+        //     key: 'tanggal_mulai',
+        //     label: 'Tanggal Mulai',
+        //     sortable: true,
+        //     render: (value) =>
+        //         new Date(value as string).toLocaleDateString('id-ID', {
+        //             day: '2-digit',
+        //             month: 'short',
+        //             year: 'numeric',
+        //         }),
+        // },
         {
             key: 'nama_klien',
             label: 'Klien',

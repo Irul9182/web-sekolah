@@ -100,8 +100,6 @@ const toneStyles: Record<SelectTone, React.CSSProperties> = {
     } as React.CSSProperties,
 };
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
 const AppSelectSearch = ({
     options,
     value: valueProp,

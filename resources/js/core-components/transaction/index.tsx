@@ -161,6 +161,7 @@ const TransactionIndex = ({ filters, list_transaksi }: PageProps) => {
                     staff_perpajakan: 'Staff Perpajakan',
                     mandor: 'Jasa Mandor',
                     jasa_tukang: 'Jasa Tukang',
+                    material: 'Material',
                 };
                 return (
                     <span className="bg-secondary text-secondary-foreground rounded-md px-2 py-0.5 text-sm font-semibold">
@@ -190,7 +191,7 @@ const TransactionIndex = ({ filters, list_transaksi }: PageProps) => {
             label: 'Persen',
             sortable: true,
             render: (value, record: TransaksiProps) => {
-                return <span className={cn('font-semibold')}>{value as string} %</span>;
+                return <span className={cn('font-semibold')}>{value === null ? '-' : ((value + ' %') as string)} </span>;
             },
         },
         {

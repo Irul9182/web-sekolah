@@ -62,7 +62,9 @@ class TransaksiSeeder extends Seeder
 
                     // Update jumlah transaksi dari total items
                     $transaksi->update(['jumlah' => $totalJumlah]);
-
+                    // Hitung persen dari dana_setelah_pajak
+                    $persen = $dana > 0 ? ($totalJumlah / $dana) * 100 : 0;
+                    $transaksi->update(['persen' => round($persen, 2)]);
                     // Kategori langsung — jumlah dari persen × dana_setelah_pajak
                 } else {
                     $persen = match ($kategori) {

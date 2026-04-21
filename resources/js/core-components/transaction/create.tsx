@@ -9,13 +9,15 @@ import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { BreadcrumbItem } from '@/types';
 import { ProyekProps } from '@/types/project.type';
-import { initialTransaksi, KategoriTransaksi, TransaksiProps } from '@/types/transaction.type';
+import { initialTransaksi, KategoriTransaksi, TransaksiItem, TransaksiProps } from '@/types/transaction.type';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { formatDate } from 'date-fns';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import ItemTable from './assets/components/ItemTable';
+import { KATEGORI_DENGAN_ITEM } from './assets/transaksi-assets';
 
 interface PageProps extends InertiaPageProps {
     transaksi?: TransaksiProps;
@@ -113,6 +115,7 @@ const TransactionCreateIndex = () => {
         label: usedKategori.includes(opt.value) ? `${opt.label} ✓` : opt.label,
         disabled: usedKategori.includes(opt.value),
     }));
+
     const handleSubmitTransaksi = async (e: React.FormEvent) => {
         e.preventDefault();
         console.log('Data terkirim: ', data);
@@ -192,6 +195,14 @@ const TransactionCreateIndex = () => {
                     error={errors.proyek_id}
                 />
 
+                <AppDatePicker
+                    value={data.tanggal ? new Date(data.tanggal) : undefined}
+                    required
+                    label="Tanggal"
+                    error={errors?.tanggal}
+                    onChange={(e) => setData('tanggal', e ? formatDate(e, 'yyyy-MM-dd') : '')}
+                />
+
                 <AppSelect
                     defaultValue={dataTransaksi?.kategori || ''}
                     label="Kategori"
@@ -206,69 +217,81 @@ const TransactionCreateIndex = () => {
                     tooltip={transaksiId === null ? (!data.proyek_id ? 'Pilih proyek terlebih dahulu' : undefined) : undefined}
                 />
 
-                <div className="flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between">
-                        <label className="ml-0.5 text-sm font-medium">Nominal</label>
-                        <div className="bg-muted border-border flex h-7 w-fit gap-0.5 rounded-md border p-0.5">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setMode('persen');
-                                    setData('persen', 0);
-                                }}
-                                className={cn(
-                                    'rounded px-2.5 text-xs font-semibold transition-all duration-150',
-                                    mode === 'persen' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
-                                )}
-                            >
-                                %
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setMode('jumlah');
-                                    setData('jumlah', 0);
-                                }}
-                                className={cn(
-                                    'rounded px-2.5 text-xs font-semibold transition-all duration-150',
-                                    mode === 'jumlah' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
-                                )}
-                            >
-                                IDR
-                            </button>
+                {!['material', 'operasional', 'biaya_tak_terduga'].includes(data?.kategori) && (
+                    <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between">
+                            <label className="ml-0.5 text-sm font-medium">Nominal</label>
+                            <div className="bg-muted border-border flex h-7 w-fit gap-0.5 rounded-md border p-0.5">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setMode('persen');
+                                        setData('persen', 0);
+                                    }}
+                                    className={cn(
+                                        'rounded px-2.5 text-xs font-semibold transition-all duration-150',
+                                        mode === 'persen' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+                                    )}
+                                >
+                                    %
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setMode('jumlah');
+                                        setData('jumlah', 0);
+                                    }}
+                                    className={cn(
+                                        'rounded px-2.5 text-xs font-semibold transition-all duration-150',
+                                        mode === 'jumlah' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+                                    )}
+                                >
+                                    IDR
+                                </button>
+                            </div>
                         </div>
+
+                        <AppInput
+                            type="number"
+                            min={0}
+                            max={mode === 'persen' ? 100 : undefined}
+                            required
+                            placeholder={mode === 'persen' ? 'Masukkan persen . . .' : 'Masukkan jumlah . . .'}
+                            onChange={(e) => {
+                                const val = parseFloat(e.target.value) || 0;
+                                if (mode === 'persen') {
+                                    setData('persen', val);
+                                    setData('jumlah', 0);
+                                } else {
+                                    setData('jumlah', val);
+                                    setData('persen', 0);
+                                }
+                            }}
+                            value={mode === 'jumlah' ? data.jumlah || '' : data.persen || ''}
+                            error={errors?.jumlah || errors?.persen}
+                        />
                     </div>
-
-                    <AppInput
-                        type="number"
-                        min={0}
-                        max={mode === 'persen' ? 100 : undefined}
-                        required
-                        placeholder={mode === 'persen' ? 'Masukkan persen . . .' : 'Masukkan jumlah . . .'}
-                        onChange={(e) => {
-                            const val = parseFloat(e.target.value) || 0;
-                            if (mode === 'persen') {
-                                setData('persen', val);
-                                setData('jumlah', 0);
-                            } else {
-                                setData('jumlah', val);
-                                setData('persen', 0);
-                            }
-                        }}
-                        value={mode === 'jumlah' ? data.jumlah || 0 : data.persen || 0}
-                        error={errors?.jumlah || errors?.persen}
-                    />
-                </div>
-
-                <AppDatePicker
-                    value={data.tanggal ? new Date(data.tanggal) : undefined}
-                    required
-                    label="Tanggal"
-                    error={errors?.tanggal}
-                    onChange={(e) => setData('tanggal', e ? formatDate(e, 'yyyy-MM-dd') : '')}
-                />
+                )}
             </div>
-            <div className="px-4 pb-7">
+            {!dataProyek?.proyek_id && !data?.proyek_id ? (
+                <> </>
+            ) : (
+                <div
+                    className={`max-w-[390px] transition-all duration-500 ease-in-out sm:max-w-[700px] lg:max-w-full ${
+                        KATEGORI_DENGAN_ITEM.includes(data.kategori) ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+                    }`}
+                >
+                    <div className="px-4 pt-2">
+                        <ItemTable
+                            errors={errors as Record<string, string>}
+                            items={data?.items as TransaksiItem[]}
+                            onChange={(items) => setData('items', items as TransaksiItem[])}
+                        />
+                    </div>
+                </div>
+            )}
+
+            <div className="mt-4 px-4 pb-7">
                 <AppTextArea
                     className="min-h-50 px-3 py-4"
                     value={data?.keterangan || ''}

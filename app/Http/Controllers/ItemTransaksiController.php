@@ -7,12 +7,18 @@ use App\Models\Transaksi;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use App\Models\ItemTransaksi;
+use App\Services\FinanceService;
 
 class ItemTransaksiController extends Controller
 {
     //
 
+    protected FinanceService $financeService;
 
+    public function __construct(FinanceService $financeService)
+    {
+        $this->financeService = $financeService;
+    }
     public function index($transaksi_id)
     {
         $transaksi = Transaksi::with(['proyek', 'items'])
@@ -63,6 +69,8 @@ class ItemTransaksiController extends Controller
         }
 
         $this->recalculateJumlah($transaksi);
+        $transaksi->load('proyek'); // pastikan relasi proyek ter-load
+        $this->recalculatePersen($transaksi);
 
         return redirect()
             ->route('transaction.detail', $transaksi_id)
@@ -93,6 +101,8 @@ class ItemTransaksiController extends Controller
         ]);
 
         $this->recalculateJumlah($transaksi);
+        $transaksi->load('proyek'); // pastikan relasi proyek ter-load
+        $this->recalculatePersen($transaksi);
 
         return redirect()
             ->route('transaction.detail', $transaksi_id)
@@ -110,6 +120,8 @@ class ItemTransaksiController extends Controller
         $item->delete();
 
         $this->recalculateJumlah($transaksi);
+        $transaksi->load('proyek'); // pastikan relasi proyek ter-load
+        $this->recalculatePersen($transaksi);
 
         return redirect()
             ->route('transaction.detail', $transaksi_id)
@@ -123,6 +135,18 @@ class ItemTransaksiController extends Controller
     {
         $total = $transaksi->items()->sum('subtotal');
         $transaksi->update(['jumlah' => $total]);
+    }
+
+    private function recalculatePersen(Transaksi $transaksi): void
+    {
+        $anggaran = (new \App\Services\FinanceService())->hitungAnggaranProyek($transaksi->proyek);
+        $dana     = $anggaran['dana_setelah_pajak'];
+
+        $persen = $dana > 0
+            ? ($transaksi->jumlah / $dana) * 100
+            : 0;
+
+        $transaksi->update(['persen' => round($persen, 2)]);
     }
 
     /**
