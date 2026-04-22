@@ -163,7 +163,7 @@ const ListAddItem = ({ items = [], errors, onChange, kategori }: ItemTableProps)
                                     <div className="flex w-full flex-col gap-3">
                                         <AppInput
                                             type="number"
-                                            value={item?.qty}
+                                            value={item?.qty !== undefined && item?.qty !== null ? Number(item.qty).toString() : ''}
                                             label="Kuantitas"
                                             required
                                             placeholder="Masukkan kuantitas . . ."

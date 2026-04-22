@@ -2,7 +2,7 @@ import DetailItem from '@/components/app-detail-item';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui-shadcn/card';
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui-shadcn/empty';
 import { formatCurrency, formatDate } from '@/helpers/format';
-import { KategoriTransaksi, TransaksiItem } from '@/types/transaction.type';
+import { KategoriTransaksi, TransaksiItem, TransaksiProps } from '@/types/transaction.type';
 import { ShieldQuestion } from 'lucide-react';
 import { Button } from 'react-day-picker';
 
@@ -12,9 +12,10 @@ interface PropTypes {
     title?: string;
     itemValueList?: TransaksiItem[];
     itemValue?: TransaksiItem;
+    transaksiValue?: TransaksiProps;
 }
 
-const DetailItemTransaksiContent = ({ kategoriTransaksi, title, itemValue, itemValueList }: PropTypes) => {
+const DetailItemTransaksiContent = ({ kategoriTransaksi, title, itemValue, itemValueList, transaksiValue }: PropTypes) => {
     return (
         <>
             {kategoriTransaksi === 'jasa_tukang' ||
@@ -24,7 +25,7 @@ const DetailItemTransaksiContent = ({ kategoriTransaksi, title, itemValue, itemV
                 <></>
             ) : (
                 <Card className="border-primary/20 bg-card mx-4 mt-0 mb-4 shadow-sm">
-                    <CardHeader className="border-border border-b pb-3">
+                    <CardHeader className="border-border flex items-center justify-between border-b pb-3">
                         <div className="flex items-center gap-3">
                             <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-md">
                                 <div className="text-primary">
@@ -66,6 +67,10 @@ const DetailItemTransaksiContent = ({ kategoriTransaksi, title, itemValue, itemV
                                 </div>
                             </div>
                             <CardTitle className="text-card-foreground text-sm font-bold sm:text-base">{title}</CardTitle>
+                        </div>
+                        <div className="bg-muted font-semiboldsm:text-xl flex items-center gap-2 rounded-xl border px-4 py-2">
+                            <span>Total:</span>
+                            <span className="font-semibold">{formatCurrency(transaksiValue?.jumlah)}</span>
                         </div>
                     </CardHeader>
                     <CardContent className="flex w-full flex-col items-center justify-center">
@@ -113,7 +118,7 @@ const DetailItemTransaksiContent = ({ kategoriTransaksi, title, itemValue, itemV
                                                 labelClassName="text-muted! text-[10px] sm:text-sm"
                                                 valueClassName="text-muted! text-[10px] sm:text-sm"
                                                 label="Kuantitas"
-                                                value={Number(item?.qty)}
+                                                value={item?.qty !== undefined && item?.qty !== null ? Number(item.qty).toString() : ''}
                                             />
                                             <DetailItem
                                                 className="!border-white"

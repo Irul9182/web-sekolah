@@ -131,7 +131,7 @@ const ProjectDetailIndex = () => {
                             <CardTitle className="text-card-foreground text-sm font-bold sm:text-base">Detail Proyek</CardTitle>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-0 pt-4">
+                    <CardContent className="space-y-0">
                         <DetailItem
                             labelClassName=" text-[10px] sm:text-sm"
                             valueClassName=" text-[10px] sm:text-sm"
@@ -213,7 +213,7 @@ const ProjectDetailIndex = () => {
                             <CardTitle className="text-card-foreground text-sm font-bold sm:text-base">Transaksi</CardTitle>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-0 pt-4">
+                    <CardContent className="space-y-0">
                         <DetailItem
                             labelClassName=" text-[10px] sm:text-sm"
                             valueClassName=" text-[10px] sm:text-sm"

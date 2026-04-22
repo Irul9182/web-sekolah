@@ -104,12 +104,12 @@ const TransactionDetailIndex = () => {
                         label="Persen Total (%)"
                         value={formatPercent(transaksi?.persen)}
                     />
-                    <DetailItem
+                    {/* <DetailItem
                         labelClassName=" text-[10px] sm:text-sm"
                         valueClassName=" text-[10px] sm:text-sm"
                         label="Jumlah Total (IDR)"
                         value={formatCurrency(transaksi?.jumlah)}
-                    />
+                    /> */}
                     <DetailItem
                         labelClassName=" text-[10px] sm:text-sm"
                         valueClassName=" text-[10px] sm:text-sm"
@@ -131,6 +131,7 @@ const TransactionDetailIndex = () => {
                 </CardContent>
             </Card>
             <DetailItemTransaksiContent
+                transaksiValue={transaksi}
                 title={
                     transaksi?.kategori === 'biaya_tak_terduga'
                         ? 'List Biaya Digunakan'

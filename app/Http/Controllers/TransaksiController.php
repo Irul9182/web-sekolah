@@ -317,6 +317,25 @@ class TransaksiController extends Controller
             'keterangan' => $validated['keterangan'] ?? null,
         ]);
 
+        if (in_array($validated['kategori'], Transaksi::KATEGORI_DENGAN_ITEM)) {
+            // Hapus items lama
+            $transaksi->items()->delete();
+
+            // Insert items baru
+            foreach ($validated['items'] as $item) {
+                ItemTransaksi::create([
+                    'transaksi_id' => $transaksi->transaksi_id,
+                    'tanggal'      => $item['tanggal'],
+                    'nama_item'    => $item['nama_item'],
+                    'satuan'       => $item['satuan'] ?? null,
+                    'qty'          => $item['qty'],
+                    'harga_satuan' => $item['harga_satuan'],
+                    'subtotal'     => $item['qty'] * $item['harga_satuan'],
+                    'keterangan'   => $item['keterangan'] ?? null,
+                ]);
+            }
+        }
+
         return redirect()
             ->route('transaction.index')
             ->with('success', 'Transaksi berhasil diperbarui.');
