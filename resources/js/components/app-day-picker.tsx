@@ -93,7 +93,10 @@ const AppDatePicker = ({
         <div className={cn('flex flex-col gap-1.5', className)}>
             {/* ── Label ── */}
             {label && (
-                <Label htmlFor={inputId} className={cn('ml-0.5 text-sm font-medium', error && 'text-destructive', disabled && 'opacity-50')}>
+                <Label
+                    htmlFor={inputId}
+                    className={cn('ml-0.5 text-[12px] font-medium sm:text-sm', error && 'text-destructive', disabled && 'opacity-50')}
+                >
                     {label}
                     {required && <span className="text-destructive ml-1">*</span>}
                 </Label>
@@ -110,7 +113,7 @@ const AppDatePicker = ({
                     disabled={disabled}
                     onClick={() => !disabled && setOpen(true)}
                     className={cn(
-                        'border-input bg-muted text-foreground flex h-10 w-full rounded-md border px-3 py-2 pr-10 text-sm',
+                        'border-input bg-muted text-foreground flex h-10 w-full rounded-md border px-3 py-2 pr-10 text-[10px] sm:text-sm',
                         'placeholder:text-muted-foreground transition-all duration-200',
                         'cursor-pointer select-none',
                         'focus:border-primary focus:bg-background focus:outline-none',

@@ -16,7 +16,6 @@ import { formatDate } from 'date-fns';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import ItemTable from './assets/components/ItemTable';
 import ListAddItem from './assets/components/ListAddItem';
 import { KATEGORI_DENGAN_ITEM } from './assets/transaksi-assets';
 
@@ -120,6 +119,8 @@ const TransactionCreateIndex = () => {
     const handleSubmitTransaksi = async (e: React.FormEvent) => {
         e.preventDefault();
         console.log('Data terkirim: ', data);
+        console.log('Items: ', data.items);
+        console.log('Jumlah items: ', data.items?.length);
         if (transaksiId !== null) {
             put(`/transaction/${transaksiId}`, {
                 preserveState: false,
@@ -225,6 +226,7 @@ const TransactionCreateIndex = () => {
                             <div className="bg-muted border-border flex h-7 w-fit gap-0.5 rounded-md border p-0.5">
                                 <button
                                     type="button"
+                                    disabled={!data?.kategori}
                                     onClick={() => {
                                         setMode('persen');
                                         setData('persen', 0);
@@ -238,6 +240,7 @@ const TransactionCreateIndex = () => {
                                 </button>
                                 <button
                                     type="button"
+                                    disabled={!data?.kategori}
                                     onClick={() => {
                                         setMode('jumlah');
                                         setData('jumlah', 0);
@@ -255,6 +258,7 @@ const TransactionCreateIndex = () => {
                         <AppInput
                             type="number"
                             min={0}
+                            disabled={!data?.kategori}
                             max={mode === 'persen' ? 100 : undefined}
                             required
                             placeholder={mode === 'persen' ? 'Masukkan persen . . .' : 'Masukkan jumlah . . .'}
@@ -274,7 +278,7 @@ const TransactionCreateIndex = () => {
                     </div>
                 )}
             </div>
-            {!dataProyek?.proyek_id && !data?.proyek_id ? (
+            {/* {!dataProyek?.proyek_id && !data?.proyek_id ? (
                 <> </>
             ) : (
                 <div
@@ -290,13 +294,13 @@ const TransactionCreateIndex = () => {
                         />
                     </div>
                 </div>
-            )}
+            )} */}
 
             {!dataProyek?.proyek_id && !data?.proyek_id ? (
                 <> </>
             ) : (
                 <div
-                    className={`max-w-[390px] transition-all duration-500 ease-in-out sm:max-w-[700px] lg:max-w-full ${
+                    className={`max-w-full transition-all duration-500 ease-in-out sm:max-w-[700px] lg:max-w-full ${
                         KATEGORI_DENGAN_ITEM.includes(data.kategori) ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
                     }`}
                 >

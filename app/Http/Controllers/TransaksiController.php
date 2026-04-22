@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use App\Models\Proyek;
 use App\Services\FinanceService;
 use Illuminate\Validation\Rule;
+use App\Models\ItemTransaksi;
 
 class TransaksiController extends Controller
 {
@@ -107,6 +108,14 @@ class TransaksiController extends Controller
                 Rule::unique('transaksi')
                     ->where('proyek_id', $request->proyek_id),
             ],
+            // Validasi items untuk kategori dengan item
+            'items'                  => [
+                Rule::requiredIf(in_array($request->kategori, Transaksi::KATEGORI_DENGAN_ITEM)),
+                'nullable',
+                'array',
+                'min:1',
+            ],
+
             'tanggal'    => ['required', 'date'],
             'persen'     => ['nullable', 'numeric', 'min:0', 'max:100'],
             'jumlah'     => ['nullable', 'numeric', 'min:0'],
@@ -128,33 +137,56 @@ class TransaksiController extends Controller
         ]);
         $proyek   = Proyek::find($validated['proyek_id']);
         $anggaran = $this->financeService->hitungAnggaranProyek($proyek);
-        $dana     = $anggaran['dana_setelah_pajak']; // ← basis yang benar
+        $dana     = $anggaran['dana_setelah_pajak'];
 
-        if (empty($validated['persen']) && empty($validated['jumlah'])) {
-            return back()->withErrors([
-                'jumlah' => 'Persen atau jumlah wajib diisi salah satu.',
-            ])->withInput();
+        if (in_array($validated['kategori'], Transaksi::KATEGORI_DENGAN_ITEM)) {
+            // Jumlah dari sum subtotal items
+
+
+
+            $jumlah = collect($validated['items'])->sum(
+                fn($item) => $item['qty'] * $item['harga_satuan']
+            );
+            $persen = $dana > 0 ? ($jumlah / $dana) * 100 : 0;
+        } else {
+            // Kategori langsung — persen atau jumlah wajib salah satu
+            if (empty($validated['persen']) && empty($validated['jumlah'])) {
+                return back()->withErrors([
+                    'jumlah' => 'Persen atau jumlah wajib diisi salah satu.',
+                ])->withInput();
+            }
+
+            if (!empty($validated['persen'])) {
+                $jumlah = $dana * ($validated['persen'] / 100);
+                $persen = $validated['persen'];
+            } else {
+                $jumlah = $validated['jumlah'];
+                $persen = $dana > 0 ? ($jumlah / $dana) * 100 : 0;
+            }
         }
 
-        if (!empty($validated['persen']) && empty($validated['jumlah'])) {
-            $validated['jumlah'] = $dana * ($validated['persen'] / 100);
-        }
-
-        if (!empty($validated['jumlah']) && empty($validated['persen'])) {
-            $validated['persen'] = $dana > 0
-                ? ($validated['jumlah'] / $dana) * 100
-                : 0;
-        }
-
-        Transaksi::create([
+        $transaksi = Transaksi::create([
             'proyek_id'    => $validated['proyek_id'],
             'kategori'     => $validated['kategori'],
             'tanggal'      => $validated['tanggal'],
-            'persen'       => $validated['persen'],
-            'jumlah'       => $validated['jumlah'],
+            'persen'     => round($persen, 2),
+            'jumlah'     => $jumlah,
             'keterangan'   => $validated['keterangan'] ?? null,
         ]);
-
+        if (in_array($validated['kategori'], Transaksi::KATEGORI_DENGAN_ITEM)) {
+            foreach ($validated['items'] as $item) {
+                ItemTransaksi::create([
+                    'transaksi_id' => $transaksi->transaksi_id,
+                    'tanggal'      => $item['tanggal'],
+                    'nama_item'    => $item['nama_item'],
+                    'satuan'       => $item['satuan'] ?? null,
+                    'qty'          => $item['qty'],
+                    'harga_satuan' => $item['harga_satuan'],
+                    'subtotal'     => $item['qty'] * $item['harga_satuan'],
+                    'keterangan'   => $item['keterangan'] ?? null,
+                ]);
+            }
+        }
         return redirect()
             ->route('transaction.index')
             ->with('success', 'Transaksi berhasil ditambahkan.');
@@ -180,7 +212,8 @@ class TransaksiController extends Controller
      */
     public function edit($transaksi_id)
     {
-        $transaksi = Transaksi::findOrFail($transaksi_id);
+        $transaksi = Transaksi::with(['proyek', 'items'])
+            ->findOrFail($transaksi_id);
 
         $proyek = Proyek::findOrFail($transaksi->proyek_id);
 
@@ -220,6 +253,14 @@ class TransaksiController extends Controller
                     ->where('proyek_id', $request->proyek_id)
                     ->ignore($transaksi->transaksi_id, 'transaksi_id'),
             ],
+
+            // Validasi items untuk kategori dengan item
+            'items'                  => [
+                Rule::requiredIf(in_array($request->kategori, Transaksi::KATEGORI_DENGAN_ITEM)),
+                'nullable',
+                'array',
+                'min:1',
+            ],
             'tanggal'    => ['required', 'date'],
             'persen'     => ['nullable', 'numeric', 'min:0', 'max:100'],
             'jumlah'     => ['nullable', 'numeric', 'min:0'],
@@ -244,24 +285,35 @@ class TransaksiController extends Controller
         $anggaran = $this->financeService->hitungAnggaranProyek($proyek);
         $dana     = $anggaran['dana_setelah_pajak'];
 
-        if (!empty($validated['persen'])) {
-            $validated['jumlah'] = $dana * ($validated['persen'] / 100);
-        } elseif (!empty($validated['jumlah'])) {
-            $validated['persen'] = $dana > 0
-                ? ($validated['jumlah'] / $dana) * 100
-                : 0;
+        if (in_array($validated['kategori'], Transaksi::KATEGORI_DENGAN_ITEM)) {
+            // Jumlah dari sum subtotal items
+            $jumlah = collect($validated['items'])->sum(
+                fn($item) => $item['qty'] * $item['harga_satuan']
+            );
+            $persen = $dana > 0 ? ($jumlah / $dana) * 100 : 0;
         } else {
-            return back()->withErrors([
-                'jumlah' => 'Persen atau jumlah wajib diisi salah satu.',
-            ])->withInput();
+            // Kategori langsung — persen atau jumlah wajib salah satu
+            if (empty($validated['persen']) && empty($validated['jumlah'])) {
+                return back()->withErrors([
+                    'jumlah' => 'Persen atau jumlah wajib diisi salah satu.',
+                ])->withInput();
+            }
+
+            if (!empty($validated['persen'])) {
+                $jumlah = $dana * ($validated['persen'] / 100);
+                $persen = $validated['persen'];
+            } else {
+                $jumlah = $validated['jumlah'];
+                $persen = $dana > 0 ? ($jumlah / $dana) * 100 : 0;
+            }
         }
 
         $transaksi->update([
             'proyek_id'  => $validated['proyek_id'],
             'kategori'   => $validated['kategori'],
             'tanggal'    => $validated['tanggal'],
-            'persen'     => $validated['persen'],
-            'jumlah'     => $validated['jumlah'],
+            'persen'     => round($persen, 2),
+            'jumlah'     => $jumlah,
             'keterangan' => $validated['keterangan'] ?? null,
         ]);
 

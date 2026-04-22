@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDate } from '@/helpers/format';
 import { KategoriTransaksi, TransaksiItem } from '@/types/transaction.type';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Plus, Trash2 } from 'lucide-react';
+import { BadgeInfo, Plus, Trash2 } from 'lucide-react';
 type ItemForm = Omit<TransaksiItem, 'transaksi_id' | 'created_at' | 'updated_at'>;
 const defaultItem = (): ItemForm => ({
     tanggal: '',
@@ -45,116 +45,69 @@ const ListAddItem = ({ items = [], errors, onChange, kategori }: ItemTableProps)
     };
 
     const total = safeItems.reduce((sum, item) => sum + (parseFloat(item.subtotal) || 0), 0);
+
+    const namaItem =
+        kategori === 'biaya_tak_terduga'
+            ? 'Barang/kegiatan'
+            : kategori === 'material'
+              ? 'Barang/Bahan'
+              : kategori === 'operasional'
+                ? 'Kegiatan/Pekerjaan'
+                : '';
+
+    const namaSatuan =
+        kategori === 'biaya_tak_terduga'
+            ? 'Jumlah biaya'
+            : kategori === 'material'
+              ? 'Harga Satuan'
+              : kategori === 'operasional'
+                ? 'Jumlah biaya'
+                : '';
+
     return (
         <div>
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-3 flex items-baseline justify-between sm:items-center">
                 <div className="flex items-center">
                     <p className="text-sm font-medium">Daftar Item </p>
                     <span className="text-destructive ml-1 text-[8px] sm:text-[12px]">*</span>
                 </div>
                 <div className="flex items-center gap-4">
-                    <span>
+                    <span className="bg-muted hidden rounded-xl border px-4 py-2 text-[12px] sm:block sm:text-sm">
                         Sub Total:
                         <span className="ml-2 font-semibold text-blue-500">{formatCurrency(total)}</span>
                     </span>
-                    <Button type="button" variant="default" size="sm" onClick={handleAdd} className="flex items-center gap-1">
+                    <Button type="button" variant="default" size="sm" onClick={handleAdd} className="flex h-7 items-center gap-1 sm:h-10">
                         <Plus size={14} />
                         Tambah Item
                     </Button>
                 </div>
             </div>
+            <div className="flex items-center justify-center pb-2 sm:hidden">
+                <span className="bg-muted rounded-xl border px-4 py-2 text-[12px]">
+                    Sub Total:
+                    <span className="ml-2 font-semibold text-blue-500">{formatCurrency(total)}</span>
+                </span>
+            </div>
             <div className="flex flex-col items-center gap-3">
-                {/* <AnimatePresence initial={false}>
-                    {safeItems?.map((item, index) => (
-                        <motion.div
-                            key={item?.item_id} 
-                            layout
-                            initial={{ opacity: 0, y: 12, scale: 0.98 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -8, scale: 0.97 }}
-                            transition={{
-                                duration: 0.25,
-                                delay: index * 0.06,
-                                ease: 'easeOut',
-                            }}
-                            className="w-full rounded-xl border p-4"
-                        >
-                            <div className="grid w-full grid-cols-1 items-center gap-4 sm:grid-cols-2">
-                                <div className="flex w-full flex-col gap-3">
-                                    <AppDatePicker
-                                        placeholder="masukkan tanggal . . ."
-                                        value={item.tanggal ? new Date(item.tanggal) : undefined}
-                                        onChange={(e) => handleChange(index, 'tanggal', e ? formatDate(e.toDateString()) : '')}
-                                        className="h-8 w-full"
-                                    />
-                                    {errors[`items.${index}.tanggal`] && (
-                                        <p className="text-destructive mt-1 text-xs">{errors[`items.${index}.tanggal`]}</p>
-                                    )}
-                                </div>
-                                <div className="flex w-full flex-col gap-3">
-                                    <AppInput
-                                        type="text"
-                                        value={item?.nama_item}
-                                        onChange={(e) => handleChange(index, 'nama_item', e.target.value)}
-                                        className="h-8 w-full"
-                                    />
-                                    {errors[`items.${index}.nama_item`] && (
-                                        <p className="text-destructive mt-1 text-xs">{errors[`items.${index}.nama_item`]}</p>
-                                    )}
-                                </div>
-                                <div className="flex w-full flex-col gap-3">
-                                    <AppInput
-                                        type="text"
-                                        value={item?.satuan}
-                                        onChange={(e) => handleChange(index, 'satuan', e.target.value)}
-                                        className="h-8 w-full"
-                                    />
-                                    {errors[`items.${index}.satuan`] && (
-                                        <p className="text-destructive mt-1 text-xs">{errors[`items.${index}.satuan`]}</p>
-                                    )}
-                                </div>
-                                <div className="flex w-full flex-col gap-3">
-                                    <AppInput
-                                        type="number"
-                                        value={item?.qty}
-                                        onChange={(e) => handleChange(index, 'qty', e.target.value)}
-                                        className="h-8 w-full"
-                                    />
-                                    {errors[`items.${index}.qty`] && <p className="text-destructive mt-1 text-xs">{errors[`items.${index}.qty`]}</p>}
-                                </div>
-                                <div className="flex w-full flex-col gap-3">
-                                    <AppInput
-                                        type="number"
-                                        value={item?.harga_satuan}
-                                        onChange={(e) => handleChange(index, 'harga_satuan', e.target.value)}
-                                        className="h-8 w-full"
-                                    />
-                                    {errors[`items.${index}.harga_satuan`] && (
-                                        <p className="text-destructive mt-1 text-xs">{errors[`items.${index}.harga_satuan`]}</p>
-                                    )}
-                                </div>
-                                <div className="flex w-full flex-col gap-3">
-                                    <AppInput
-                                        type="text"
-                                        value={item?.keterangan}
-                                        onChange={(e) => handleChange(index, 'keterangan', e.target.value)}
-                                        className="h-8 w-full"
-                                    />
-                                    {errors[`items.${index}.keterangan`] && (
-                                        <p className="text-destructive mt-1 text-xs">{errors[`items.${index}.keterangan`]}</p>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="mt-4 flex items-center justify-end">
-                                <Button variant={'secondary'} onClick={() => handleRemove(index)} type="button">
-                                    <Trash size={14} /> Hapus Item
-                                </Button>
-                            </div>
-                        </motion.div>
-                    ))}
-                </AnimatePresence> */}
-
                 <AnimatePresence initial={false} mode="popLayout">
+                    <>
+                        {safeItems.length === 0 && (
+                            <motion.div
+                                layout
+                                initial={{ opacity: 0, y: -16, scale: 0.98 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -16, scale: 0.97, transition: { duration: 0.2 } }}
+                                transition={{
+                                    duration: 0.25,
+                                    ease: 'easeOut',
+                                }}
+                                className="flex w-full flex-col items-center justify-center gap-[-10px] rounded-xl border p-4"
+                            >
+                                <BadgeInfo size={40} />
+                                <span className="text-muted-foreground py-6 text-center">Belum ada {namaItem}. Klik Tambah untuk mulai.</span>
+                            </motion.div>
+                        )}
+                    </>
                     {[...safeItems].reverse().map((item) => {
                         const realIndex = safeItems.findIndex((i) => i.item_id === item.item_id);
                         return (
@@ -174,6 +127,7 @@ const ListAddItem = ({ items = [], errors, onChange, kategori }: ItemTableProps)
                                     <div className="flex w-full flex-col gap-3">
                                         <AppInput
                                             type="text"
+                                            placeholder={`Masukkan Nama ${namaItem} . . .`}
                                             label={
                                                 kategori === 'biaya_tak_terduga'
                                                     ? 'Nama/Judul'
@@ -200,6 +154,7 @@ const ListAddItem = ({ items = [], errors, onChange, kategori }: ItemTableProps)
                                             value={item?.satuan}
                                             onChange={(e) => handleChange(realIndex, 'satuan', e.target.value)}
                                             className="h-8 w-full"
+                                            placeholder="Masukkan satuan . . ."
                                         />
                                         {errors[`items.${realIndex}.satuan`] && (
                                             <p className="text-destructive mt-1 text-xs">{errors[`items.${realIndex}.satuan`]}</p>
@@ -210,6 +165,8 @@ const ListAddItem = ({ items = [], errors, onChange, kategori }: ItemTableProps)
                                             type="number"
                                             value={item?.qty}
                                             label="Kuantitas"
+                                            required
+                                            placeholder="Masukkan kuantitas . . ."
                                             onChange={(e) => handleChange(realIndex, 'qty', e.target.value)}
                                             className="h-8 w-full"
                                         />
@@ -221,6 +178,7 @@ const ListAddItem = ({ items = [], errors, onChange, kategori }: ItemTableProps)
                                         <AppDatePicker
                                             label="Tanggal Transaksi"
                                             required
+                                            placeholder="Masukkan tanggal . . . "
                                             inputClassName="h-8"
                                             value={item.tanggal ? new Date(item.tanggal) : undefined}
                                             onChange={(e) => handleChange(realIndex, 'tanggal', e ? formatDate(e.toDateString()) : '')}
@@ -233,9 +191,11 @@ const ListAddItem = ({ items = [], errors, onChange, kategori }: ItemTableProps)
                                     <div className="flex w-full flex-col gap-3">
                                         <AppInput
                                             type="number"
-                                            label="Harga Satuan"
+                                            label={namaSatuan}
+                                            placeholder={`Masukkan ${namaSatuan} . . .`}
                                             value={item?.harga_satuan}
                                             onChange={(e) => handleChange(realIndex, 'harga_satuan', e.target.value)}
+                                            required
                                             className="h-8 w-full"
                                         />
                                         {errors[`items.${realIndex}.harga_satuan`] && (
@@ -248,6 +208,7 @@ const ListAddItem = ({ items = [], errors, onChange, kategori }: ItemTableProps)
                                             value={item?.keterangan}
                                             label="Keterangan"
                                             onChange={(e) => handleChange(realIndex, 'keterangan', e.target.value)}
+                                            placeholder="Masukkan keterangan . . ."
                                             className="h-8 w-full"
                                         />
                                         {errors[`items.${realIndex}.keterangan`] && (

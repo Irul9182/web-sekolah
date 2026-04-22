@@ -25,7 +25,7 @@ const AppTextArea = React.forwardRef<HTMLTextAreaElement, AppTextAreaProps>(({ l
                 ref={ref}
                 id={inputId}
                 className={cn(
-                    'bg-muted border-input text-foreground min-h-[100px] resize-y',
+                    'bg-muted border-input text-foreground min-h-[100px] resize-y text-[12px] sm:text-[16px]',
                     'placeholder:text-muted-foreground transition-all duration-200',
                     'focus-visible:border-primary focus-visible:bg-background focus-visible:outline-none',
                     'focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_25%,transparent)]',

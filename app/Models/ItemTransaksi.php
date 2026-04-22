@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class ItemTransaksi extends Model
 {
@@ -33,5 +34,17 @@ class ItemTransaksi extends Model
     public function transaksi(): BelongsTo
     {
         return $this->belongsTo(Transaksi::class, 'transaksi_id', 'transaksi_id');
+    }
+
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->item_id)) {
+                $model->item_id = (string) Str::ulid();
+            }
+        });
     }
 }
