@@ -74,7 +74,7 @@ const DetailItem: React.FC<DetailItemProps> = ({
                         color: 'var(--tone-text)',
                     }}
                     data-tone={tone}
-                    className="border px-2.5 py-0.5 text-xs font-semibold tracking-wide"
+                    className="border px-2.5 py-0.5 text-[10px] font-semibold tracking-wide sm:text-xs"
                 >
                     {value}
                 </Badge>

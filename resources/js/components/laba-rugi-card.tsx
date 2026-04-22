@@ -87,7 +87,7 @@ const LabaRugiCard = ({ pemasukan, pengeluaran, selisih, status }: LabaRugiCardP
                         <div className={cn('flex h-8 w-8 items-center justify-center rounded-md', toneConfig.iconBg)}>
                             <Icon className={cn('h-4 w-4', toneConfig.iconColor)} />
                         </div>
-                        <CardTitle className="text-card-foreground text-base font-bold">Laba / Rugi Proyek</CardTitle>
+                        <CardTitle className="text-card-foreground text-sm font-bold sm:text-base">Laba / Rugi Proyek</CardTitle>
                     </div>
 
                     <span
@@ -105,14 +105,14 @@ const LabaRugiCard = ({ pemasukan, pengeluaran, selisih, status }: LabaRugiCardP
             </CardHeader>
 
             <CardContent className="pt-4">
-                <div className="mb-5 flex flex-col items-center justify-center gap-1 py-4">
+                <div className="mb-5 flex flex-col items-center justify-center gap-1 py-0 sm:py-4">
                     <p className="text-muted-foreground text-xs font-medium tracking-widest uppercase">Selisih ({toneConfig.label})</p>
-                    <h4 className={cn('text-3xl font-bold tracking-tight', toneConfig.valueColor)}>
+                    <h4 className={cn('text-xl font-bold tracking-tight sm:text-3xl', toneConfig.valueColor)}>
                         {formatCurrency(Math.abs(animatedValueSelisih))}
                     </h4>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div className="border-border bg-muted/30 flex flex-col gap-1 rounded-lg border px-4 py-3">
                         <p className="text-muted-foreground text-[10px] font-semibold tracking-widest uppercase">Pemasukan</p>
                         <p className="text-base font-bold text-[color:var(--color-success)]">{formatCurrency(pemasukan ?? 0)}</p>

@@ -67,24 +67,26 @@ const CashFlowCard = ({ kasMasuk, kasKeluar, netCash, breakdown }: CashFlowCardP
                         <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-md">
                             <Icon className="h-4 w-4" />
                         </div>
-                        <CardTitle className="text-base font-bold">Cash Flow Proyek</CardTitle>
+                        <CardTitle className="text-[12px] font-bold sm:text-base">Cash Flow Proyek</CardTitle>
                     </div>
 
-                    <span className="flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-semibold">{toneConfig.label}</span>
+                    <span className="flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-[10px] font-semibold sm:text-xs">
+                        {toneConfig.label}
+                    </span>
                 </div>
             </CardHeader>
 
             <CardContent className="pt-4">
                 {/* Net Cash */}
-                <div className="mb-5 flex flex-col items-center justify-center gap-1 py-4">
+                <div className="mb-5 flex flex-col items-center justify-center gap-1 py-0 sm:py-4">
                     <p className="text-muted-foreground text-xs font-medium uppercase">Arus Kas Bersih</p>
-                    <h4 className="text-3xl font-bold" style={{ color: toneConfig.color }}>
+                    <h4 className="text-xl font-bold sm:text-3xl" style={{ color: toneConfig.color }}>
                         {formatCurrency(Math.abs(animatedNet))}
                     </h4>
                 </div>
 
                 {/* Kas Masuk & Keluar */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div className="bg-muted/30 flex flex-col gap-1 rounded-lg border px-4 py-3">
                         <p className="text-muted-foreground text-[10px] uppercase">Kas Masuk</p>
                         <p className="text-base font-bold text-green-600">{formatCurrency(kasMasuk ?? 0)}</p>

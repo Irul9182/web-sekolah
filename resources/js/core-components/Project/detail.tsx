@@ -99,9 +99,9 @@ const ProjectDetailIndex = () => {
             <Head title="Detail Proyek" />
 
             {/* Action Bar */}
-            <div className="mt-4 flex w-full items-center justify-between px-4">
+            <div className="mt-4 flex w-full flex-col items-center justify-between gap-3 px-4 sm:flex-row">
                 <div className="flex items-center gap-2">
-                    <div className="bg-primary h-1 w-6 rounded-full" />
+                    <div className="bg-primary hidden h-1 w-6 rounded-full sm:block" />
                     <h2 className="text-foreground text-sm font-semibold tracking-wide uppercase opacity-60">Ringkasan Proyek</h2>
                 </div>
                 <div className="flex items-center gap-2">
@@ -128,23 +128,75 @@ const ProjectDetailIndex = () => {
                             <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-md">
                                 <div className="bg-primary h-3 w-3 rounded-sm" />
                             </div>
-                            <CardTitle className="text-card-foreground text-base font-bold">Detail Proyek</CardTitle>
+                            <CardTitle className="text-card-foreground text-sm font-bold sm:text-base">Detail Proyek</CardTitle>
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-0 pt-4">
-                        <DetailItem label="Nama Proyek" value={proyek?.nama_proyek} />
-                        <DetailItem label="Kategori" value={proyek?.kategori?.nama?.toLocaleUpperCase()} />
-                        <DetailItem label="Jenis" value={proyek?.jenis?.nama} />
-                        <DetailItem isStatus toneStatus={getStatusTone(proyek?.status)} label="Status" value={getStatusLabel(proyek?.status)} />
-                        <DetailItem label="Pagu Total" value={formatCurrency(proyek?.pagu_total)} />
-                        <DetailItem label="Tanggal Mulai" value={formatDate(proyek?.tanggal_mulai)} />
-                        <DetailItem label="Tanggal Selesai" value={formatDate(proyek?.tanggal_selesai as string)} />
-                        <DetailItem label="Pajak (%)" value={formatPercent(proyek?.pajak_persen)} />
-                        <DetailItem label="Total Dana Setelah Pajak" value={formatCurrency(anggaran?.dana_setelah_pajak || '-')} />
-                        <DetailItem label="Nama Klien" value={proyek?.nama_klien} />
+                        <DetailItem
+                            labelClassName=" text-[10px] sm:text-sm"
+                            valueClassName=" text-[10px] sm:text-sm"
+                            label="Nama Proyek"
+                            value={proyek?.nama_proyek}
+                        />
+                        <DetailItem
+                            labelClassName=" text-[10px] sm:text-sm"
+                            valueClassName=" text-[10px] sm:text-sm"
+                            label="Kategori"
+                            value={proyek?.kategori?.nama?.toLocaleUpperCase()}
+                        />
+                        <DetailItem
+                            labelClassName=" text-[10px] sm:text-sm"
+                            valueClassName=" text-[10px] sm:text-sm"
+                            label="Jenis"
+                            value={proyek?.jenis?.nama}
+                        />
+                        <DetailItem
+                            labelClassName=" text-[10px] sm:text-sm"
+                            valueClassName=" text-[10px] sm:text-sm"
+                            isStatus
+                            toneStatus={getStatusTone(proyek?.status)}
+                            label="Status"
+                            value={getStatusLabel(proyek?.status)}
+                        />
+                        <DetailItem
+                            labelClassName=" text-[10px] sm:text-sm"
+                            valueClassName=" text-[10px] sm:text-sm"
+                            label="Pagu Total"
+                            value={formatCurrency(proyek?.pagu_total)}
+                        />
+                        <DetailItem
+                            labelClassName=" text-[10px] sm:text-sm"
+                            valueClassName=" text-[10px] sm:text-sm"
+                            label="Tanggal Mulai"
+                            value={formatDate(proyek?.tanggal_mulai)}
+                        />
+                        <DetailItem
+                            labelClassName=" text-[10px] sm:text-sm"
+                            valueClassName=" text-[10px] sm:text-sm"
+                            label="Tanggal Selesai"
+                            value={formatDate(proyek?.tanggal_selesai as string)}
+                        />
+                        <DetailItem
+                            labelClassName=" text-[10px] sm:text-sm"
+                            valueClassName=" text-[10px] sm:text-sm"
+                            label="Pajak (%)"
+                            value={formatPercent(proyek?.pajak_persen)}
+                        />
+                        <DetailItem
+                            labelClassName=" text-[10px] sm:text-sm"
+                            valueClassName=" text-[10px] sm:text-sm"
+                            label="Total Dana Setelah Pajak"
+                            value={formatCurrency(anggaran?.dana_setelah_pajak || '-')}
+                        />
+                        <DetailItem
+                            labelClassName=" text-[10px] sm:text-sm"
+                            valueClassName=" text-[10px] sm:text-sm"
+                            label="Nama Klien"
+                            value={proyek?.nama_klien}
+                        />
                         <div className="border-border flex flex-col gap-1 border-b py-3 last:border-b-0">
-                            <span className="text-foreground text-sm font-semibold">Deskripsi Proyek</span>
-                            <p className="bg-muted text-muted-foreground rounded-md px-3 py-2 text-sm font-normal">
+                            <span className="text-foreground text-[10px] font-semibold sm:text-sm">Deskripsi Proyek</span>
+                            <p className="bg-muted text-muted-foreground rounded-md px-3 py-2 text-[10px] font-normal sm:text-sm">
                                 {proyek?.deskripsi_proyek || '-'}
                             </p>
                         </div>
@@ -158,16 +210,46 @@ const ProjectDetailIndex = () => {
                             <div className="bg-chart-2/10 flex h-8 w-8 items-center justify-center rounded-md">
                                 <div className="bg-chart-2 h-3 w-3 rounded-sm" />
                             </div>
-                            <CardTitle className="text-card-foreground text-base font-bold">Transaksi</CardTitle>
+                            <CardTitle className="text-card-foreground text-sm font-bold sm:text-base">Transaksi</CardTitle>
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-0 pt-4">
-                        <DetailItem label="Jasa Tukang" value={formatPercent(realisasi?.jasa_tukang?.items?.persen) || '-'} />
-                        <DetailItem label="Biaya Mandor" value={formatPercent(realisasi?.mandor?.items?.persen) || '-'} />
-                        <DetailItem label="Material" value={formatPercent(realisasi?.material?.items?.persen) || '-'} />
-                        <DetailItem label="Staff Entry Data" value={formatCurrency(realisasi?.staff_entry_data?.aktual) || '-'} />
-                        <DetailItem label="Staff Perpajakan" value={formatCurrency(realisasi?.staff_perpajakan?.aktual) || '-'} />
-                        <DetailItem label="Biaya Tak Terduga" value={formatPercent(realisasi?.biaya_tak_terduga?.items?.persen) || '-'} />
+                        <DetailItem
+                            labelClassName=" text-[10px] sm:text-sm"
+                            valueClassName=" text-[10px] sm:text-sm"
+                            label="Jasa Tukang"
+                            value={formatPercent(realisasi?.jasa_tukang?.items?.persen) || '-'}
+                        />
+                        <DetailItem
+                            labelClassName=" text-[10px] sm:text-sm"
+                            valueClassName=" text-[10px] sm:text-sm"
+                            label="Biaya Mandor"
+                            value={formatPercent(realisasi?.mandor?.items?.persen) || '-'}
+                        />
+                        <DetailItem
+                            labelClassName=" text-[10px] sm:text-sm"
+                            valueClassName=" text-[10px] sm:text-sm"
+                            label="Material"
+                            value={formatPercent(realisasi?.material?.items?.persen) || '-'}
+                        />
+                        <DetailItem
+                            labelClassName=" text-[10px] sm:text-sm"
+                            valueClassName=" text-[10px] sm:text-sm"
+                            label="Staff Entry Data"
+                            value={formatCurrency(realisasi?.staff_entry_data?.aktual) || '-'}
+                        />
+                        <DetailItem
+                            labelClassName=" text-[10px] sm:text-sm"
+                            valueClassName=" text-[10px] sm:text-sm"
+                            label="Staff Perpajakan"
+                            value={formatCurrency(realisasi?.staff_perpajakan?.aktual) || '-'}
+                        />
+                        <DetailItem
+                            labelClassName=" text-[10px] sm:text-sm"
+                            valueClassName=" text-[10px] sm:text-sm"
+                            label="Biaya Tak Terduga"
+                            value={formatPercent(realisasi?.biaya_tak_terduga?.items?.persen) || '-'}
+                        />
                     </CardContent>
                 </Card>
             </FadeUpWrapper>
@@ -194,10 +276,10 @@ const ProjectDetailIndex = () => {
                             <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-md">
                                 <div className="bg-primary h-3 w-3 rounded-full" />
                             </div>
-                            <CardTitle className="text-card-foreground text-base font-bold">Total Netto</CardTitle>
+                            <CardTitle className="text-card-foreground text-sm font-bold sm:text-base">Total Netto</CardTitle>
                         </div>
                     </CardHeader>
-                    <CardContent className="flex flex-col items-center justify-center gap-1 py-6">
+                    <CardContent className="flex flex-col items-center justify-center gap-1 py-3 sm:py-6">
                         <p className="text-muted-foreground text-xs font-medium tracking-widest uppercase">Nilai Bersih Proyek</p>
                         <h4 className="text-primary text-3xl font-bold tracking-tight">{formatCurrency(animatedValueNetto || '')}</h4>
                     </CardContent>

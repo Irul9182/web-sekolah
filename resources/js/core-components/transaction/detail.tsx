@@ -5,6 +5,7 @@ import { formatCurrency, formatDate, formatPercent } from '@/helpers/format';
 import { useCountUp } from '@/hooks/use-count';
 import { useMounted } from '@/hooks/use-mounted';
 import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import { BreadcrumbItem } from '@/types';
 import { AnggaranProps } from '@/types/anggaran.type';
 import { KategoriTransaksi, TransaksiProps } from '@/types/transaction.type';
@@ -39,7 +40,7 @@ const TransactionDetailIndex = () => {
 
             <div className="mt-4 flex w-full items-center justify-between px-4">
                 <div className="flex items-center gap-2">
-                    <div className="bg-primary h-1 w-6 rounded-full" />
+                    <div className="bg-primary hidden h-1 w-6 rounded-full sm:block" />
                     <h2 className="text-foreground text-sm font-semibold tracking-wide uppercase opacity-60">Ringkasan Transaksi</h2>
                 </div>
                 <Button
@@ -59,13 +60,25 @@ const TransactionDetailIndex = () => {
                         <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-md">
                             <Receipt className="text-primary h-4 w-4" />
                         </div>
-                        <CardTitle className="text-card-foreground text-base font-bold">Rincian Transaksi</CardTitle>
+                        <CardTitle className="text-card-foreground text-sm font-bold sm:text-base">Rincian Transaksi</CardTitle>
                     </div>
                 </CardHeader>
-                <CardContent className="space-y-0 pt-4">
-                    <DetailItem label="Nama Proyek" value={transaksi?.proyek?.nama_proyek} />
-                    <DetailItem label="Dana Setelah Pajak" value={formatCurrency(anggaran?.dana_setelah_pajak)} />
+                <CardContent className="space-y-0">
                     <DetailItem
+                        labelClassName=" text-[10px] sm:text-sm"
+                        valueClassName=" text-[10px] sm:text-sm"
+                        label="Nama Proyek"
+                        value={transaksi?.proyek?.nama_proyek}
+                    />
+                    <DetailItem
+                        labelClassName=" text-[10px] sm:text-sm"
+                        valueClassName=" text-[10px] sm:text-sm"
+                        label="Dana Setelah Pajak"
+                        value={formatCurrency(anggaran?.dana_setelah_pajak)}
+                    />
+                    <DetailItem
+                        labelClassName=" text-[10px] sm:text-sm"
+                        valueClassName=" text-[10px] sm:text-sm"
                         label="Kategori"
                         value={
                             transaksi?.kategori === 'biaya_tak_terduga'
@@ -85,10 +98,36 @@ const TransactionDetailIndex = () => {
                                             : '-'
                         }
                     />
-                    <DetailItem label="Persen Total (%)" value={formatPercent(transaksi?.persen)} />
-                    <DetailItem label="Jumlah Total (IDR)" value={formatCurrency(transaksi?.jumlah)} />
-                    <DetailItem label="Tanggal" value={formatDate(transaksi?.tanggal)} />
-                    <DetailItem label="Keterangan" value={transaksi?.keterangan} />
+                    <DetailItem
+                        labelClassName=" text-[10px] sm:text-sm"
+                        valueClassName=" text-[10px] sm:text-sm"
+                        label="Persen Total (%)"
+                        value={formatPercent(transaksi?.persen)}
+                    />
+                    <DetailItem
+                        labelClassName=" text-[10px] sm:text-sm"
+                        valueClassName=" text-[10px] sm:text-sm"
+                        label="Jumlah Total (IDR)"
+                        value={formatCurrency(transaksi?.jumlah)}
+                    />
+                    <DetailItem
+                        labelClassName=" text-[10px] sm:text-sm"
+                        valueClassName=" text-[10px] sm:text-sm"
+                        label="Tanggal"
+                        value={formatDate(transaksi?.tanggal)}
+                    />
+                    {/* <DetailItem
+                        labelClassName=" text-[10px] sm:text-sm"
+                        valueClassName=" text-[10px] sm:text-sm"
+                        label="Keterangan"
+                        value={transaksi?.keterangan}
+                    /> */}
+                    <div className="py-2.5">
+                        <span className={cn(`text-foreground text-[10px] font-semibold sm:text-sm`)}>Keterangan</span>
+                        <div className="bg-muted text-muted-foreground mt-2 rounded-md px-3 py-2 text-[10px] font-normal sm:text-sm">
+                            <p>{transaksi?.keterangan}</p>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
             <DetailItemTransaksiContent

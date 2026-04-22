@@ -65,7 +65,7 @@ const DetailItemTransaksiContent = ({ kategoriTransaksi, title, itemValue, itemV
                                     </div>
                                 </div>
                             </div>
-                            <CardTitle className="text-card-foreground text-base font-bold">{title}</CardTitle>
+                            <CardTitle className="text-card-foreground text-sm font-bold sm:text-base">{title}</CardTitle>
                         </div>
                     </CardHeader>
                     <CardContent className="flex w-full flex-col items-center justify-center">
