@@ -8,6 +8,8 @@ use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use App\Models\ItemTransaksi;
 use App\Services\FinanceService;
+use Illuminate\Http\JsonResponse;
+
 
 class ItemTransaksiController extends Controller
 {
@@ -76,7 +78,7 @@ class ItemTransaksiController extends Controller
             ->route('transaction.detail', $transaksi_id)
             ->with('success', 'Item berhasil ditambahkan.');
     }
-    public function update(Request $request, $transaksi_id, $item_id): RedirectResponse
+    public function update(Request $request, $transaksi_id, $item_id): JsonResponse|RedirectResponse
     {
         $transaksi = Transaksi::findOrFail($transaksi_id);
         $item      = ItemTransaksi::findOrFail($item_id);
@@ -103,16 +105,13 @@ class ItemTransaksiController extends Controller
         $this->recalculateJumlah($transaksi);
         $transaksi->load('proyek'); // pastikan relasi proyek ter-load
         $this->recalculatePersen($transaksi);
-
-        return redirect()
-            ->route('transaction.detail', $transaksi_id)
-            ->with('success', 'Item berhasil diperbarui.');
+        return response()->json(['message' => 'Berhasil diperbarui'], 200);
     }
 
     /**
      * Hapus satu item.
      */
-    public function destroy($transaksi_id, $item_id): RedirectResponse
+    public function destroy($transaksi_id, $item_id): JsonResponse|RedirectResponse
     {
         $transaksi = Transaksi::findOrFail($transaksi_id);
         $item      = ItemTransaksi::findOrFail($item_id);
@@ -123,9 +122,7 @@ class ItemTransaksiController extends Controller
         $transaksi->load('proyek'); // pastikan relasi proyek ter-load
         $this->recalculatePersen($transaksi);
 
-        return redirect()
-            ->route('transaction.detail', $transaksi_id)
-            ->with('success', 'Item berhasil dihapus.');
+        return response()->json(['message' => 'Berhasil dihapus'], 200);
     }
 
     /**

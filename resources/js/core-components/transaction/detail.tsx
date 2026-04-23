@@ -8,11 +8,13 @@ import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { BreadcrumbItem } from '@/types';
 import { AnggaranProps } from '@/types/anggaran.type';
-import { KategoriTransaksi, TransaksiProps } from '@/types/transaction.type';
+import { KategoriTransaksi, TransaksiItem, TransaksiProps } from '@/types/transaction.type';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Head, router, usePage } from '@inertiajs/react';
 import { ArrowLeft, Receipt } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import DetailItemTransaksiContent from './assets/components/DetailItemTransaksiContent';
+import ModalFormTransaksiItem from './assets/components/ModalFormTransaksiItem';
 
 interface PageProps extends InertiaPageProps {
     transaksi?: TransaksiProps;
@@ -23,8 +25,13 @@ const TransactionDetailIndex = () => {
     const { props } = usePage<PageProps>();
     const transaksi = props?.transaksi;
     const anggaran = props?.anggaran;
+
     const transaksid = props?.transaksi_id ?? null;
-    console.log('props: ', props);
+    const [isOpenEdit, setIsOpenEdit] = useState<boolean>(false);
+    const [modalType, setModalType] = useState<'update' | 'delete' | null>(null);
+    const [selectedId, setSelectedId] = useState<string | null>(null);
+    const [selectedDataItem, setSelectedDataItem] = useState<TransaksiItem | null>(null);
+    // console.log('props: ', props);
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Detail Transaksi',
@@ -33,6 +40,24 @@ const TransactionDetailIndex = () => {
     ];
     const mounted = useMounted();
     const animatedJumlah = useCountUp(transaksi?.jumlah as number, 1000, mounted);
+
+    const handleOpenModal = (key: string | null, type: 'update' | 'delete' | null) => {
+        setSelectedId(key);
+        setIsOpenEdit(true);
+        setModalType(type);
+    };
+    const handleCloseModal = () => {
+        setSelectedId(null);
+        setIsOpenEdit(false);
+        setSelectedDataItem(null);
+        setModalType(null);
+    };
+
+    useEffect(() => {
+        const selectedData = transaksi?.items?.find((item) => item?.item_id === selectedId) ?? null;
+        console.log('Transaksiid: ', transaksid);
+        setSelectedDataItem(selectedData as TransaksiItem);
+    }, [selectedId]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -131,6 +156,7 @@ const TransactionDetailIndex = () => {
                 </CardContent>
             </Card>
             <DetailItemTransaksiContent
+                openModal={handleOpenModal}
                 transaksiValue={transaksi}
                 title={
                     transaksi?.kategori === 'biaya_tak_terduga'
@@ -168,6 +194,16 @@ const TransactionDetailIndex = () => {
                     </p>
                 </CardContent>
             </Card>
+
+            <ModalFormTransaksiItem
+                onCloseModal={handleCloseModal}
+                item={selectedDataItem as TransaksiItem}
+                item_id={selectedId as string}
+                open={isOpenEdit}
+                kategori={transaksi?.kategori}
+                transaksi_id={transaksi?.transaksi_id}
+                type={modalType}
+            />
         </AppLayout>
     );
 };

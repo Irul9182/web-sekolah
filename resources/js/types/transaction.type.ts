@@ -52,6 +52,7 @@ export const initialTransaksi: TransaksiProps = {
 };
 
 export interface TransaksiItem {
+    // [key: string]: string | number;
     item_id: string;
     transaksi_id: string;
     tanggal: string;
@@ -64,3 +65,19 @@ export interface TransaksiItem {
     created_at: string;
     updated_at: string;
 }
+export type TransaksiItemForm = TransaksiItem & {
+    [key: string]: any;
+};
+export const initialTransaksiItem: TransaksiItemForm = {
+    item_id: '',
+    transaksi_id: '',
+    tanggal: '',
+    nama_item: '',
+    satuan: '',
+    qty: '0',
+    harga_satuan: '0',
+    subtotal: '0',
+    keterangan: '',
+    created_at: '',
+    updated_at: '',
+};
