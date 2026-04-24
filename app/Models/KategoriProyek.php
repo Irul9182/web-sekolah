@@ -5,20 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class KategoriProyek extends Model
 {
-    use HasFactory, HasUlids;
+    use HasFactory;
 
     protected $table = 'kategori_proyek';
-    protected $primaryKey = 'kategori_proyek_id';
+    protected $primaryKey = 'id';
     public $incrementing = true;
     protected $keyType = 'int';
 
-    protected $fillable = [
+    protected $fillable = ['nama'];
 
-        'proyek_id',
-        'nama',
-
-    ];
+    public function jenisProyek(): HasMany
+    {
+        return $this->hasMany(JenisProyek::class, 'kategori_proyek_id');
+    }
 }

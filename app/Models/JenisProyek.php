@@ -4,21 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class JenisProyek extends Model
 {
-    use HasFactory, HasUlids;
+    use HasFactory;
 
     protected $table = 'jenis_proyek';
-    protected $primaryKey = 'jenis_proyek_id';
+    protected $primaryKey = 'id';
     public $incrementing = true;
     protected $keyType = 'int';
 
-    protected $fillable = [
+    protected $fillable = ['kategori_proyek_id', 'nama'];
 
-        'kategori_proyek_id',
-        'nama',
-
-    ];
+    public function kategoriProyek(): BelongsTo
+    {
+        return $this->belongsTo(KategoriProyek::class, 'kategori_proyek_id');
+    }
 }

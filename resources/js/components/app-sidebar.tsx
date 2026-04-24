@@ -1,13 +1,13 @@
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
+import { NavGroup } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, ChartBar, Folder, LayoutGrid, Pickaxe, UtilityPoleIcon, Wallet } from 'lucide-react';
+import { ChartBar, Cog, Hammer, LayoutGrid, Pickaxe, UtilityPoleIcon, Wallet, Wrench } from 'lucide-react';
 import AppLogo from './app-logo';
 import { NavFooter } from './nav-footer';
 
-const mainNavItems: NavItem[] = [
+const mainNavItems: NavGroup[] = [
     {
         title: 'Dashboard',
         url: '/dashboard',
@@ -33,19 +33,43 @@ const mainNavItems: NavItem[] = [
         url: '/forcasting',
         icon: UtilityPoleIcon,
     },
+    {
+        title: 'Konfigurasi',
+        url: '/config',
+        icon: Cog,
+        items: [
+            {
+                title: 'Proyek',
+                url: '/config/project-config',
+                icon: Wrench,
+            },
+        ],
+    },
 ];
 
-const footerNavItems: NavItem[] = [
+const footerNavItems: NavGroup[] = [
     {
-        title: 'Repository',
-        url: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
+        title: 'Konfigurasi',
+        url: '/config',
+        icon: Cog,
+        items: [
+            {
+                title: 'Proyek',
+                url: '/config/project',
+                icon: Hammer,
+            },
+        ],
     },
-    {
-        title: 'Documentation',
-        url: 'https://laravel.com/docs/starter-kits',
-        icon: BookOpen,
-    },
+    // {
+    //     title: 'Repository',
+    //     url: 'https://github.com/laravel/react-starter-kit',
+    //     icon: Folder,
+    // },
+    // {
+    //     title: 'Documentation',
+    //     url: 'https://laravel.com/docs/starter-kits',
+    //     icon: BookOpen,
+    // },
 ];
 
 export function AppSidebar() {

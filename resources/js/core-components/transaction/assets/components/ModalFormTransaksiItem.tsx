@@ -1,9 +1,11 @@
 import AppDatePicker from '@/components/app-day-picker';
 import AppInput from '@/components/app-input';
+import AppTextArea from '@/components/app-textare';
 import { ModalContent } from '@/components/ui-shadcn/modal';
 import { Button } from '@/components/ui/button';
 import { Modal, ModalBody, ModalClose, ModalFooter, ModalHeader, ModalProps, ModalTitle } from '@/components/ui/modal';
 import { formatDate } from '@/helpers/format';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { initialTransaksiItem, KategoriTransaksi, TransaksiItem, TransaksiItemForm } from '@/types/transaction.type';
 import { router, useForm } from '@inertiajs/react';
 import axios from 'axios';
@@ -43,7 +45,8 @@ const ModalFormTransaksiItem = ({ open, item_id, item, kategori, onChange, trans
                 ? 'Jumlah biaya'
                 : '';
     const [loading, setLoading] = useState<boolean>(false);
-    const { data, setData, errors, progress, processing } = form;
+    const isMobile = useIsMobile();
+    const { data, setData, processing } = form;
     // const handleSubmit = async (e: React.FormEvent) => {
     //     e.preventDefault();
     //     console.log('Data terkirim: ', form.data);
@@ -115,104 +118,105 @@ const ModalFormTransaksiItem = ({ open, item_id, item, kategori, onChange, trans
     }, [item]);
     return (
         <Modal open={open}>
-            <ModalContent size="xl" hideClose>
+            <ModalContent className="h-auto overflow-y-auto" size={!isMobile ? 'xl' : 'sm'} hideClose>
                 <ModalHeader>
                     {type === 'update' && (
-                        <ModalTitle className="text-xl">
+                        <ModalTitle className="text-sm sm:text-xl">
                             Ubah Transaksi {namaItem} {item?.nama_item}{' '}
                         </ModalTitle>
                     )}
-                    {type === 'delete' && <ModalTitle className="text-xl">Hapus Transaksi {namaItem} </ModalTitle>}
+                    {type === 'delete' && <ModalTitle className="text-sm sm:text-xl">Hapus Transaksi {namaItem} </ModalTitle>}
                 </ModalHeader>
                 <ModalBody>
                     {type === 'update' && (
-                        <div className="grid w-full grid-cols-1 items-center gap-4 sm:grid-cols-2">
-                            <div className="flex w-full flex-col gap-3">
-                                <AppInput
-                                    type="text"
-                                    placeholder={`Masukkan Nama ${namaItem} . . .`}
-                                    label={
-                                        kategori === 'biaya_tak_terduga'
-                                            ? 'Nama/Judul'
-                                            : kategori === 'operasional'
-                                              ? 'Nama kegiatan'
-                                              : kategori === 'material'
-                                                ? 'Nama Barang'
-                                                : ''
-                                    }
-                                    // value={data?.nama_item || ''}
-                                    value={data?.nama_item || ''}
-                                    required
-                                    onChange={(e) => {
-                                        setData('nama_item', e.target.value);
-                                    }}
-                                    className="h-8 w-full"
-                                    error={clientErrors?.nama_item}
-                                />
-                            </div>
-                            <div className="flex w-full flex-col gap-3">
-                                <AppInput
-                                    label="Satuan (hari, meter, m3, cm, dll)"
-                                    required
-                                    type="text"
-                                    value={data?.satuan || ''}
-                                    onChange={(e) => setData('satuan', e.target.value)}
-                                    className="h-8 w-full"
-                                    placeholder="Masukkan satuan . . ."
-                                    error={clientErrors?.satuan}
-                                />
-                                {/* {errors[`items.${realIndex}.satuan`] && (
+                        <>
+                            <div className="grid w-full grid-cols-1 items-center gap-2 sm:grid-cols-2 sm:gap-4">
+                                <div className="flex w-full flex-col gap-3">
+                                    <AppInput
+                                        type="text"
+                                        placeholder={`Masukkan Nama ${namaItem} . . .`}
+                                        label={
+                                            kategori === 'biaya_tak_terduga'
+                                                ? 'Nama/Judul'
+                                                : kategori === 'operasional'
+                                                  ? 'Nama kegiatan'
+                                                  : kategori === 'material'
+                                                    ? 'Nama Barang'
+                                                    : ''
+                                        }
+                                        // value={data?.nama_item || ''}
+                                        value={data?.nama_item || ''}
+                                        required
+                                        onChange={(e) => {
+                                            setData('nama_item', e.target.value);
+                                        }}
+                                        className="h-8 w-full"
+                                        error={clientErrors?.nama_item}
+                                    />
+                                </div>
+                                <div className="flex w-full flex-col gap-3">
+                                    <AppInput
+                                        label="Satuan (hari, meter, m3, cm, dll)"
+                                        required
+                                        type="text"
+                                        value={data?.satuan || ''}
+                                        onChange={(e) => setData('satuan', e.target.value)}
+                                        className="h-8 w-full"
+                                        placeholder="Masukkan satuan . . ."
+                                        error={clientErrors?.satuan}
+                                    />
+                                    {/* {errors[`items.${realIndex}.satuan`] && (
                                             <p className="text-destructive mt-1 text-xs">{errors[`items.${realIndex}.satuan`]}</p>
                                         )} */}
-                            </div>
-                            <div className="flex w-full flex-col gap-3">
-                                <AppInput
-                                    type="number"
-                                    value={data?.qty !== undefined && data?.qty !== null ? Number(data?.qty).toString() : ''}
-                                    label="Kuantitas"
-                                    required
-                                    placeholder="Masukkan kuantitas . . ."
-                                    onChange={(e) => setData('qty', e.target.value)}
-                                    className="h-8 w-full"
-                                    error={clientErrors?.qty}
-                                />
-                                {/* {errors[`items.${realIndex}.qty`] && (
+                                </div>
+                                <div className="flex w-full flex-col gap-3">
+                                    <AppInput
+                                        type="number"
+                                        value={data?.qty !== undefined && data?.qty !== null ? Number(data?.qty).toString() : ''}
+                                        label="Kuantitas"
+                                        required
+                                        placeholder="Masukkan kuantitas . . ."
+                                        onChange={(e) => setData('qty', e.target.value)}
+                                        className="h-8 w-full"
+                                        error={clientErrors?.qty}
+                                    />
+                                    {/* {errors[`items.${realIndex}.qty`] && (
                                             <p className="text-destructive mt-1 text-xs">{errors[`items.${realIndex}.qty`]}</p>
                                         )} */}
-                            </div>
-                            <div className="flex w-full flex-col gap-3">
-                                <AppDatePicker
-                                    label="Tanggal Transaksi"
-                                    required
-                                    placeholder="Masukkan tanggal . . . "
-                                    inputClassName="h-8"
-                                    value={data?.tanggal ? new Date(data?.tanggal) : undefined}
-                                    onChange={(e) => setData('tanggal', e ? formatDate(e.toDateString()) : '')}
-                                    className="w-full"
-                                    error={clientErrors?.tanggal}
-                                />
-                                {/* {errors[`items.${realIndex}.tanggal`] && (
+                                </div>
+                                <div className="flex w-full flex-col gap-3">
+                                    <AppDatePicker
+                                        label="Tanggal Transaksi"
+                                        required
+                                        placeholder="Masukkan tanggal . . . "
+                                        inputClassName="h-8"
+                                        value={data?.tanggal ? new Date(data?.tanggal) : undefined}
+                                        onChange={(e) => setData('tanggal', e ? formatDate(e.toDateString()) : '')}
+                                        className="w-full"
+                                        error={clientErrors?.tanggal}
+                                    />
+                                    {/* {errors[`items.${realIndex}.tanggal`] && (
                                             <p className="text-destructive mt-1 text-xs">{errors[`items.${realIndex}.tanggal`]}</p>
                                         )} */}
-                            </div>
-                            <div className="flex w-full flex-col gap-3">
-                                <AppInput
-                                    type="number"
-                                    label={namaSatuan}
-                                    placeholder={`Masukkan ${namaSatuan} . . .`}
-                                    value={data?.harga_satuan}
-                                    onChange={(e) => setData('harga_satuan', e.target.value)}
-                                    required
-                                    error={clientErrors?.harga_satuan}
-                                    className="h-8 w-full"
-                                />
-                                {/* {errors[`items.${realIndex}.harga_satuan`] && (
+                                </div>
+                                <div className="flex w-full flex-col gap-3">
+                                    <AppInput
+                                        type="number"
+                                        label={namaSatuan}
+                                        placeholder={`Masukkan ${namaSatuan} . . .`}
+                                        value={data?.harga_satuan}
+                                        onChange={(e) => setData('harga_satuan', e.target.value)}
+                                        required
+                                        error={clientErrors?.harga_satuan}
+                                        className="h-8 w-full"
+                                    />
+                                    {/* {errors[`items.${realIndex}.harga_satuan`] && (
                                             <p className="text-destructive mt-1 text-xs">{errors[`items.${realIndex}.harga_satuan`]}</p>
                                         )} */}
+                                </div>
                             </div>
-                            <div className="flex w-full flex-col gap-3">
-                                <AppInput
-                                    type="text"
+                            <div className="mt-2 flex w-full flex-col gap-3">
+                                <AppTextArea
                                     value={data?.keterangan}
                                     label="Keterangan"
                                     onChange={(e) => setData('keterangan', e.target.value)}
@@ -224,7 +228,7 @@ const ModalFormTransaksiItem = ({ open, item_id, item, kategori, onChange, trans
                                             <p className="text-destructive mt-1 text-xs">{errors[`items.${realIndex}.keterangan`]}</p>
                                         )} */}
                             </div>
-                        </div>
+                        </>
                     )}
                     {type === 'delete' && (
                         <p className="text-sm">

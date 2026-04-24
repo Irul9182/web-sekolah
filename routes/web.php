@@ -5,6 +5,8 @@ use Inertia\Inertia;
 use App\Http\Controllers\ProyekController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\ItemTransaksiController;
+use App\Http\Controllers\KategoriProyekController;
+use App\Http\Controllers\JenisProyekController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -41,13 +43,28 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/transaction/{id}/detail', [TransaksiController::class, 'show'])->name('transaction.show');
     Route::delete('/transaction/{id}', [TransaksiController::class, 'destroy'])->name('transaction.destroy');
 
-    // Transaction Item ===================
 
     Route::prefix('transaction/{id}/items')->name('transaction.items.')->group(function () {
         Route::get('/',             [ItemTransaksiController::class, 'index'])->name('index');
         Route::post('/',            [ItemTransaksiController::class, 'store'])->name('store');
         Route::put('/{item_id}',    [ItemTransaksiController::class, 'update'])->name('update');
         Route::delete('/{item_id}', [ItemTransaksiController::class, 'destroy'])->name('destroy');
+    });
+
+
+
+    Route::prefix('config')->name('config.')->group(function () {
+        Route::get('/project-config', [KategoriProyekController::class, 'index'])->name('project-config.index');
+
+        // Kategori
+        Route::post('/project-config/project-category',           [KategoriProyekController::class, 'store'])->name('project-category.store');
+        Route::put('/project-config/project-category/{kategoriProyek}',    [KategoriProyekController::class, 'update'])->name('project-category.update');
+        Route::delete('/project-config/project-category/{kategoriProyek}', [KategoriProyekController::class, 'destroy'])->name('project-category.destroy');
+
+        // Jenis
+        Route::post('/project-config/project-type',              [KategoriProyekController::class, 'store'])->name('project-type.store');
+        Route::put('/project-config/project-type/{jenisProyek}', [KategoriProyekController::class, 'update'])->name('project-type.update');
+        Route::delete('/project-config/project-type/{jenisProyek}', [KategoriProyekController::class, 'destroy'])->name('project-type.destroy');
     });
 });
 
