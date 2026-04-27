@@ -262,7 +262,7 @@ const ProjectConfigTypeIndex = () => {
             <div className="p-4">
                 <div className="flex w-full justify-between">
                     <AppSearchInput
-                        placeholder="Cari transaksi dengan nama proyek . . ."
+                        placeholder="Cari transaksi dengan nama . . ."
                         value={search}
                         className="w-84!"
                         onChange={(e) => handleSearch(e.target.value as string)}

@@ -1,9 +1,10 @@
-import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
 import { NavGroup } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui-shadcn/collapsible';
 import { Icon } from './ui-shadcn/icon';
 export function NavMain({ items = [] }: { items: NavGroup[] }) {
@@ -11,7 +12,13 @@ export function NavMain({ items = [] }: { items: NavGroup[] }) {
     const [openItems, setOpenItems] = useState<string[]>(() =>
         items.filter((item) => item.items?.some((sub) => sub.url === page.url)).map((item) => item.title),
     );
+    const { open: isOpenSideBar } = useSidebar();
 
+    // const [isOpenSideBar, setIsOpenSideBar] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('sidebar') !== 'false' : true));
+
+    useEffect(() => {
+        console.log('Sidebar open: ', isOpenSideBar);
+    }, [isOpenSideBar]);
     return (
         <SidebarGroup className="px-2 py-0">
             <SidebarMenu>
@@ -76,7 +83,7 @@ export function NavMain({ items = [] }: { items: NavGroup[] }) {
                                                     transition={{ duration: 0.25, ease: 'easeInOut' }}
                                                     style={{ overflow: 'hidden' }}
                                                 >
-                                                    <div className="flex flex-col gap-2 pt-1 pl-6">
+                                                    <div className={`flex flex-col gap-2 pt-1 ${cn(isOpenSideBar ? 'pl-6' : 'pl-0')}`}>
                                                         {item.items?.map((sub) => (
                                                             <SidebarMenuButton key={sub.title} asChild isActive={sub.url === page.url}>
                                                                 <Link href={sub.url} prefetch>

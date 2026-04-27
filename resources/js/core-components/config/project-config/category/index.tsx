@@ -142,7 +142,7 @@ const ProjectConfigCategoryIndex = () => {
                 onError: (err: any) => {
                     toast.error('Gagal hapus kategori proyek.', {
                         position: 'top-right',
-                        description: errors?.nama || errors?.kategori_proyek_id,
+                        description: errors?.kategori,
                     });
                     console.log('Error: ', err);
                 },
@@ -250,7 +250,7 @@ const ProjectConfigCategoryIndex = () => {
             <div className="p-4">
                 <div className="flex w-full justify-between">
                     <AppSearchInput
-                        placeholder="Cari transaksi dengan nama proyek . . ."
+                        placeholder="Cari dengan judul . . ."
                         value={search}
                         className="w-84!"
                         onChange={(e) => handleSearch(e.target.value as string)}
