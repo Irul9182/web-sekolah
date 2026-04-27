@@ -54,17 +54,22 @@ Route::middleware(['auth'])->group(function () {
 
 
     Route::prefix('config')->name('config.')->group(function () {
-        Route::get('/project-config', [KategoriProyekController::class, 'index'])->name('project-config.index');
-
-        // Kategori
-        Route::post('/project-config/project-category',           [KategoriProyekController::class, 'store'])->name('project-category.store');
-        Route::put('/project-config/project-category/{kategoriProyek}',    [KategoriProyekController::class, 'update'])->name('project-category.update');
-        Route::delete('/project-config/project-category/{kategoriProyek}', [KategoriProyekController::class, 'destroy'])->name('project-category.destroy');
-
-        // Jenis
-        Route::post('/project-config/project-type',              [KategoriProyekController::class, 'store'])->name('project-type.store');
-        Route::put('/project-config/project-type/{jenisProyek}', [KategoriProyekController::class, 'update'])->name('project-type.update');
-        Route::delete('/project-config/project-type/{jenisProyek}', [KategoriProyekController::class, 'destroy'])->name('project-type.destroy');
+        Route::prefix('project-config')->name('project-config.')->group(function () {
+            // Jenis Proyek
+            Route::prefix('type')->name('type.')->group(function () {
+                Route::get('/',      [JenisProyekController::class, 'index'])->name('index');
+                Route::post('/',     [JenisProyekController::class, 'store'])->name('store');
+                Route::put('/{jenisProyek}',    [JenisProyekController::class, 'update'])->name('update');
+                Route::delete('/{jenisProyek}', [JenisProyekController::class, 'destroy'])->name('destroy');
+            });
+            // Kategori Proyek
+            Route::prefix('category')->name('category.')->group(function () {
+                Route::get('/',        [KategoriProyekController::class, 'index'])->name('index');
+                Route::post('/',       [KategoriProyekController::class, 'store'])->name('store');
+                Route::put('/{kategoriProyek}',    [KategoriProyekController::class, 'update'])->name('update');
+                Route::delete('/{kategoriProyek}', [KategoriProyekController::class, 'destroy'])->name('destroy');
+            });
+        });
     });
 });
 

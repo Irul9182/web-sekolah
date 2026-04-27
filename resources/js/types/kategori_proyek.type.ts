@@ -11,3 +11,14 @@ export const initialKategoriProyek: KategoriProyek = {
     created_at: undefined,
     updated_at: undefined,
 };
+
+export interface KategoriProyekForm extends KategoriProyek {
+    [key: string]: any;
+}
+
+export const initialKategoriProyekForm: KategoriProyekForm = {
+    id: 0,
+    nama: '',
+    created_at: undefined,
+    updated_at: undefined,
+};

@@ -2,14 +2,37 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\JenisProyek;
+use App\Models\KategoriProyek;
+use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class JenisProyekController extends Controller
 {
+    public function index(Request $request)
+    {
+        $search  = $request->query('search', '');
+        $perPage = $request->query('per_page', 10);
 
+        $jenis = JenisProyek::query()
+            ->with('kategoriProyek')
+            ->when($search, function ($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return Inertia::render('config/project-config/type/index', [
+            'list_jenis'     => $jenis,
+            'list_kategori'  => KategoriProyek::select('id', 'nama')->orderBy('nama')->get(),
+            'filters'        => [
+                'search'   => $search,
+                'per_page' => $perPage,
+            ],
+        ]);
+    }
 
     public function store(Request $request): RedirectResponse
     {

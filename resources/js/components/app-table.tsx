@@ -85,7 +85,7 @@ export function DataTable<T extends object>({
     emptyMessage = 'Tidak ada data.',
     loading = false,
 }: DataTableProps<T>) {
-    // ── State (hanya dipakai saat client-side) ────────────────────────────────
+    // ── State  ────────────────────────────────
     const [clientPage, setClientPage] = useState(1);
     const [clientPageSize, setClientPageSize] = useState(initialPageSize);
     const [sortKey, setSortKey] = useState<string | null>(null);
@@ -101,7 +101,7 @@ export function DataTable<T extends object>({
     const fromItem = isServerSide ? (pagination!.from ?? 0) : (clientPage - 1) * clientPageSize + 1;
     const toItem = isServerSide ? (pagination!.to ?? 0) : Math.min(clientPage * clientPageSize, data.length);
 
-    // ── Sorting (hanya client-side) ───────────────────────────────────────────
+    // ── Sorting ───────────────────────────────────────────
     const handleSort = (key: string) => {
         if (sortKey !== key) {
             setSortKey(key);
@@ -124,10 +124,8 @@ export function DataTable<T extends object>({
               return sortDir === 'asc' ? cmp : -cmp;
           });
 
-    // ── Slicing (hanya client-side) ───────────────────────────────────────────
-    const pageData = isServerSide
-        ? sortedData // server sudah memotong
-        : sortedData.slice((clientPage - 1) * clientPageSize, clientPage * clientPageSize);
+    // ── Slicing ───────────────────────────────────────────
+    const pageData = isServerSide ? sortedData : sortedData.slice((clientPage - 1) * clientPageSize, clientPage * clientPageSize);
 
     // ── Navigation ────────────────────────────────────────────────────────────
     const goTo = (page: number) => {

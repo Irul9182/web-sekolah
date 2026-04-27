@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { NavGroup } from '@/types';
 import { Link } from '@inertiajs/react';
-import { ChartBar, Cog, Hammer, LayoutGrid, Pickaxe, UtilityPoleIcon, Wallet, Wrench } from 'lucide-react';
+import { Blocks, ChartBar, Cog, Hammer, LayoutGrid, Pickaxe, UtilityPoleIcon, Wallet, Wrench } from 'lucide-react';
 import AppLogo from './app-logo';
 import { NavFooter } from './nav-footer';
 
@@ -39,8 +39,13 @@ const mainNavItems: NavGroup[] = [
         icon: Cog,
         items: [
             {
-                title: 'Proyek',
-                url: '/config/project-config',
+                title: 'Kategori Proyek',
+                url: '/config/project-config/category',
+                icon: Blocks,
+            },
+            {
+                title: 'Jenis Proyek',
+                url: '/config/project-config/type',
                 icon: Wrench,
             },
         ],
