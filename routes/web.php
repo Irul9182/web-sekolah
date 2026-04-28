@@ -8,15 +8,16 @@ use App\Http\Controllers\ItemTransaksiController;
 use App\Http\Controllers\KategoriProyekController;
 use App\Http\Controllers\JenisProyekController;
 use App\Http\Controllers\ForecastController;
+use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+
+    // Dashboard =====================
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
     // Project =====================
     Route::get('/project', [ProyekController::class, 'index'])->name('project.index');

@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { NavGroup } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Blocks, ChartBar, Cog, Hammer, LayoutGrid, Pickaxe, UtilityPoleIcon, Wallet, Wrench } from 'lucide-react';
+import { Blocks, ChartBar, Cog, LayoutGrid, Pickaxe, UtilityPoleIcon, Wallet, Wrench } from 'lucide-react';
 import AppLogo from './app-logo';
 import { NavFooter } from './nav-footer';
 
@@ -53,18 +53,18 @@ const mainNavItems: NavGroup[] = [
 ];
 
 const footerNavItems: NavGroup[] = [
-    {
-        title: 'Konfigurasi',
-        url: '/config',
-        icon: Cog,
-        items: [
-            {
-                title: 'Proyek',
-                url: '/config/project',
-                icon: Hammer,
-            },
-        ],
-    },
+    // {
+    //     title: 'Konfigurasi',
+    //     url: '/config',
+    //     icon: Cog,
+    //     items: [
+    //         {
+    //             title: 'Proyek',
+    //             url: '/config/project',
+    //             icon: Hammer,
+    //         },
+    //     ],
+    // },
     // {
     //     title: 'Repository',
     //     url: 'https://github.com/laravel/react-starter-kit',

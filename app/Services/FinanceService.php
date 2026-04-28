@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Proyek;
 use App\Models\Transaksi;
 use Illuminate\Support\Collection;
+use Carbon\Carbon;
 
 class FinanceService
 {
@@ -245,13 +246,30 @@ class FinanceService
             ->groupByRaw("DATE_FORMAT(tanggal_mulai, '%Y-%m-01')")
             ->pluck('total', 'bulan');
 
-        // Gabungkan semua bulan
-        $bulan = collect($pemasukan->keys()->merge($pengeluaran->keys())->unique()->sort());
+        // Tentukan range bulan: dari bulan paling awal hingga bulan ini
+        $semuaBulan = collect($pemasukan->keys()->merge($pengeluaran->keys())->unique());
 
-        return $bulan->map(fn($b) => [
-            'ds' => $b,
-            'y'  => (float)($pemasukan[$b] ?? 0) - (float)($pengeluaran[$b] ?? 0),
-        ])->values();
+        if ($semuaBulan->isEmpty()) {
+            return collect();
+        }
+
+        $start = Carbon::parse($semuaBulan->min())->startOfMonth();
+        $end   = Carbon::now()->startOfMonth();
+
+        // Isi semua bulan dalam range, bulan kosong = 0
+        $result = collect();
+        $cursor = $start->copy();
+
+        while ($cursor->lte($end)) {
+            $bulan = $cursor->format('Y-m-01');
+            $result->push([
+                'ds' => $bulan,
+                'y'  => (float)($pemasukan[$bulan] ?? 0) - (float)($pengeluaran[$bulan] ?? 0),
+            ]);
+            $cursor->addMonth();
+        }
+
+        return $result->values();
     }
 
     /**
