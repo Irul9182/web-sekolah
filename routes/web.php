@@ -7,6 +7,7 @@ use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\ItemTransaksiController;
 use App\Http\Controllers\KategoriProyekController;
 use App\Http\Controllers\JenisProyekController;
+use App\Http\Controllers\ForecastController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -53,6 +54,7 @@ Route::middleware(['auth'])->group(function () {
 
 
 
+    // Config
     Route::prefix('config')->name('config.')->group(function () {
         Route::prefix('project-config')->name('project-config.')->group(function () {
             // Jenis Proyek
@@ -71,6 +73,11 @@ Route::middleware(['auth'])->group(function () {
             });
         });
     });
+
+
+    // Forecasting
+    Route::get('/forecasting', [ForecastController::class, 'index'])->name('forecasting.index');
+    Route::post('/forecasting/generate', [ForecastController::class, 'generate'])->name('forecasting.generate');
 });
 
 require __DIR__ . '/settings.php';

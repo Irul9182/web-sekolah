@@ -29,8 +29,8 @@ const mainNavItems: NavGroup[] = [
         icon: ChartBar,
     },
     {
-        title: 'Forcasting',
-        url: '/forcasting',
+        title: 'Forecasting',
+        url: '/forecasting',
         icon: UtilityPoleIcon,
     },
     {
