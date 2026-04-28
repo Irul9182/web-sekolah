@@ -164,7 +164,7 @@ const TransactionIndex = ({ filters, list_transaksi }: PageProps) => {
                     material: 'Material',
                 };
                 return (
-                    <span className="bg-secondary text-secondary-foreground rounded-md px-2 py-0.5 text-sm font-semibold">
+                    <span className="bg-secondary text-secondary-foreground rounded-md px-2 py-0.5 text-sm text-[12px] font-semibold sm:text-sm">
                         {map[value as string] ?? value}
                     </span>
                 );
@@ -256,11 +256,11 @@ const TransactionIndex = ({ filters, list_transaksi }: PageProps) => {
             <Head title="Transaksi" />
 
             <div className="p-4">
-                <div className="flex w-full justify-between">
+                <div className="flex w-full items-center justify-between">
                     <AppSearchInput
                         placeholder="Cari transaksi dengan nama proyek . . ."
                         value={search}
-                        className="w-84!"
+                        className="w-[90%] sm:w-84!"
                         onChange={(e) => handleSearch(e.target.value)}
                         clearable={false}
                     />
@@ -281,6 +281,7 @@ const TransactionIndex = ({ filters, list_transaksi }: PageProps) => {
                     data={list_transaksi?.data as TransaksiProps[]}
                     columns={columnsTransaksi}
                     key={list_transaksi?.data?.length}
+                    mobileColumns={['proyek_name', 'kategori', 'action']}
                     pagination={{
                         current_page: list_transaksi?.current_page as number,
                         last_page: list_transaksi?.last_page as number,

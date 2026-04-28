@@ -9,11 +9,10 @@ import {
 } from '@/components/ui-shadcn/pagination';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui-shadcn/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronsLeft, ChevronsRight, ChevronsUpDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronsLeft, ChevronsRight, ChevronsUpDown, ChevronUp, Info } from 'lucide-react';
 import { useState } from 'react';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export type SortDirection = 'asc' | 'desc' | null;
 
@@ -25,7 +24,6 @@ export interface Column<T> {
     render?: (value: unknown, row: T, index: number) => React.ReactNode;
 }
 
-/** Meta pagination dari response API Laravel (format paginate()) */
 export interface PaginationMeta {
     current_page: number;
     last_page: number;
@@ -39,22 +37,24 @@ export interface DataTableProps<T> {
     data: T[];
     columns: Column<T>[];
 
-    // ── Server-side pagination (opsional) ──────────────────────────────────────
-    // Jika diisi → mode server-side aktif; DataTable tidak melakukan slicing sendiri.
     pagination?: PaginationMeta;
     onPageChange?: (page: number) => void;
     onPageSizeChange?: (pageSize: number) => void;
 
-    // ── Client-side (dipakai saat `pagination` tidak diisi) ───────────────────
     pageSize?: number;
     pageSizeOptions?: number[];
 
     className?: string;
     emptyMessage?: string;
     loading?: boolean;
-}
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+    mobileSliced?: {
+        firstValue: number;
+        secondValue: number;
+    };
+
+    mobileColumns?: string[];
+}
 
 function getRowValue(row: unknown, key: string): unknown {
     if (row !== null && typeof row === 'object') {
@@ -63,15 +63,11 @@ function getRowValue(row: unknown, key: string): unknown {
     return undefined;
 }
 
-// ─── Sort Icon ────────────────────────────────────────────────────────────────
-
 function SortIcon({ direction }: { direction: SortDirection }) {
     if (direction === 'asc') return <ChevronUp className="text-primary h-3.5 w-3.5" />;
     if (direction === 'desc') return <ChevronDown className="text-primary h-3.5 w-3.5" />;
     return <ChevronsUpDown className="text-muted-foreground/50 group-hover:text-muted-foreground h-3.5 w-3.5 transition-colors" />;
 }
-
-// ─── Data Table ───────────────────────────────────────────────────────────────
 
 export function DataTable<T extends object>({
     data,
@@ -84,8 +80,9 @@ export function DataTable<T extends object>({
     className,
     emptyMessage = 'Tidak ada data.',
     loading = false,
+    mobileSliced,
+    mobileColumns = ['created_at', 'action'],
 }: DataTableProps<T>) {
-    // ── State  ────────────────────────────────
     const [clientPage, setClientPage] = useState(1);
     const [clientPageSize, setClientPageSize] = useState(initialPageSize);
     const [sortKey, setSortKey] = useState<string | null>(null);
@@ -93,7 +90,6 @@ export function DataTable<T extends object>({
 
     const isServerSide = pagination !== undefined;
 
-    // ── Derived pagination values ─────────────────────────────────────────────
     const currentPage = isServerSide ? pagination!.current_page : clientPage;
     const totalPages = isServerSide ? pagination!.last_page : Math.max(1, Math.ceil(data.length / clientPageSize));
     const pageSize = isServerSide ? pagination!.per_page : clientPageSize;
@@ -101,7 +97,6 @@ export function DataTable<T extends object>({
     const fromItem = isServerSide ? (pagination!.from ?? 0) : (clientPage - 1) * clientPageSize + 1;
     const toItem = isServerSide ? (pagination!.to ?? 0) : Math.min(clientPage * clientPageSize, data.length);
 
-    // ── Sorting ───────────────────────────────────────────
     const handleSort = (key: string) => {
         if (sortKey !== key) {
             setSortKey(key);
@@ -124,10 +119,8 @@ export function DataTable<T extends object>({
               return sortDir === 'asc' ? cmp : -cmp;
           });
 
-    // ── Slicing ───────────────────────────────────────────
     const pageData = isServerSide ? sortedData : sortedData.slice((clientPage - 1) * clientPageSize, clientPage * clientPageSize);
 
-    // ── Navigation ────────────────────────────────────────────────────────────
     const goTo = (page: number) => {
         const safe = Math.max(1, Math.min(page, totalPages));
         if (isServerSide) {
@@ -147,7 +140,6 @@ export function DataTable<T extends object>({
         }
     };
 
-    // ── Page number list ──────────────────────────────────────────────────────
     const pageNumbers: (number | '…')[] = (() => {
         if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
         if (currentPage <= 4) return [1, 2, 3, 4, 5, '…', totalPages];
@@ -155,34 +147,34 @@ export function DataTable<T extends object>({
         return [1, '…', currentPage - 1, currentPage, currentPage + 1, '…', totalPages];
     })();
 
+    const isMobile = useIsMobile();
+
     return (
         <div className={cn('flex flex-col gap-4', className)}>
-            {/* ── Table ── */}
-            <div className="border-border bg-card overflow-hidden rounded-xl border">
+            <div className="border-border bg-card max-w-full overflow-x-scroll rounded-xl border sm:overflow-hidden">
                 <Table>
                     <TableHeader className="!bg-muted/60">
                         <TableRow className="border-border hover:bg-transparent">
-                            {columns.map((col) => {
-                                const key = String(col.key);
-                                const isActive = sortKey === key;
-                                return (
-                                    <TableHead
-                                        key={key}
-                                        onClick={() => col.sortable && handleSort(key)}
-                                        className={cn(
-                                            'text-background bg-sidebar-accent-foreground p-4 font-semibold select-none',
-                                            col.sortable && 'group hover:text-muted/80! cursor-pointer transition-colors',
-                                            isActive && 'text-background',
-                                            col.className,
-                                        )}
-                                    >
-                                        <div className="flex items-center gap-1.5">
-                                            {col.label}
-                                            {/* {col.sortable && <SortIcon direction={isActive ? sortDir : null} />} */}
-                                        </div>
-                                    </TableHead>
-                                );
-                            })}
+                            {columns
+                                ?.filter((col) => (isMobile ? mobileColumns.includes(col?.key as string) : true))
+                                .map((col) => {
+                                    const key = String(col.key);
+                                    const isActive = sortKey === key;
+                                    return (
+                                        <TableHead
+                                            key={key}
+                                            onClick={() => col.sortable && handleSort(key)}
+                                            className={cn(
+                                                'text-background bg-sidebar-accent-foreground p-2! text-xs! font-semibold select-none sm:p-4! sm:text-sm!',
+                                                col.sortable && 'group hover:text-muted/80! cursor-pointer transition-colors',
+                                                isActive && 'text-background',
+                                                col.className,
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-1.5">{col.label}</div>
+                                        </TableHead>
+                                    );
+                                })}
                         </TableRow>
                     </TableHeader>
 
@@ -190,31 +182,38 @@ export function DataTable<T extends object>({
                         {loading ? (
                             Array.from({ length: pageSize }).map((_, i) => (
                                 <TableRow key={i} className="border-border hover:bg-transparent">
-                                    {columns.map((col) => (
-                                        <TableCell key={String(col.key)}>
-                                            <div className="bg-muted h-4 w-3/4 animate-pulse rounded" />
-                                        </TableCell>
-                                    ))}
+                                    {columns
+                                        ?.filter((col) => (isMobile ? mobileColumns.includes(col?.key as string) : true))
+                                        .map((col) => (
+                                            <TableCell key={String(col.key)}>
+                                                <div className="bg-muted h-4 w-3/4 animate-pulse rounded" />
+                                            </TableCell>
+                                        ))}
                                 </TableRow>
                             ))
                         ) : pageData?.length === 0 ? (
-                            <TableRow className="border-0 hover:bg-transparent">
-                                <TableCell colSpan={columns.length} className="text-muted-foreground py-12 text-center text-[10px] sm:text-sm">
-                                    {emptyMessage}
+                            <TableRow>
+                                <TableCell colSpan={isMobile ? mobileColumns.length : columns.length}>
+                                    <div className="text-muted-foreground flex w-full flex-col items-center justify-center py-12 text-center text-[10px] sm:text-sm">
+                                        <Info />
+                                        <p>{emptyMessage}</p>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ) : (
                             pageData?.map((row, rowIdx) => (
                                 <TableRow key={rowIdx} className="border-border hover:bg-muted/80! transition-colors duration-100">
-                                    {columns.map((col) => {
-                                        const key = String(col.key);
-                                        const value = getRowValue(row, key);
-                                        return (
-                                            <TableCell key={key} className={cn('text-foreground', col.className)}>
-                                                {col.render ? col.render(value, row, rowIdx) : String(value ?? '—')}
-                                            </TableCell>
-                                        );
-                                    })}
+                                    {columns
+                                        ?.filter((col) => (isMobile ? mobileColumns.includes(col?.key as string) : true))
+                                        .map((col) => {
+                                            const key = String(col.key);
+                                            const value = getRowValue(row, key);
+                                            return (
+                                                <TableCell key={key} className={cn('text-foreground text-[10px]! sm:text-sm!', col.className)}>
+                                                    {col.render ? col.render(value, row, rowIdx) : String(value ?? '—')}
+                                                </TableCell>
+                                            );
+                                        })}
                                 </TableRow>
                             ))
                         )}
@@ -222,9 +221,7 @@ export function DataTable<T extends object>({
                 </Table>
             </div>
 
-            {/* ── Footer ── */}
             <div className="text-muted-foreground flex flex-col items-center gap-3 text-sm sm:flex-row sm:justify-between">
-                {/* Info + page size */}
                 <div className="flex items-center gap-3">
                     <span>{totalItems === 0 ? 'Tidak ada hasil' : `${fromItem}–${toItem} dari ${totalItems}`}</span>
                     <div className="flex items-center gap-2">
@@ -244,7 +241,6 @@ export function DataTable<T extends object>({
                     </div>
                 </div>
 
-                {/* Pagination */}
                 <Pagination className="mx-0 w-fit">
                     <PaginationContent>
                         <PaginationItem>

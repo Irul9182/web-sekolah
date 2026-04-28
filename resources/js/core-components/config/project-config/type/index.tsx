@@ -260,11 +260,11 @@ const ProjectConfigTypeIndex = () => {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Jenis Proyek" />
             <div className="p-4">
-                <div className="flex w-full justify-between">
+                <div className="flex w-full items-center justify-between">
                     <AppSearchInput
                         placeholder="Cari transaksi dengan nama . . ."
                         value={search}
-                        className="w-84!"
+                        className="w-[90%] sm:w-84!"
                         onChange={(e) => handleSearch(e.target.value as string)}
                         clearable={true}
                     />

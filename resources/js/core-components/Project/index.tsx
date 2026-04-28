@@ -140,7 +140,7 @@ const ProjectIndex = ({ proyeks, filters }: PropTypes) => {
             label: 'Kategori',
             render: (_: any, record: ProyekProps) => {
                 return (
-                    <span className="bg-secondary text-secondary-foreground rounded-md px-2 py-0.5 text-sm font-semibold uppercase">
+                    <span className="bg-secondary text-secondary-foreground rounded-md px-2 py-0.5 text-sm text-[10px] font-semibold uppercase sm:text-sm">
                         {record?.kategori?.nama}
                     </span>
                 );
@@ -253,11 +253,11 @@ const ProjectIndex = ({ proyeks, filters }: PropTypes) => {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Proyek" />
             <div className="p-4">
-                <div className="flex w-full justify-between">
+                <div className="flex w-full items-center justify-between">
                     <AppSearchInput
                         placeholder="Cari proyek dengan nama . . ."
                         value={search}
-                        className="w-84!"
+                        className="w-[90%] sm:w-84!"
                         onChange={(e) => handleSearch(e.target.value)}
                         clearable={false}
                     />
@@ -284,6 +284,7 @@ const ProjectIndex = ({ proyeks, filters }: PropTypes) => {
                         from: proyeks.from,
                         to: proyeks.to,
                     }}
+                    mobileColumns={['nama_proyek', 'kategori', 'status', 'action']}
                     onPageChange={handlePageChange}
                     onPageSizeChange={handlePageSizeChange}
                 />

@@ -36,13 +36,11 @@ type ModalType = 'put' | 'post' | 'delete';
 const ProjectConfigCategoryIndex = () => {
     const { props } = usePage<PageProps>();
     const { filters, list_kategori } = props;
-    // console.log('Props jenis: ', props);
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [selectedModalType, setSelectedModalType] = useState<ModalType | null>(null);
     const [selectedDataKategori, setSelectedDataKategori] = useState<KategoriProyek | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [search, setSearch] = useState(filters?.search ?? '');
-    // const currentPage = new URLSearchParams(window.location.search).get('page') ?? '1';
     const isMobile = useIsMobile();
     const currentPerPage = new URLSearchParams(window.location.search).get('per_page') ?? '10';
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -228,7 +226,6 @@ const ProjectConfigCategoryIndex = () => {
                                     </DropdownMenuItem>
 
                                     <DropdownMenuItem
-                                        // onClick={() => OpenModal(record?.transaksi_id)}
                                         className={cn('group hover:bg-error/10! flex cursor-pointer items-center justify-between p-2 transition-all')}
                                         onClick={() => handleOpenModal(record?.id, 'delete')}
                                     >
@@ -252,17 +249,13 @@ const ProjectConfigCategoryIndex = () => {
                     <AppSearchInput
                         placeholder="Cari dengan judul . . ."
                         value={search}
-                        className="w-84!"
-                        onChange={(e) => handleSearch(e.target.value as string)}
+                        className="w-[90%]! sm:w-84!"
+                        onClear={() => setSearch('')}
                         clearable={true}
+                        onChange={(e) => handleSearch(e.target.value as string)}
                     />
 
-                    <Button
-                        className="cursor-pointer"
-                        // disabled={processing}
-                        size={isMobile ? 'sm' : 'default'}
-                        onClick={() => handleOpenModal(0, 'post')}
-                    >
+                    <Button className="cursor-pointer" size={isMobile ? 'sm' : 'default'} onClick={() => handleOpenModal(0, 'post')}>
                         <Plus />
                         <p>Kategori Proyek</p>
                     </Button>
@@ -273,6 +266,7 @@ const ProjectConfigCategoryIndex = () => {
                     data={list_kategori?.data as JenisProyek[]}
                     columns={LIST_TYPE_COLUMNS}
                     key={list_kategori?.data?.length}
+                    mobileColumns={['nama', 'created_at', 'action']}
                     pagination={{
                         current_page: list_kategori?.current_page as number,
                         last_page: list_kategori?.last_page as number,
@@ -309,13 +303,12 @@ const ProjectConfigCategoryIndex = () => {
                                 </h4>
                             </div>
                         ) : (
-                            <div className="grid w-full grid-cols-1 items-center gap-2 p-4 sm:grid-cols-2 sm:gap-4">
+                            <div className="w-full px-3">
                                 <AppInput
                                     placeholder="Masukkan judul kategori. . ."
                                     label="Judul kategori Proyek"
                                     value={data?.nama}
                                     onChange={(e) => setData('nama', e.target.value)}
-                                    // error={errors?.nama}
                                 />
                             </div>
                         )}

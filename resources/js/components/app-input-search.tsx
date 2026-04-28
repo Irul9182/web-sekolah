@@ -17,7 +17,6 @@ const AppSearchInput = React.forwardRef<HTMLInputElement, AppSearchInputProps>(
 
         return (
             <div className="relative">
-                {/* Search Icon */}
                 <div className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2">
                     <Search className="h-4 w-4" />
                 </div>
@@ -38,7 +37,6 @@ const AppSearchInput = React.forwardRef<HTMLInputElement, AppSearchInputProps>(
                     {...props}
                 />
 
-                {/* Clear Button */}
                 {clearable && (
                     <>
                         {' '}
