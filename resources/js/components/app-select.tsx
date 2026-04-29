@@ -17,7 +17,7 @@ export interface SelectOptionGroup {
     options: SelectOption[];
 }
 
-type SelectOptions = SelectOption[] | SelectOptionGroup[];
+export type SelectOptions = SelectOption[] | SelectOptionGroup[];
 
 export type SelectTone = 'default' | 'error' | 'warning' | 'success' | 'info';
 

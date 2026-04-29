@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { NavGroup } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Blocks, ChartBar, Cog, LayoutGrid, Pickaxe, UtilityPoleIcon, Wallet, Wrench } from 'lucide-react';
+import { Blocks, Cog, LayoutGrid, Pickaxe, UtilityPoleIcon, Wallet, Wrench } from 'lucide-react';
 import AppLogo from './app-logo';
 import { NavFooter } from './nav-footer';
 
@@ -23,11 +23,11 @@ const mainNavItems: NavGroup[] = [
         url: '/transaction',
         icon: Wallet,
     },
-    {
-        title: 'Cashflow',
-        url: '/cashflow',
-        icon: ChartBar,
-    },
+    // {
+    //     title: 'Cashflow',
+    //     url: '/cashflow',
+    //     icon: ChartBar,
+    // },
     {
         title: 'Forecasting',
         url: '/forecasting',

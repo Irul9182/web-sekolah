@@ -17,7 +17,6 @@ class FinanceService
     {
         $pagu = (float) $proyek->pagu_total;
 
-        // Pajak tetap dari proyek
         $nilai_pajak        = $pagu * ($proyek->pajak_persen / 100);
         $dana_setelah_pajak = $pagu - $nilai_pajak;
 
@@ -64,7 +63,6 @@ class FinanceService
         ];
     }
 
-    // Laba rugi per proyek
     public function hitungLabaRugi(Proyek $proyek): array
     {
         $pemasukan   = (float) $proyek->pagu_total;
@@ -79,7 +77,6 @@ class FinanceService
         ];
     }
 
-    // Laporan keuangan perusahaan
     public function laporanKeuanganPerusahaan(): array
     {
         $proyeks = Proyek::with('transaksi')->get();
@@ -117,7 +114,6 @@ class FinanceService
 
         $total_pengeluaran = $transaksi->sum('jumlah');
 
-        // Pemasukan = pagu_total langsung
         $cashflow = (float) $proyek->pagu_total - $total_pengeluaran;
 
         $breakdown = $transaksi
@@ -141,7 +137,6 @@ class FinanceService
             : $proyek->transaksi()->get();
 
 
-        // Aktual per kategori dari transaksi
         $aktual = $transaksi->isNotEmpty()
             ? $transaksi->groupBy('kategori')->map(fn($group) => [
                 'jumlah' => $group->sum('jumlah'),
@@ -155,7 +150,6 @@ class FinanceService
             ])
             : collect();
 
-        // Gabungkan rencana vs aktual per kategori
         return [
             'jasa_tukang' => [
                 'rencana' => $rencana['jasa_tukang'],
@@ -197,10 +191,7 @@ class FinanceService
     }
 
 
-    /**
-     * Bandingkan anggaran vs aktual per proyek.
-     * Berguna untuk halaman detail proyek & laporan.
-     */
+
     public function hitungRealisasi(Proyek $proyek): array
     {
         $anggaran = $this->hitungAnggaranProyek($proyek);
@@ -232,57 +223,42 @@ class FinanceService
      *   ...
      * ]
      */
-    public function aggregateCashflowBulanan(): Collection
+    public function aggregateCashflowBulanan(Carbon $start = null, Carbon $end = null): Collection
     {
-        // Pengeluaran aktual per bulan dari transaksi
+        $start = $start ?? Carbon::now()->subMonths(5)->startOfMonth();
+        $end   = $end   ?? Carbon::now()->endOfMonth();
+
         $pengeluaran = Transaksi::query()
             ->selectRaw("DATE_FORMAT(tanggal, '%Y-%m-01') as bulan, SUM(jumlah) as total")
+            ->whereBetween('tanggal', [$start, $end])
             ->groupByRaw("DATE_FORMAT(tanggal, '%Y-%m-01')")
             ->pluck('total', 'bulan');
 
-        // Pemasukan per bulan dari pagu proyek (berdasarkan tanggal mulai)
         $pemasukan = Proyek::query()
             ->selectRaw("DATE_FORMAT(tanggal_mulai, '%Y-%m-01') as bulan, SUM(pagu_total) as total")
+            ->whereBetween('tanggal_mulai', [$start, $end])
             ->groupByRaw("DATE_FORMAT(tanggal_mulai, '%Y-%m-01')")
             ->pluck('total', 'bulan');
 
-        // Tentukan range bulan: dari bulan paling awal hingga bulan ini
-        $semuaBulan = collect($pemasukan->keys()->merge($pengeluaran->keys())->unique());
+        $bulan = collect($pemasukan->keys()->merge($pengeluaran->keys())->unique()->sort());
 
-        if ($semuaBulan->isEmpty()) {
-            return collect();
-        }
-
-        $start = Carbon::parse($semuaBulan->min())->startOfMonth();
-        $end   = Carbon::now()->startOfMonth();
-
-        // Isi semua bulan dalam range, bulan kosong = 0
-        $result = collect();
-        $cursor = $start->copy();
-
-        while ($cursor->lte($end)) {
-            $bulan = $cursor->format('Y-m-01');
-            $result->push([
-                'ds' => $bulan,
-                'y'  => (float)($pemasukan[$bulan] ?? 0) - (float)($pengeluaran[$bulan] ?? 0),
-            ]);
-            $cursor->addMonth();
-        }
-
-        return $result->values();
+        return $bulan->map(fn($b) => [
+            'ds' => $b,
+            'y'  => (float)($pemasukan[$b] ?? 0) - (float)($pengeluaran[$b] ?? 0),
+        ])->values();
     }
 
-    /**
-     * Summary dashboard perusahaan — semua proyek.
-     */
-    public function summaryPerusahaan(): array
-    {
-        $proyeks = Proyek::with('transaksi')->get();
 
-        $total_pagu            = $proyeks->sum('pagu_total');
-        $total_pengeluaran     = $proyeks->sum(fn($p) => $p->transaksi->sum('jumlah'));
-        $total_cashflow        = $total_pagu - $total_pengeluaran;
-        $total_netto           = $proyeks->sum(fn($p) => $this->hitungAnggaranProyek($p)['netto']);
+    public function summaryPerusahaan(Carbon $start = null, Carbon $end = null): array
+    {
+        $start = $start ?? Carbon::now()->subMonths(5)->startOfMonth();
+        $end   = $end   ?? Carbon::now()->endOfMonth();
+
+        $proyeks           = Proyek::whereBetween('tanggal_mulai', [$start, $end])->get();
+        $total_pagu        = $proyeks->sum('pagu_total');
+        $total_pengeluaran = Transaksi::whereBetween('tanggal', [$start, $end])->sum('jumlah');
+        $total_cashflow    = $total_pagu - $total_pengeluaran;
+        $total_netto       = $proyeks->sum(fn($p) => $this->hitungAnggaranProyek($p)['netto']);
 
         return [
             'total_pagu'        => (float) $total_pagu,

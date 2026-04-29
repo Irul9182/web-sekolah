@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Database\Seeders\ProyekSeeder;
 use Database\Seeders\TransaksiSeeder;
+use Database\Seeders\ProyekTransaksiSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -22,9 +23,13 @@ class DatabaseSeeder extends Seeder
             'email' => 'herkal@test.com',
             'password' => 'herkal123',
         ]);
-        $this->call(KategoriProyekSeeder::class);
-        $this->call(JenisProyekSeeder::class);
-        $this->call(ProyekSeeder::class);
-        $this->call(TransaksiSeeder::class);
+        $this->call([
+            KategoriProyekSeeder::class,
+            JenisProyekSeeder::class,
+            ProyekTransaksiSeeder::class,
+        ]);
+
+        // $this->call(ProyekSeeder::class);
+        // $this->call(TransaksiSeeder::class);
     }
 }

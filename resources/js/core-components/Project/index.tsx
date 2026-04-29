@@ -133,6 +133,7 @@ const ProjectIndex = ({ proyeks, filters }: PropTypes) => {
         {
             key: 'nama_proyek',
             label: 'Nama Proyek',
+            className: 'truncate max-w-[300px]',
             sortable: true,
         },
         {
@@ -182,6 +183,7 @@ const ProjectIndex = ({ proyeks, filters }: PropTypes) => {
             key: 'nama_klien',
             label: 'Klien',
             sortable: true,
+            className: 'truncate max-w-[200px]',
         },
         {
             key: 'status',

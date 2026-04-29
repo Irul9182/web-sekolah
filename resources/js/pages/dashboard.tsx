@@ -1,18 +1,17 @@
-import AppSelect from '@/components/app-select';
+import AppSelect, { SelectOptions } from '@/components/app-select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { ArcElement, BarElement, CategoryScale, Chart as ChartJS, Filler, Legend, LinearScale, LineElement, PointElement, Tooltip } from 'chart.js';
-import { Banknote, FolderKanban, TrendingDown, TrendingUp } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Banknote, HardHat, TrendingDown, TrendingUp } from 'lucide-react';
+import { useState } from 'react';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Filler, Tooltip, Legend);
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 type ChartBase = {
     labels: string[];
     [key: string]: unknown;
@@ -50,15 +49,20 @@ interface ChartTopProyek {
     status: string[];
 }
 
+interface PeriodeOption {
+    value: string;
+    label: string;
+}
+
 interface PageProps extends InertiaPageProps {
     summary: Summary;
     chartPemasukanBulanan: ChartPemasukanBulanan;
     chartCashflowBulanan: ChartCashflowBulanan;
     chartStatusProyek: ChartStatusProyek;
     chartTopProyek: ChartTopProyek;
+    periodeOptions: PeriodeOption[];
+    selectedBulan: number;
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const fmt = (n: number) =>
     new Intl.NumberFormat('id-ID', {
@@ -75,14 +79,6 @@ const fmtFull = (n: number) =>
         maximumFractionDigits: 0,
     }).format(n);
 
-// ─── Semester Utilities ───────────────────────────────────────────────────────
-
-/**
- * Parse label bulan dari format translatedFormat('M Y') Laravel,
- * mis. "Jan 2025", "Feb 2025", "Agt 2025", dll.
- * Karena locale id-ID bisa pakai singkatan Bahasa Indonesia,
- * kita map manual agar aman lintas environment.
- */
 const MONTH_ID: Record<string, number> = {
     jan: 0,
     feb: 1,
@@ -96,7 +92,6 @@ const MONTH_ID: Record<string, number> = {
     okt: 9,
     nov: 10,
     des: 11,
-    // fallback English (jika Carbon locale belum di-set)
     may: 4,
     aug: 7,
     oct: 9,
@@ -104,7 +99,6 @@ const MONTH_ID: Record<string, number> = {
 };
 
 function parseLabelBulan(label: string): { year: number; month: number } | null {
-    // Format: "Jan 2025" → ["Jan", "2025"]
     const parts = label.trim().split(/\s+/);
     if (parts.length !== 2) return null;
     const month = MONTH_ID[parts[0].toLowerCase()];
@@ -113,11 +107,6 @@ function parseLabelBulan(label: string): { year: number; month: number } | null 
     return { year, month };
 }
 
-/**
- * Generate daftar opsi semester dari array label bulanan.
- * Semester 1 = Jan–Jun, Semester 2 = Jul–Des.
- * Urutan mengikuti urutan kemunculan di data.
- */
 function generateSemesterOptions(labels: string[]): { value: string; label: string }[] {
     const seen = new Set<string>();
     const options: { value: string; label: string }[] = [];
@@ -142,9 +131,9 @@ function generateSemesterOptions(labels: string[]): { value: string; label: stri
 }
 
 /**
- * Filter semua array dalam objek data berdasarkan semester terpilih.
- * Key "labels" dipakai sebagai acuan index; semua key lain yang berupa array
- * ikut difilter dengan index yang sama.
+ * filter semua array dalam objek data brdasarkan semester terpilih.
+ * Key "labels" dipakai buat acuan index; semua key lain yg berupa array
+ * ikut difilter dgn index yg sama.
  *
  * semKey format: "2025-1" (semester 1 tahun 2025) atau "2025-2"
  */
@@ -153,7 +142,6 @@ function filterBySemester<T extends { labels: string[] } & { [K: string]: unknow
     const year = parseInt(yearStr, 10);
     const sem = parseInt(semStr, 10);
 
-    // Kumpulkan index yang masuk semester ini
     const indices = data.labels.reduce<number[]>((acc, label, i) => {
         const parsed = parseLabelBulan(label);
         if (!parsed) return acc;
@@ -162,7 +150,6 @@ function filterBySemester<T extends { labels: string[] } & { [K: string]: unknow
         return acc;
     }, []);
 
-    // Bangun objek hasil dengan semua key di-filter
     const result: Record<string, unknown> = {};
     for (const key of Object.keys(data)) {
         const val = data[key];
@@ -171,38 +158,17 @@ function filterBySemester<T extends { labels: string[] } & { [K: string]: unknow
     return result as T;
 }
 
-// ─── Shared chart defaults ────────────────────────────────────────────────────
-
 const baseTooltip = {
     backgroundColor: '#0f172a',
     borderColor: 'rgba(255,255,255,0.08)',
     borderWidth: 1,
     titleColor: '#94a3b8',
     bodyColor: '#f1f5f9',
-    titleFont: { family: 'monospace', size: 11 } as const,
-    bodyFont: { family: 'monospace', size: 11 } as const,
+    titleFont: { family: 'poppins', size: 11 } as const,
+    bodyFont: { family: 'poppins', size: 11 } as const,
     padding: 12,
     cornerRadius: 10,
 };
-
-const baseScales = {
-    x: {
-        grid: { color: 'rgba(148,163,184,0.07)' },
-        ticks: { color: '#64748b', font: { family: 'monospace', size: 10 } as const },
-        border: { display: false },
-    },
-    y: {
-        grid: { color: 'rgba(148,163,184,0.07)' },
-        ticks: {
-            color: '#64748b',
-            font: { family: 'monospace', size: 10 } as const,
-            callback: (v: string | number) => fmt(v as number),
-        },
-        border: { display: false },
-    },
-};
-
-// ─── Stat Card ────────────────────────────────────────────────────────────────
 
 function StatCard({
     label,
@@ -221,11 +187,11 @@ function StatCard({
         <Card>
             <CardContent className="flex items-start gap-4 px-5 pt-5 pb-4">
                 <div className="bg-muted mt-0.5 rounded-lg p-2.5">
-                    <Icon className="text-muted-foreground h-4 w-4" />
+                    <Icon className="text-muted-foreground h-4 w-4 sm:h-6 sm:w-6" />
                 </div>
                 <div className="min-w-0 flex-1">
                     <p className="text-muted-foreground mb-1 text-[11px] tracking-widest uppercase">{label}</p>
-                    <p className={`truncate text-2xl font-bold tracking-tight ${valueClass ?? 'text-foreground'}`}>{value}</p>
+                    <p className={`truncate text-2xl font-bold tracking-wide ${valueClass ?? 'text-foreground'}`}>{value}</p>
                     {sub && <p className="text-muted-foreground mt-1 text-[11px]">{sub}</p>}
                 </div>
             </CardContent>
@@ -233,41 +199,54 @@ function StatCard({
     );
 }
 
-// ─── Breadcrumbs ──────────────────────────────────────────────────────────────
-
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
     const { props } = usePage<PageProps>();
-    const { summary, chartPemasukanBulanan, chartCashflowBulanan, chartStatusProyek, chartTopProyek } = props;
+    const { summary, chartPemasukanBulanan, periodeOptions, chartCashflowBulanan, selectedBulan, chartStatusProyek, chartTopProyek } = props;
+    const [periode, setPeriode] = useState(String(selectedBulan));
+    console.log('Props dashboard: ', props);
 
-    // ── Generate opsi semester dari label data yang tersedia ──────────────────
-    // Otomatis menyesuaikan dengan rentang data dari backend (tidak hardcode tahun)
-    const semesterOptions = useMemo(() => generateSemesterOptions(chartPemasukanBulanan.labels), [chartPemasukanBulanan.labels]);
+    const slicedPemasukan = chartPemasukanBulanan;
 
-    // ── State periode — default ke semester paling akhir ─────────────────────
-    const [periode, setPeriode] = useState<string>(() => semesterOptions.at(-1)?.value ?? '');
+    const slicedCashflow = chartCashflowBulanan;
 
-    // ── Filter data sesuai semester terpilih ──────────────────────────────────
-    // FIX: kedua chart kini menggunakan data yang sudah difilter
-    const slicedPemasukan = useMemo(
-        () => (periode ? filterBySemester(chartPemasukanBulanan, periode) : chartPemasukanBulanan),
-        [chartPemasukanBulanan, periode],
-    );
+    const handlePeriodeChange = (val: string) => {
+        setPeriode(val);
+        router.get(
+            route('dashboard.index'),
+            { bulan: val },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
+    };
 
-    const slicedCashflow = useMemo(
-        () => (periode ? filterBySemester(chartCashflowBulanan, periode) : chartCashflowBulanan),
-        [chartCashflowBulanan, periode],
-    );
-
-    // Label periode aktif untuk ditampilkan di deskripsi chart
-    const periodeLabel = semesterOptions.find((o) => o.value === periode)?.label ?? '';
-
-    // ── Chart 1: Pemasukan & Pengeluaran ──────────────────────────────────────
+    const textColor = getComputedStyle(document.body).getPropertyValue('--muted-foreground').trim();
+    const periodeLabel = periodeOptions.find((o) => o.value === periode)?.label ?? '';
+    const baseScales = {
+        x: {
+            grid: { color: 'rgba(148,163,184,0.07)' },
+            ticks: {
+                color: textColor,
+                font: { family: 'poppins', size: 12 } as const,
+            },
+            border: { display: false },
+        },
+        y: {
+            grid: { color: 'rgba(148,163,184,0.07)' },
+            ticks: {
+                color: textColor,
+                font: { family: 'poppins', size: 12 } as const,
+                callback: (v: string | number) => fmt(v as number),
+            },
+            border: { display: false },
+        },
+    };
     const pemasukanData = {
         labels: slicedPemasukan.labels,
+
         datasets: [
             {
                 label: 'Pemasukan',
@@ -276,6 +255,7 @@ export default function Dashboard() {
                 borderRadius: 5,
                 borderSkipped: false,
             },
+
             {
                 label: 'Pengeluaran',
                 data: slicedPemasukan.pengeluaran,
@@ -299,14 +279,12 @@ export default function Dashboard() {
         scales: baseScales,
     };
 
-    // ── Chart 2: Cashflow Bulanan ─────────────────────────────────────────────
-    // FIX: data sekarang menggunakan slicedCashflow (sebelumnya masih pakai chartCashflowBulanan mentah)
     const cashflowData = {
         labels: slicedCashflow.labels,
         datasets: [
             {
                 label: 'Cashflow',
-                data: slicedCashflow.cashflow, // ← FIX: was chartCashflowBulanan.cashflow
+                data: slicedCashflow.cashflow,
                 borderColor: '#34d399',
                 backgroundColor: 'rgba(52,211,153,0.08)',
                 fill: true,
@@ -330,7 +308,6 @@ export default function Dashboard() {
         scales: baseScales,
     };
 
-    // ── Chart 3: Status Proyek ────────────────────────────────────────────────
     const statusData = {
         labels: chartStatusProyek.labels,
         datasets: [
@@ -351,8 +328,8 @@ export default function Dashboard() {
             legend: {
                 position: 'bottom' as const,
                 labels: {
-                    color: '#64748b',
-                    font: { family: 'monospace', size: 11 },
+                    color: textColor,
+                    font: { family: 'poppins', size: 11 },
                     padding: 16,
                     boxWidth: 12,
                 },
@@ -364,7 +341,6 @@ export default function Dashboard() {
         },
     };
 
-    // ── Chart 4: Top Proyek ───────────────────────────────────────────────────
     const topProyekData = {
         labels: chartTopProyek.labels,
         datasets: [
@@ -395,7 +371,10 @@ export default function Dashboard() {
             x: baseScales.x,
             y: {
                 grid: { display: false },
-                ticks: { color: '#64748b', font: { family: 'monospace', size: 10 } as const },
+                ticks: {
+                    color: textColor,
+                    font: { family: 'poppins', size: 12 } as const,
+                },
                 border: { display: false },
             },
         },
@@ -416,16 +395,17 @@ export default function Dashboard() {
 
                     <div className="w-52">
                         <AppSelect
-                            options={semesterOptions}
-                            value={periode}
-                            onValueChange={setPeriode}
+                            options={periodeOptions as SelectOptions}
+                            value={periode ?? [{}]}
+                            onValueChange={handlePeriodeChange}
                             label="Pilih periode"
+                            placeholder="Pilih . . ."
                             tooltip="Mempengaruhi chart pemasukan, pengeluaran, dan cashflow bulanan"
                         />
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <StatCard label="Total Pagu" value={fmt(summary.total_pagu)} sub={`${summary.total_proyek} proyek`} icon={Banknote} />
                     <StatCard
                         label="Total Pengeluaran"
@@ -445,7 +425,7 @@ export default function Dashboard() {
                         label="Proyek Berjalan"
                         value={String(summary.proyek_berjalan)}
                         sub={`selesai: ${summary.proyek_selesai} · batal: ${summary.proyek_dibatalkan}`}
-                        icon={FolderKanban}
+                        icon={HardHat}
                         valueClass="text-blue-500"
                     />
                 </div>
@@ -453,7 +433,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 gap-5">
                     <Card>
                         <CardHeader className="pb-2">
-                            <div className="flex items-start justify-between gap-2">
+                            <div className="mx-auto flex flex-col items-start justify-center gap-2 sm:mx-0 sm:flex-row sm:justify-between">
                                 <div>
                                     <CardTitle className="text-sm font-semibold">Pemasukan & Pengeluaran</CardTitle>
                                     <CardDescription className="mt-0.5 text-[11px]">{periodeLabel} · seluruh proyek</CardDescription>

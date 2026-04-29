@@ -15,39 +15,90 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
+        Carbon::setLocale('id');
+        $periode = $request->query('bulan', null);
+
+        $defaultValue =
+            Carbon::now()->subMonths(5)->translatedFormat('F Y')
+            . ':' .
+            Carbon::now()->translatedFormat('F Y');
+
+        if (!$periode || !str_contains($periode, ':')) {
+            $periode = $defaultValue;
+        }
+
+        [$startStr, $endStr] = explode(':', $periode, 2);
+
+        try {
+            $start = Carbon::parse($startStr)->startOfMonth();
+            $end   = Carbon::parse($endStr)->endOfMonth();
+        } catch (\Exception $e) {
+            $periode = $defaultValue;
+            [$startStr, $endStr] = explode(':', $periode, 2);
+            $start = Carbon::parse($startStr)->startOfMonth();
+            $end   = Carbon::parse($endStr)->endOfMonth();
+        }
+
         return Inertia::render('dashboard', [
-            'summary'               => $this->financeService->summaryPerusahaan(),
-            'chartPemasukanBulanan' => $this->chartPemasukanPengeluaranBulanan(),
-            'chartCashflowBulanan'  => $this->chartCashflowBulanan(),
+            'summary'               => $this->financeService->summaryPerusahaan($start, $end),
+            'chartPemasukanBulanan' => $this->chartPemasukanPengeluaranBulanan($start, $end),
+            'chartCashflowBulanan'  => $this->chartCashflowBulanan($start, $end),
             'chartStatusProyek'     => $this->chartStatusProyek(),
             'chartTopProyek'        => $this->chartTopProyek(),
+            'periodeOptions'        => $this->generatePeriodeOptions(),
+            'selectedPeriode'       => $periode,
         ]);
     }
 
-    // ─── Chart 1: Pemasukan & Pengeluaran Bulanan (6 bulan terakhir) ─────────
-
-    private function chartPemasukanPengeluaranBulanan(int $bulanTerakhir = 6): array
+    private function generatePeriodeOptions(int $perPeriode = 6, int $maxOpsi = 5): array
     {
-        $start = Carbon::now()->startOfMonth()->subMonths($bulanTerakhir - 1);
-        $end   = Carbon::now()->startOfMonth();
+        $bulanTertua = Transaksi::query()
+            ->selectRaw("DATE_FORMAT(tanggal, '%Y-%m-01') as bulan")
+            ->orderBy('tanggal')
+            ->value('bulan');
 
+        if (!$bulanTertua) return [];
+
+        $dataStart = Carbon::parse($bulanTertua)->startOfMonth();
+        $end       = Carbon::now()->startOfMonth();
+        $options   = [];
+        $cursor    = $end->copy();
+
+        while ($cursor->gte($dataStart) && count($options) < $maxOpsi) {
+            $periodeStart = $cursor->copy()->subMonths($perPeriode - 1)->startOfMonth();
+
+            if ($periodeStart->lt($dataStart)) {
+                $periodeStart = $dataStart->copy();
+            }
+
+            $options[] = [
+                'value' => $periodeStart->format('Y-m') . ':' . $cursor->format('Y-m'),
+                'label' => $periodeStart->translatedFormat('M Y') . ' – ' . $cursor->translatedFormat('M Y'),
+            ];
+
+            $cursor->subMonths($perPeriode);
+        }
+
+        return $options;
+    }
+
+    private function chartPemasukanPengeluaranBulanan(Carbon $start, Carbon $end): array
+    {
         $pengeluaran = Transaksi::query()
             ->selectRaw("DATE_FORMAT(tanggal, '%Y-%m-01') as bulan, SUM(jumlah) as total")
-            ->whereBetween('tanggal', [$start, $end->copy()->endOfMonth()])
+            ->whereBetween('tanggal', [$start, $end])
             ->groupByRaw("DATE_FORMAT(tanggal, '%Y-%m-01')")
             ->pluck('total', 'bulan');
 
         $pemasukan = Proyek::query()
             ->selectRaw("DATE_FORMAT(tanggal_mulai, '%Y-%m-01') as bulan, SUM(pagu_total) as total")
-            ->whereBetween('tanggal_mulai', [$start, $end->copy()->endOfMonth()])
+            ->whereBetween('tanggal_mulai', [$start, $end])
             ->groupByRaw("DATE_FORMAT(tanggal_mulai, '%Y-%m-01')")
             ->pluck('total', 'bulan');
 
-        $labels          = [];
-        $dataPemasukan   = [];
-        $dataPengeluaran = [];
+        $labels = $dataPemasukan = $dataPengeluaran = [];
+        $cursor = $start->copy()->startOfMonth();
 
-        $cursor = $start->copy();
         while ($cursor->lte($end)) {
             $bulan             = $cursor->format('Y-m-01');
             $labels[]          = $cursor->translatedFormat('M Y');
@@ -63,24 +114,15 @@ class DashboardController extends Controller
         ];
     }
 
-    // ─── Chart 2: Cashflow Bulanan Netto (6 bulan terakhir) ──────────────────
-
-    private function chartCashflowBulanan(int $bulanTerakhir = 6): array
+    private function chartCashflowBulanan(Carbon $start, Carbon $end): array
     {
-        $bulanan = $this->financeService->aggregateCashflowBulanan();
-
-        // takeLast() tidak ada di Laravel Collection — gunakan slice dari belakang
-        $bulanan = $bulanan->slice(max(0, $bulanan->count() - $bulanTerakhir))->values();
+        $bulanan = $this->financeService->aggregateCashflowBulanan($start, $end);
 
         return [
-            'labels'   => $bulanan->map(
-                fn($b) => Carbon::parse($b['ds'])->translatedFormat('M Y')
-            )->values()->toArray(),
+            'labels'   => $bulanan->map(fn($b) => Carbon::parse($b['ds'])->translatedFormat('M Y'))->values()->toArray(),
             'cashflow' => $bulanan->pluck('y')->values()->toArray(),
         ];
     }
-
-    // ─── Chart 3: Status Proyek (Pie/Donut) ──────────────────────────────────
 
     private function chartStatusProyek(): array
     {
@@ -105,8 +147,6 @@ class DashboardController extends Controller
 
         return compact('labels', 'data');
     }
-
-    // ─── Chart 4: Top 5 Proyek by Pagu ───────────────────────────────────────
 
     private function chartTopProyek(int $limit = 5): array
     {
