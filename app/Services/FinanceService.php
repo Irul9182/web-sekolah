@@ -251,12 +251,18 @@ class FinanceService
 
     public function summaryPerusahaan(Carbon $start = null, Carbon $end = null): array
     {
-        $start = $start ?? Carbon::now()->subMonths(5)->startOfMonth();
-        $end   = $end   ?? Carbon::now()->endOfMonth();
+        // Kalau tidak ada parameter, pakai semua data
+        $proyekQuery = Proyek::query();
+        $transaksiQuery = Transaksi::query();
 
-        $proyeks           = Proyek::whereBetween('tanggal_mulai', [$start, $end])->get();
+        if ($start && $end) {
+            $proyekQuery    = $proyekQuery->whereBetween('tanggal_mulai', [$start, $end]);
+            $transaksiQuery = $transaksiQuery->whereBetween('tanggal', [$start, $end]);
+        }
+
+        $proyeks           = $proyekQuery->get();
         $total_pagu        = $proyeks->sum('pagu_total');
-        $total_pengeluaran = Transaksi::whereBetween('tanggal', [$start, $end])->sum('jumlah');
+        $total_pengeluaran = $transaksiQuery->sum('jumlah');
         $total_cashflow    = $total_pagu - $total_pengeluaran;
         $total_netto       = $proyeks->sum(fn($p) => $this->hitungAnggaranProyek($p)['netto']);
 
@@ -270,5 +276,26 @@ class FinanceService
             'proyek_selesai'    => $proyeks->where('status', 'selesai')->count(),
             'proyek_dibatalkan' => $proyeks->where('status', 'dibatalkan')->count(),
         ];
+    }
+
+
+    public function aggregateCashflowBulanantAll(): Collection
+    {
+        $pengeluaran = Transaksi::query()
+            ->selectRaw("DATE_FORMAT(tanggal, '%Y-%m-01') as bulan, SUM(jumlah) as total")
+            ->groupByRaw("DATE_FORMAT(tanggal, '%Y-%m-01')")
+            ->pluck('total', 'bulan');
+
+        $pemasukan = Proyek::query()
+            ->selectRaw("DATE_FORMAT(tanggal_mulai, '%Y-%m-01') as bulan, SUM(pagu_total) as total")
+            ->groupByRaw("DATE_FORMAT(tanggal_mulai, '%Y-%m-01')")
+            ->pluck('total', 'bulan');
+
+        $bulan = collect($pemasukan->keys()->merge($pengeluaran->keys())->unique()->sort());
+
+        return $bulan->map(fn($b) => [
+            'ds' => $b,
+            'y'  => (float)($pemasukan[$b] ?? 0) - (float)($pengeluaran[$b] ?? 0),
+        ])->values();
     }
 }

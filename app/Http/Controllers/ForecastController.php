@@ -25,64 +25,56 @@ class ForecastController extends Controller
     public function generate(Request $request)
     {
         $request->validate([
-            'periods' => 'nullable|integer|min:6',
+            'periods' => 'nullable|integer|min:1|max:24',
         ]);
 
         $periods = $request->input('periods', 6);
 
-        // 1. Ambil cashflow bulanan dari FinanceService
-        //    Format: Collection of ['ds' => 'YYYY-MM-01', 'y' => float]
-        $cashflowData = $this->financeService->aggregateCashflowBulanan()->toArray();
+        // Ambil SEMUA data historis — tanpa filter periode
+        $cashflowData = $this->financeService->aggregateCashflowBulanantAll()->toArray();
 
-        // 2. Validasi minimal data historis
         if (count($cashflowData) < 6) {
             return back()->withErrors([
-                'data' => 'Data historis minimal 6 bulan diperlukan untuk forecasting. '
+                'data' => 'Data historis minimal 6 bulan diperlukan. '
                     . 'Saat ini hanya tersedia ' . count($cashflowData) . ' bulan.',
             ]);
         }
 
-        // 3. Siapkan payload untuk Python
-        $payload = json_encode([
-            'periods' => $periods,
-            'data'    => $cashflowData,
-        ]);
-
-        $encoded = base64_encode($payload);
-
-
-        // 4. Panggil Python Prophet via shell_exec
-        $scriptPath = base_path('app/python/prophet_runner.py');
+        $payload        = json_encode(['periods' => $periods, 'data' => $cashflowData]);
+        $encoded        = base64_encode($payload);
+        $scriptPath     = base_path('app/python/prophet_runner.py');
         $pythonBin      = env('PYTHON_BIN', 'python');
-        $escapedPayload = escapeshellarg($payload);
-        $command = "{$pythonBin} {$scriptPath} {$encoded} 2>&1";
-        $output = shell_exec($command);
+        $command        = "{$pythonBin} {$scriptPath} {$encoded} 2>&1";
+        $output         = shell_exec($command);
 
-
-        // 5. Validasi output Python
         if (empty($output)) {
             return back()->withErrors([
-                'forecast' => 'Gagal menjalankan script Python. Periksa instalasi Prophet dan path: ' . $scriptPath,
+                'forecast' => 'Gagal menjalankan script Python.',
             ]);
         }
 
-        $result = json_decode($output, true);
+        // Ambil hanya baris JSON terakhir — abaikan log Prophet
+        $lines      = array_filter(explode("\n", trim($output)));
+        $lastLine   = end($lines);
+        $result     = json_decode($lastLine, true);
 
-        if (! $result || ($result['status'] ?? '') !== 'success') {
+        if (!$result || ($result['status'] ?? '') !== 'success') {
             return back()->withErrors([
                 'forecast' => 'Prophet error: ' . ($result['error'] ?? $output),
             ]);
         }
 
-        // 6. Kembalikan ke React via Inertia
         return Inertia::render('forecasting/index', [
             'forecasting' => [
-                'actual'      => $result['actual'],
-                'forecast'    => $result['forecast'],
-                'periods'     => $result['periods'],
-                'trained_on'  => $result['trained_on'],
-                // Tambahan konteks keuangan untuk ditampilkan di UI
-                'summary'     => $this->financeService->summaryPerusahaan(),
+                'actual'     => $result['actual'],
+                'forecast'   => $result['forecast'],
+                'periods'    => $result['periods'],
+                'trained_on' => $result['trained_on'],
+                'mae'        => $result['mae'],   // ← tambah
+                'rmse'  => $result['rmse'],
+                'smape' => $result['smape'],
+                'mape'  => $result['mape'],
+                'summary'    => $this->financeService->summaryPerusahaan(), // pakai default
             ],
         ]);
     }

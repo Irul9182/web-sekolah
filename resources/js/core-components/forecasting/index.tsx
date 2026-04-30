@@ -28,8 +28,6 @@ import { ChartNoAxesCombined, Loader2, TrendingUp, TriangleAlert } from 'lucide-
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 interface ForecastPoint {
     ds: string;
     yhat: number;
@@ -54,6 +52,8 @@ interface ForecastingResult {
     periods: number;
     trained_on: number;
     summary: Summary | null;
+    mae: number;
+    mape: number;
 }
 
 interface PageProps extends InertiaPageProps {
@@ -63,8 +63,6 @@ interface PageProps extends InertiaPageProps {
         forecast?: string;
     };
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const fmt = (n: number) =>
     new Intl.NumberFormat('id-ID', {
@@ -87,8 +85,6 @@ const fmtMonth = (ds: string) =>
         year: '2-digit',
     });
 
-// ─── Chart Builder ────────────────────────────────────────────────────────────
-
 function buildChartConfig(forecasting: ForecastingResult): ChartData<'line'> {
     const actualLabels = forecasting.actual.map((r) => fmtMonth(r.ds));
     const forecastLabels = forecasting.forecast.map((r) => fmtMonth(r.ds));
@@ -97,17 +93,14 @@ function buildChartConfig(forecasting: ForecastingResult): ChartData<'line'> {
     const actualLen = actualLabels.length;
     const totalLen = labels.length;
 
-    // Aktual: hanya terisi di indeks aktual, null setelahnya
     const aktualData: (number | null)[] = [...forecasting.actual.map((r) => r.yhat), ...Array(totalLen - actualLen).fill(null)];
 
-    // Proyeksi: null sebelum titik terakhir aktual, overlap 1 titik agar menyambung
     const proyeksiData: (number | null)[] = [
         ...Array(actualLen - 1).fill(null),
         forecasting.actual[forecasting.actual.length - 1]?.yhat ?? null,
         ...forecasting.forecast.map((r) => r.yhat),
     ];
 
-    // CI Upper & Lower — diisi dari titik terakhir aktual
     const upperData: (number | null)[] = [
         ...Array(actualLen - 1).fill(null),
         forecasting.actual[forecasting.actual.length - 1]?.yhat ?? null,
@@ -122,7 +115,6 @@ function buildChartConfig(forecasting: ForecastingResult): ChartData<'line'> {
     return {
         labels,
         datasets: [
-            // CI Upper — fill ke dataset CI Lower (index +1)
             {
                 label: 'CI Upper',
                 data: upperData,
@@ -133,7 +125,6 @@ function buildChartConfig(forecasting: ForecastingResult): ChartData<'line'> {
                 tension: 0.4,
                 spanGaps: true,
             },
-            // CI Lower
             {
                 label: 'CI Lower',
                 data: lowerData,
@@ -144,7 +135,6 @@ function buildChartConfig(forecasting: ForecastingResult): ChartData<'line'> {
                 tension: 0.4,
                 spanGaps: true,
             },
-            // Proyeksi — dashed
             {
                 label: 'Proyeksi',
                 data: proyeksiData,
@@ -158,7 +148,6 @@ function buildChartConfig(forecasting: ForecastingResult): ChartData<'line'> {
                 tension: 0.4,
                 spanGaps: false,
             },
-            // Aktual — solid
             {
                 label: 'Aktual',
                 data: aktualData,
@@ -227,8 +216,6 @@ function buildChartOptions(): ChartOptions<'line'> {
     };
 }
 
-// ─── Metric Card ──────────────────────────────────────────────────────────────
-
 interface MetricCardProps {
     label: string;
     value: string;
@@ -247,8 +234,6 @@ function MetricCard({ label, value, sub, valueClass }: MetricCardProps) {
         </Card>
     );
 }
-
-// ─── Stat Row ─────────────────────────────────────────────────────────────────
 
 function StatRow({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
     return (
@@ -365,6 +350,34 @@ const ForecastingIndex = () => {
                             <MetricCard label="Proyeksi tertinggi" value={fmt(maxForecast)} sub="batas atas 95% CI" valueClass="text-emerald-500" />
                             <MetricCard label="Proyeksi terendah" value={fmt(minForecast)} sub="batas bawah 95% CI" valueClass="text-amber-500" />
                             <MetricCard label="Dilatih dari" value={`${forecasting.trained_on} bulan`} sub="data historis transaksi" />
+                            <Card>
+                                <CardContent className="pt-4">
+                                    <p className="text-muted-foreground text-xs tracking-widest uppercase">MAE</p>
+                                    <p className="text-2xl font-bold">{fmtFull(forecasting.mae)}</p>
+                                    <p className="text-muted-foreground mt-1 text-xs">Rata-rata selisih prediksi vs aktual</p>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardContent className="pt-4">
+                                    <p className="text-muted-foreground text-xs tracking-widest uppercase">MAPE</p>
+                                    <p
+                                        className={`text-2xl font-bold ${
+                                            forecasting.mape < 10 ? 'text-emerald-500' : forecasting.mape < 20 ? 'text-yellow-500' : 'text-rose-500'
+                                        }`}
+                                    >
+                                        {forecasting.mape.toFixed(2)}%
+                                    </p>
+                                    <p className="text-muted-foreground mt-1 text-xs">
+                                        {forecasting.mape < 10
+                                            ? 'Sangat akurat'
+                                            : forecasting.mape < 20
+                                              ? 'Akurat'
+                                              : forecasting.mape < 50
+                                                ? 'Cukup akurat'
+                                                : 'Tidak akurat'}
+                                    </p>
+                                </CardContent>
+                            </Card>
                             {summary && (
                                 <>
                                     <MetricCard
@@ -494,6 +507,8 @@ const ForecastingIndex = () => {
                                 </CardContent>
                             </Card>
                         </div>
+
+                        <div className="grid grid-cols-2 gap-4"></div>
                     </div>
                 )}
             </div>

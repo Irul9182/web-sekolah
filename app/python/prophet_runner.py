@@ -3,6 +3,7 @@ import json
 import pandas as pd
 from prophet import Prophet
 import base64
+import numpy as np
 
 
 def main():
@@ -83,7 +84,10 @@ def main():
 
     result_actual   = []
     result_forecast = []
-
+    
+    
+    
+    
     for _, row in forecast.iterrows():
         entry = {
             "ds":         row["ds"].strftime("%Y-%m-%d"),
@@ -96,10 +100,39 @@ def main():
         else:
             result_forecast.append(entry)
 
+
+    actual_df = df.copy()  # df adalah data historis yang dipakai train
+    forecast_actual = forecast[forecast['ds'].isin(actual_df['ds'])][['ds', 'yhat', 'yhat_lower', 'yhat_upper']]
+    merged = actual_df.merge(forecast_actual, on='ds')
+
+    mae  = float(np.mean(np.abs(merged['y'] - merged['yhat'])))
+    mape = float(np.mean(np.abs((merged['y'] - merged['yhat']) / merged['y'].replace(0, np.nan))) * 100)
+    # Filter baris dengan aktual tidak nol untuk MAPE
+    merged_nonzero = merged[merged['y'] != 0]
+
+    rmse  = float(np.sqrt(np.mean((merged['y'] - merged['yhat']) ** 2)))
+
+    # sMAPE — lebih stabil untuk data negatif/nol
+    smape = float(np.mean(
+        2 * np.abs(merged['y'] - merged['yhat']) /
+        (np.abs(merged['y']) + np.abs(merged['yhat']))
+    ) * 100)
+
+    # MAPE hanya dari data non-zero dan non-negatif
+    mape_safe = float(np.mean(
+        np.abs((merged_nonzero['y'] - merged_nonzero['yhat']) / merged_nonzero['y'])
+    ) * 100) if len(merged_nonzero) > 0 else None
+    
     print(json.dumps({
         "status":         "success",
         "periods":        periods,
         "trained_on":     n_months,
+        "mae":        round(mae, 2),
+        "mape":       round(mape, 2),
+        "mae":        round(mae, 2),
+        "rmse":       round(rmse, 2),
+        "smape":      round(smape, 2),
+        "mape":       round(mape_safe, 2) if mape_safe else None,
         "seasonality":    (
             "none"   if n_months < 12 else
             "manual" if n_months < 24 else
