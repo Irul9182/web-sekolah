@@ -14,19 +14,21 @@ import {
     type ChartData,
     type ChartOptions,
 } from 'chart.js';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
 
+import AppSelect from '@/components/app-select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui-shadcn/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { ChartNoAxesCombined, Loader2, TrendingUp, TriangleAlert } from 'lucide-react';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ForecastPoint {
     ds: string;
@@ -53,16 +55,18 @@ interface ForecastingResult {
     trained_on: number;
     summary: Summary | null;
     mae: number;
-    mape: number;
+    rmse: number;
+    smape: number;
+    mape: number | null;
+    accuracy_label?: string;
 }
 
 interface PageProps extends InertiaPageProps {
     forecasting: ForecastingResult | null;
-    errors: {
-        data?: string;
-        forecast?: string;
-    };
+    errors: { data?: string; forecast?: string };
 }
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const fmt = (n: number) =>
     new Intl.NumberFormat('id-ID', {
@@ -79,38 +83,35 @@ const fmtFull = (n: number) =>
         maximumFractionDigits: 0,
     }).format(n);
 
-const fmtMonth = (ds: string) =>
-    new Date(ds).toLocaleDateString('id-ID', {
-        month: 'short',
-        year: '2-digit',
-    });
+const fmtMonth = (ds: string) => new Date(ds).toLocaleDateString('id-ID', { month: 'short', year: '2-digit' });
+
+// ─── Opsi Select ──────────────────────────────────────────────────────────────
+
+const PERIOD_OPTIONS = [6, 9, 12, 15, 18, 21, 24].map((n) => ({
+    value: String(n),
+    label: `${n} bulan`,
+}));
+
+const TRAINING_OPTIONS = [6, 9, 12, 15, 18, 21, 24].map((n) => ({
+    value: String(n),
+    label: `${n} bulan`,
+}));
+
+// ─── Chart Builder ────────────────────────────────────────────────────────────
 
 function buildChartConfig(forecasting: ForecastingResult): ChartData<'line'> {
-    const actualLabels = forecasting.actual.map((r) => fmtMonth(r.ds));
-    const forecastLabels = forecasting.forecast.map((r) => fmtMonth(r.ds));
+    const actualLabels = forecasting?.actual.map((r) => fmtMonth(r.ds));
+    const forecastLabels = forecasting?.forecast.map((r) => fmtMonth(r.ds));
     const labels = [...actualLabels, ...forecastLabels];
 
     const actualLen = actualLabels.length;
     const totalLen = labels.length;
+    const lastActual = forecasting?.actual[forecasting?.actual.length - 1]?.yhat ?? null;
 
-    const aktualData: (number | null)[] = [...forecasting.actual.map((r) => r.yhat), ...Array(totalLen - actualLen).fill(null)];
-
-    const proyeksiData: (number | null)[] = [
-        ...Array(actualLen - 1).fill(null),
-        forecasting.actual[forecasting.actual.length - 1]?.yhat ?? null,
-        ...forecasting.forecast.map((r) => r.yhat),
-    ];
-
-    const upperData: (number | null)[] = [
-        ...Array(actualLen - 1).fill(null),
-        forecasting.actual[forecasting.actual.length - 1]?.yhat ?? null,
-        ...forecasting.forecast.map((r) => r.yhat_upper),
-    ];
-    const lowerData: (number | null)[] = [
-        ...Array(actualLen - 1).fill(null),
-        forecasting.actual[forecasting.actual.length - 1]?.yhat ?? null,
-        ...forecasting.forecast.map((r) => r.yhat_lower),
-    ];
+    const aktualData: (number | null)[] = [...forecasting?.actual.map((r) => r.yhat), ...Array(totalLen - actualLen).fill(null)];
+    const proyeksiData: (number | null)[] = [...Array(actualLen - 1).fill(null), lastActual, ...forecasting?.forecast.map((r) => r.yhat)];
+    const upperData: (number | null)[] = [...Array(actualLen - 1).fill(null), lastActual, ...forecasting?.forecast.map((r) => r.yhat_upper)];
+    const lowerData: (number | null)[] = [...Array(actualLen - 1).fill(null), lastActual, ...forecasting?.forecast.map((r) => r.yhat_lower)];
 
     return {
         labels,
@@ -164,66 +165,48 @@ function buildChartConfig(forecasting: ForecastingResult): ChartData<'line'> {
     };
 }
 
-function buildChartOptions(): ChartOptions<'line'> {
-    return {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: {
-            mode: 'index',
-            intersect: false,
-        },
-        plugins: {
-            legend: { display: false },
-            tooltip: {
-                backgroundColor: '#0f172a',
-                borderColor: 'rgba(255,255,255,0.08)',
-                borderWidth: 1,
-                titleColor: '#94a3b8',
-                bodyColor: '#f1f5f9',
-                titleFont: { family: 'monospace', size: 11 },
-                bodyFont: { family: 'monospace', size: 11 },
-                padding: 12,
-                cornerRadius: 10,
-                callbacks: {
-                    label(ctx) {
-                        const hidden = ['CI Upper', 'CI Lower'];
-                        if (hidden.includes(ctx.dataset.label ?? '')) return undefined;
-                        if (ctx.parsed.y === null) return undefined;
-                        return `${ctx.dataset.label}: ${fmtFull(ctx.parsed.y)}`;
-                    },
+const chartOptions: ChartOptions<'line'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+        legend: { display: false },
+        tooltip: {
+            backgroundColor: '#0f172a',
+            borderColor: 'rgba(255,255,255,0.08)',
+            borderWidth: 1,
+            titleColor: '#94a3b8',
+            bodyColor: '#f1f5f9',
+            titleFont: { family: 'monospace', size: 11 },
+            bodyFont: { family: 'monospace', size: 11 },
+            padding: 12,
+            cornerRadius: 10,
+            callbacks: {
+                label(ctx) {
+                    if (['CI Upper', 'CI Lower'].includes(ctx.dataset.label ?? '')) return undefined;
+                    if (ctx.parsed.y === null) return undefined;
+                    return `${ctx.dataset.label}: ${fmtFull(ctx.parsed.y)}`;
                 },
             },
         },
-        scales: {
-            x: {
-                grid: { color: 'rgba(148,163,184,0.08)' },
-                ticks: {
-                    color: '#64748b',
-                    font: { family: 'monospace', size: 11 },
-                },
-                border: { display: false },
-            },
-            y: {
-                grid: { color: 'rgba(148,163,184,0.08)' },
-                ticks: {
-                    color: '#64748b',
-                    font: { family: 'monospace', size: 11 },
-                    callback: (v) => fmt(v as number),
-                },
-                border: { display: false },
-            },
+    },
+    scales: {
+        x: {
+            grid: { color: 'rgba(148,163,184,0.08)' },
+            ticks: { color: '#64748b', font: { family: 'monospace', size: 11 } },
+            border: { display: false },
         },
-    };
-}
+        y: {
+            grid: { color: 'rgba(148,163,184,0.08)' },
+            ticks: { color: '#64748b', font: { family: 'monospace', size: 11 }, callback: (v) => fmt(v as number) },
+            border: { display: false },
+        },
+    },
+};
 
-interface MetricCardProps {
-    label: string;
-    value: string;
-    sub?: string;
-    valueClass?: string;
-}
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
-function MetricCard({ label, value, sub, valueClass }: MetricCardProps) {
+function MetricCard({ label, value, sub, valueClass }: { label: string; value: string; sub?: string; valueClass?: string }) {
     return (
         <Card>
             <CardContent className="px-5 pt-5 pb-4">
@@ -244,38 +227,45 @@ function StatRow({ label, value, valueClass }: { label: string; value: string; v
     );
 }
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Proyek',
-        href: '/forecasting',
-    },
-];
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'Forecasting', href: '/forecasting' }];
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 const ForecastingIndex = () => {
     const { props } = usePage<PageProps>();
     const { errors, forecasting } = props;
-    const chartRef = useRef(null);
 
-    const { data, setData, post, processing } = useForm({ periods: 6 });
+    const { data, setData, post, processing } = useForm({
+        periods: 6,
+        training_months: 6,
+    });
+
+    // ── Rebuild chart setiap kali forecasting props berubah ───────────────────
+    // useMemo memastikan chartData selalu sinkron dengan data terbaru dari server
+    const chartData = useMemo(() => (forecasting ? buildChartConfig(forecasting) : null), [forecasting]);
+
+    // ── Buat key unik dari data forecasting untuk force re-mount chart ────────
+    // Tanpa ini, Chart.js kadang tidak update meski data sudah berubah
+    const chartKey = useMemo(() => {
+        if (!forecasting) return 'empty';
+        return `${forecasting?.periods}-${forecasting?.trained_on}-${forecasting?.actual.length}-${forecasting?.forecast[0]?.yhat ?? 0}`;
+    }, [forecasting]);
 
     const forecastList = forecasting?.forecast ?? [];
-
     const avgForecast = forecastList.length > 0 ? forecastList.reduce((s, r) => s + r.yhat, 0) / forecastList.length : 0;
     const maxForecast = forecastList.length > 0 ? Math.max(...forecastList.map((r) => r.yhat_upper)) : 0;
     const minForecast = forecastList.length > 0 ? Math.min(...forecastList.map((r) => r.yhat_lower)) : 0;
-
-    const chartData = forecasting ? buildChartConfig(forecasting) : null;
-    const chartOptions = buildChartOptions();
     const summary = forecasting?.summary ?? null;
 
     useEffect(() => {
-        console.log('Erros: ', errors);
-        console.log('Forecasting: ', forecasting);
-    }, [errors, forecasting]);
+        console.log('Hasil forecast: ', forecasting);
+    }, [forecasting]);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Forecasting" />
             <div className="p-4">
+                {/* ── Header ── */}
                 <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">
@@ -286,21 +276,22 @@ const ForecastingIndex = () => {
                         </p>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3">
-                        <span className="text-muted-foreground text-xs">Proyeksi</span>
-                        <Select value={String(data.periods)} onValueChange={(v) => setData('periods', Number(v))}>
-                            <SelectTrigger className="h-9 w-32 text-xs">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {[6, 9, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24].map((n) => (
-                                    <SelectItem key={n} value={String(n)} className="text-xs">
-                                        {n} bulan
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-
+                    {/* ── Controls ── */}
+                    <div className="flex flex-wrap items-end gap-3">
+                        <AppSelect
+                            options={PERIOD_OPTIONS}
+                            value={String(data.periods)}
+                            onValueChange={(v) => setData('periods', Number(v))}
+                            label="Proyeksi ke depan"
+                            tooltip="Jumlah bulan yang akan diprediksi Prophet"
+                        />
+                        <AppSelect
+                            options={TRAINING_OPTIONS}
+                            value={String(data.training_months)}
+                            onValueChange={(v) => setData('training_months', Number(v))}
+                            label="Data training"
+                            tooltip="Jumlah bulan historis yang dipakai melatih model"
+                        />
                         <Button
                             onClick={() => post(route('forecasting.generate'))}
                             disabled={processing}
@@ -344,16 +335,16 @@ const ForecastingIndex = () => {
                             <MetricCard
                                 label="Rata-rata proyeksi"
                                 value={fmt(avgForecast)}
-                                sub={`${forecasting.periods} bulan ke depan`}
+                                sub={`${forecasting?.periods} bulan ke depan`}
                                 valueClass="text-primary"
                             />
                             <MetricCard label="Proyeksi tertinggi" value={fmt(maxForecast)} sub="batas atas 95% CI" valueClass="text-emerald-500" />
                             <MetricCard label="Proyeksi terendah" value={fmt(minForecast)} sub="batas bawah 95% CI" valueClass="text-amber-500" />
-                            <MetricCard label="Dilatih dari" value={`${forecasting.trained_on} bulan`} sub="data historis transaksi" />
+                            <MetricCard label="Dilatih dari" value={`${forecasting?.trained_on} bulan`} sub="data historis transaksi" />
                             <Card>
                                 <CardContent className="pt-4">
                                     <p className="text-muted-foreground text-xs tracking-widest uppercase">MAE</p>
-                                    <p className="text-2xl font-bold">{fmtFull(forecasting.mae)}</p>
+                                    <p className="text-2xl font-bold">{fmtFull(forecasting?.mae)}</p>
                                     <p className="text-muted-foreground mt-1 text-xs">Rata-rata selisih prediksi vs aktual</p>
                                 </CardContent>
                             </Card>
@@ -362,17 +353,21 @@ const ForecastingIndex = () => {
                                     <p className="text-muted-foreground text-xs tracking-widest uppercase">MAPE</p>
                                     <p
                                         className={`text-2xl font-bold ${
-                                            forecasting.mape < 10 ? 'text-emerald-500' : forecasting.mape < 20 ? 'text-yellow-500' : 'text-rose-500'
+                                            (forecasting?.mape as number) < 10
+                                                ? 'text-emerald-500'
+                                                : (forecasting?.mape as number) < 20
+                                                  ? 'text-yellow-500'
+                                                  : 'text-rose-500'
                                         }`}
                                     >
-                                        {forecasting.mape.toFixed(2)}%
+                                        {(forecasting?.mape as number).toFixed(2)}%
                                     </p>
                                     <p className="text-muted-foreground mt-1 text-xs">
-                                        {forecasting.mape < 10
+                                        {(forecasting?.mape as number) < 10
                                             ? 'Sangat akurat'
-                                            : forecasting.mape < 20
+                                            : (forecasting?.mape as number) < 20
                                               ? 'Akurat'
-                                              : forecasting.mape < 50
+                                              : (forecasting?.mape as number) < 50
                                                 ? 'Cukup akurat'
                                                 : 'Tidak akurat'}
                                     </p>
@@ -395,7 +390,7 @@ const ForecastingIndex = () => {
                             )}
                         </div>
 
-                        {/* Main chart */}
+                        {/* Main chart — key prop memaksa Chart.js re-mount saat data berubah */}
                         <Card>
                             <CardHeader className="pb-2">
                                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -405,8 +400,6 @@ const ForecastingIndex = () => {
                                             Aktual dari DB · Proyeksi Prophet · Confidence band 95%
                                         </CardDescription>
                                     </div>
-
-                                    {/* Custom legend */}
                                     <div className="flex flex-wrap gap-4">
                                         {[
                                             { color: 'bg-blue-500', label: 'Aktual' },
@@ -423,18 +416,18 @@ const ForecastingIndex = () => {
                             </CardHeader>
                             <CardContent className="pt-2">
                                 <div className="relative h-[300px]">
-                                    <Line ref={chartRef} data={chartData} options={chartOptions} />
+                                    <Line key={chartKey} data={chartData} options={chartOptions} />
                                 </div>
                             </CardContent>
                         </Card>
 
                         {/* Bottom grid */}
-                        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                        <div className="flex w-full flex-col gap-5">
                             {/* Tabel proyeksi */}
-                            <Card>
+                            <Card className="w-full">
                                 <CardHeader className="pb-3">
                                     <CardTitle className="text-sm font-semibold">Detail Proyeksi</CardTitle>
-                                    <CardDescription className="text-[11px]">{forecasting.periods} bulan · confidence 95%</CardDescription>
+                                    <CardDescription className="text-[11px]">{forecasting?.periods} bulan · confidence 95%</CardDescription>
                                 </CardHeader>
                                 <CardContent className="pt-0">
                                     <Table>
@@ -472,7 +465,7 @@ const ForecastingIndex = () => {
                             </Card>
 
                             {/* Ringkasan keuangan */}
-                            <Card>
+                            <Card className="w-full">
                                 <CardHeader className="pb-3">
                                     <CardTitle className="text-sm font-semibold">Ringkasan Keuangan</CardTitle>
                                     <CardDescription className="text-[11px]">Semua proyek aktif</CardDescription>
@@ -507,8 +500,6 @@ const ForecastingIndex = () => {
                                 </CardContent>
                             </Card>
                         </div>
-
-                        <div className="grid grid-cols-2 gap-4"></div>
                     </div>
                 )}
             </div>

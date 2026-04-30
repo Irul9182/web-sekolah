@@ -234,11 +234,22 @@ class FinanceService
             ->groupByRaw("DATE_FORMAT(tanggal, '%Y-%m-01')")
             ->pluck('total', 'bulan');
 
-        $pemasukan = Proyek::query()
-            ->selectRaw("DATE_FORMAT(tanggal_mulai, '%Y-%m-01') as bulan, SUM(pagu_total) as total")
-            ->whereBetween('tanggal_mulai', [$start, $end])
-            ->groupByRaw("DATE_FORMAT(tanggal_mulai, '%Y-%m-01')")
-            ->pluck('total', 'bulan');
+        $proyeks = Proyek::select('pagu_total', 'tanggal_mulai', 'tanggal_selesai')->get();
+
+        $pemasukan = collect();
+        foreach ($proyeks as $p) {
+            $start    = Carbon::parse($p->tanggal_mulai)->startOfMonth();
+            $end      = Carbon::parse($p->tanggal_selesai)->startOfMonth();
+            $durasi   = max(1, $start->diffInMonths($end) + 1);
+            $perBulan = $p->pagu_total / $durasi;
+
+            $cursor = $start->copy();
+            while ($cursor->lte($end)) {
+                $bulan = $cursor->format('Y-m-01');
+                $pemasukan[$bulan] = ($pemasukan[$bulan] ?? 0) + $perBulan;
+                $cursor->addMonth();
+            }
+        }
 
         $bulan = collect($pemasukan->keys()->merge($pengeluaran->keys())->unique()->sort());
 

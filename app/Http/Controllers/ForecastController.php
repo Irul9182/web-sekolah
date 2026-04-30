@@ -25,11 +25,12 @@ class ForecastController extends Controller
     public function generate(Request $request)
     {
         $request->validate([
-            'periods' => 'nullable|integer|min:1|max:24',
+            'periods' => 'nullable|integer|min:1',
+            'training_months' => 'nullable|integer|min:6',
         ]);
 
-        $periods = $request->input('periods', 6);
-
+        $periods = $request->input('periods');
+        $trainingMonths = $request->input('training_months');
         // Ambil SEMUA data historis — tanpa filter periode
         $cashflowData = $this->financeService->aggregateCashflowBulanantAll()->toArray();
 
@@ -40,7 +41,11 @@ class ForecastController extends Controller
             ]);
         }
 
-        $payload        = json_encode(['periods' => $periods, 'data' => $cashflowData]);
+        $payload = json_encode([
+            'periods' => $periods,
+            'training_months' => $trainingMonths,
+            'data' => $cashflowData,
+        ]);
         $encoded        = base64_encode($payload);
         $scriptPath     = base_path('app/python/prophet_runner.py');
         $pythonBin      = env('PYTHON_BIN', 'python');
