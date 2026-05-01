@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\FinanceService;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 class ForecastController extends Controller
 {
@@ -15,10 +16,33 @@ class ForecastController extends Controller
         $this->financeService = $financeService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
+
+
         return Inertia::render('forecasting/index', [
             'forecasting' => null,
+        ]);
+    }
+    public function list_cashflow(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date'   => 'nullable|date',
+        ]);
+
+        $start = $request->query('start_date')
+            ? Carbon::parse($request->query('start_date'))->startOfMonth()
+            : null;
+
+        $end = $request->query('end_date')
+            ? Carbon::parse($request->query('end_date'))->endOfMonth()
+            : null;
+
+        $cashflow = $this->financeService->aggregateCashflowDetail($start, $end);
+
+        return response()->json([
+            'list_cashflow' => $cashflow,
         ]);
     }
 

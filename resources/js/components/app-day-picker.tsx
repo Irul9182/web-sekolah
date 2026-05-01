@@ -1,4 +1,3 @@
-// components/ui/app-date-picker.tsx
 'use client';
 
 import { Calendar } from '@/components/ui-shadcn/calendar';
@@ -7,7 +6,7 @@ import { Modal, ModalBody, ModalContent } from '@/components/ui-shadcn/modal';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import * as React from 'react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -18,7 +17,7 @@ interface AppDatePickerProps {
     error?: string;
     placeholder?: string;
     value?: Date;
-    defaultValue?: Date; // ← tambah
+    defaultValue?: Date;
     onChange?: (date: Date | undefined) => void;
     disabled?: boolean;
     required?: boolean;
@@ -27,6 +26,7 @@ interface AppDatePickerProps {
     className?: string;
     inputClassName?: string;
     dateFormat?: string;
+    granularity?: 'day' | 'month';
 }
 
 // ─── Shared Calendar ──────────────────────────────────────────────────────────
@@ -54,13 +54,84 @@ function SharedCalendar({ value, onSelect, fromYear, toYear }: SharedCalendarPro
     );
 }
 
+// ─── Month Picker ─────────────────────────────────────────────────────────────
+
+interface MonthPickerProps {
+    value?: Date;
+    onSelect: (date: Date | undefined) => void;
+    fromYear: number;
+    toYear: number;
+}
+
+function MonthPicker({ value, onSelect, fromYear, toYear }: MonthPickerProps) {
+    const [viewYear, setViewYear] = React.useState(value?.getFullYear() ?? new Date().getFullYear());
+
+    const MONTHS = Array.from({ length: 12 }, (_, i) => format(new Date(viewYear, i, 1), 'MMM', { locale: id }));
+
+    return (
+        <div className="flex flex-col gap-3 p-1">
+            {/* ── Year navigation ── */}
+            <div className="flex items-center justify-between">
+                <button
+                    type="button"
+                    disabled={viewYear <= fromYear}
+                    onClick={() => setViewYear((y) => y - 1)}
+                    className={cn(
+                        'rounded-md p-1 transition-colors',
+                        'text-muted-foreground hover:text-foreground hover:bg-accent',
+                        'disabled:pointer-events-none disabled:opacity-40',
+                    )}
+                >
+                    <ChevronLeft className="h-4 w-4" />
+                </button>
+
+                <span className="text-sm font-semibold">{viewYear}</span>
+
+                <button
+                    type="button"
+                    disabled={viewYear >= toYear}
+                    onClick={() => setViewYear((y) => y + 1)}
+                    className={cn(
+                        'rounded-md p-1 transition-colors',
+                        'text-muted-foreground hover:text-foreground hover:bg-accent',
+                        'disabled:pointer-events-none disabled:opacity-40',
+                    )}
+                >
+                    <ChevronRight className="h-4 w-4" />
+                </button>
+            </div>
+
+            {/* ── Month grid ── */}
+            <div className="grid grid-cols-3 gap-1">
+                {MONTHS.map((name, i) => {
+                    const isSelected = value && value.getMonth() === i && value.getFullYear() === viewYear;
+
+                    return (
+                        <button
+                            key={i}
+                            type="button"
+                            onClick={() => onSelect(new Date(viewYear, i, 1))}
+                            className={cn(
+                                'rounded-md px-2 py-2 text-sm capitalize transition-colors',
+                                isSelected ? 'bg-primary text-primary-foreground font-medium' : 'text-foreground hover:bg-accent',
+                            )}
+                        >
+                            {name}
+                        </button>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const AppDatePicker = ({
     label,
     hint,
     error,
-    placeholder = 'DD/MM/YYYY',
+    placeholder,
     value: valueProp,
     defaultValue,
     onChange,
@@ -70,9 +141,9 @@ const AppDatePicker = ({
     toYear = new Date().getFullYear() + 10,
     className,
     inputClassName,
-    dateFormat = 'dd/MM/yyyy',
+    dateFormat,
+    granularity = 'day',
 }: AppDatePickerProps) => {
-    // ── uncontrolled fallback: pakai internal state jika value tidak dipass ──
     const isControlled = valueProp !== undefined;
     const [internalValue, setInternalValue] = React.useState<Date | undefined>(defaultValue);
 
@@ -81,9 +152,13 @@ const AppDatePicker = ({
     const [open, setOpen] = React.useState(false);
     const inputId = label?.toLowerCase().replace(/\s+/g, '-');
 
-    const displayValue = value ? format(value, dateFormat) : '';
+    // ── default placeholder & format per granularity ──
+    const resolvedPlaceholder = placeholder ?? (granularity === 'month' ? 'MM/YYYY' : 'DD/MM/YYYY');
+    const resolvedFormat = dateFormat ?? (granularity === 'month' ? 'MMMM yyyy' : 'dd/MM/yyyy');
 
-    const handleDaySelect = (date: Date | undefined) => {
+    const displayValue = value ? format(value, resolvedFormat, { locale: id }) : '';
+
+    const handleSelect = (date: Date | undefined) => {
         if (!isControlled) setInternalValue(date);
         onChange?.(date);
         setOpen(false);
@@ -109,7 +184,7 @@ const AppDatePicker = ({
                     type="text"
                     readOnly
                     value={displayValue}
-                    placeholder={placeholder}
+                    placeholder={resolvedPlaceholder}
                     disabled={disabled}
                     onClick={() => !disabled && setOpen(true)}
                     className={cn(
@@ -147,7 +222,11 @@ const AppDatePicker = ({
             <Modal open={open} onOpenChange={setOpen}>
                 <ModalContent size="sm" className="w-fit p-0">
                     <ModalBody className="flex items-center justify-center p-3">
-                        <SharedCalendar value={value} onSelect={handleDaySelect} fromYear={fromYear} toYear={toYear} />
+                        {granularity === 'month' ? (
+                            <MonthPicker value={value} onSelect={handleSelect} fromYear={fromYear} toYear={toYear} />
+                        ) : (
+                            <SharedCalendar value={value} onSelect={handleSelect} fromYear={fromYear} toYear={toYear} />
+                        )}
                     </ModalBody>
                 </ModalContent>
             </Modal>

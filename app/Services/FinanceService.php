@@ -259,6 +259,79 @@ class FinanceService
         ])->values();
     }
 
+    public function aggregateCashflowDetail(Carbon $start = null, Carbon $end = null): Collection
+    {
+        $start = $start ?? Carbon::now()->subMonths(5)->startOfMonth();
+        $end   = $end   ?? Carbon::now()->endOfMonth();
+
+        // ── Pemasukan per bulan ──────────────────────────────────────────────────
+        $pemasukanRaw = Proyek::query()
+            ->selectRaw("DATE_FORMAT(tanggal_mulai, '%Y-%m-01') as bulan, SUM(pagu_total) as total")
+            ->whereBetween('tanggal_mulai', [$start, $end])
+            ->groupByRaw("DATE_FORMAT(tanggal_mulai, '%Y-%m-01')")
+            ->pluck('total', 'bulan');
+
+        // Detail proyek per bulan
+        // Detail proyek per bulan
+        $pemasukanDetail = Proyek::query()
+            ->selectRaw("DATE_FORMAT(tanggal_mulai, '%Y-%m-01') as bulan, proyek_id, nama_proyek, pagu_total")
+            ->whereBetween('tanggal_mulai', [$start, $end])
+            ->get()
+            ->groupBy('bulan');
+
+        // ── Pengeluaran per bulan ────────────────────────────────────────────────
+        $pengeluaranRaw = Transaksi::query()
+            ->selectRaw("DATE_FORMAT(tanggal, '%Y-%m-01') as bulan, SUM(jumlah) as total")
+            ->whereBetween('tanggal', [$start, $end])
+            ->groupByRaw("DATE_FORMAT(tanggal, '%Y-%m-01')")
+            ->pluck('total', 'bulan');
+
+        // Detail transaksi per bulan — join proyek supaya nama proyek ikut
+        $pengeluaranDetail = Transaksi::query()
+            ->selectRaw("DATE_FORMAT(transaksi.tanggal, '%Y-%m-01') as bulan, transaksi.transaksi_id, transaksi.jumlah, transaksi.keterangan, transaksi.proyek_id, proyek.nama_proyek")
+            ->leftJoin('proyek', 'proyek.proyek_id', '=', 'transaksi.proyek_id') // ← fix di sini
+            ->whereBetween('transaksi.tanggal', [$start, $end])
+            ->get()
+            ->groupBy('bulan');
+
+        // ── Gabungkan ────────────────────────────────────────────────────────────
+        $semuaBulan = collect(
+            $pemasukanRaw->keys()->merge($pengeluaranRaw->keys())->unique()->sort()
+        );
+
+        return $semuaBulan->map(function ($bulan) use (
+            $pemasukanRaw,
+            $pemasukanDetail,
+            $pengeluaranRaw,
+            $pengeluaranDetail
+        ) {
+            $totalPemasukan   = (float) ($pemasukanRaw[$bulan]   ?? 0);
+            $totalPengeluaran = (float) ($pengeluaranRaw[$bulan] ?? 0);
+
+            return [
+                'date'              => $bulan,
+                'total_pemasukan'   => $totalPemasukan,
+                'total_pengeluaran' => $totalPengeluaran,
+                'cashflow'          => $totalPemasukan - $totalPengeluaran,
+
+                // ── Detail ──────────────────────────────────────────────────────
+                'detail_pemasukan' => ($pemasukanDetail[$bulan] ?? collect())->map(fn($p) => [
+                    'proyek_id'   => $p->proyek_id,
+                    'nama_proyek' => $p->nama_proyek,
+                    'pagu_total'  => (float) $p->pagu_total,
+                ])->values(),
+
+                'detail_pengeluaran' => ($pengeluaranDetail[$bulan] ?? collect())->map(fn($t) => [
+                    'transaksi_id' => $t->id,
+                    'proyek_id'    => $t->proyek_id,
+                    'nama_proyek'  => $t->nama_proyek,
+                    'jumlah'       => (float) $t->jumlah,
+                    'keterangan'   => $t->keterangan,
+                ])->values(),
+            ];
+        })->values();
+    }
+
 
     public function summaryPerusahaan(Carbon $start = null, Carbon $end = null): array
     {

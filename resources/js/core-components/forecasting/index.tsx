@@ -14,16 +14,21 @@ import {
     type ChartData,
     type ChartOptions,
 } from 'chart.js';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 
+import AppDatePicker from '@/components/app-day-picker';
 import AppSelect from '@/components/app-select';
+import { Column, DataTable } from '@/components/app-table';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui-shadcn/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+import axios from 'axios';
+import { formatDate } from 'date-fns';
 import { ChartNoAxesCombined, Loader2, TrendingUp, TriangleAlert } from 'lucide-react';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
@@ -59,6 +64,13 @@ interface ForecastingResult {
     smape: number;
     mape: number | null;
     accuracy_label?: string;
+}
+
+interface CashflowProps {
+    date: Date;
+    total_pemasukan: number;
+    total_pengeluaran: number;
+    cashflow: number;
 }
 
 interface PageProps extends InertiaPageProps {
@@ -229,12 +241,84 @@ function StatRow({ label, value, valueClass }: { label: string; value: string; v
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Forecasting', href: '/forecasting' }];
 
+const COLUMN_CASHFLOW: Column<CashflowProps>[] = [
+    {
+        key: 'no',
+        label: 'No',
+        className: 'px-5 py-2',
+        render: (_: any, __: any, index: number) => <span className="text-muted-foreground text-sm">{index + 1}</span>,
+    },
+    {
+        key: 'total_pemasukan',
+        label: 'Total pemasukan',
+        sortable: true,
+        render: (value) => {
+            return (
+                <span className={cn('font-semibold tracking-wide', 'text-blue-500')}>
+                    {new Intl.NumberFormat('id-ID', {
+                        style: 'currency',
+                        currency: 'IDR',
+                        maximumFractionDigits: 0,
+                    }).format(Number(value))}
+                </span>
+            );
+        },
+    },
+    {
+        key: 'total_pengeluaran',
+        label: 'Total pengeluaran',
+        sortable: true,
+        render: (value) => {
+            return (
+                <span className={cn('font-semibold tracking-wide', 'text-yellow-200')}>
+                    {new Intl.NumberFormat('id-ID', {
+                        style: 'currency',
+                        currency: 'IDR',
+                        maximumFractionDigits: 0,
+                    }).format(Number(value))}
+                </span>
+            );
+        },
+    },
+    {
+        key: 'cashflow',
+        label: 'Cashflow',
+        sortable: true,
+        render: (value) => {
+            return (
+                <span className={cn('font-semibold tracking-wide', 'text-emerald-500')}>
+                    {new Intl.NumberFormat('id-ID', {
+                        style: 'currency',
+                        currency: 'IDR',
+                        maximumFractionDigits: 0,
+                    }).format(Number(value))}
+                </span>
+            );
+        },
+    },
+    {
+        key: 'date',
+        label: 'Tanggal',
+        sortable: true,
+        render: (value) =>
+            new Date(value as string).toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+            }),
+    },
+];
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 const ForecastingIndex = () => {
     const { props } = usePage<PageProps>();
     const { errors, forecasting } = props;
+    const [listCashflow, setListCashflow] = useState<CashflowProps[] | null>(null);
+    const [startDate, setStartDate] = useState<Date | null>(null);
+    const [endDate, setEndDate] = useState<Date | null>(null);
 
+    const endError = startDate && endDate && endDate < startDate ? 'Tanggal akhir tidak boleh sebelum tanggal mulai' : null;
     const { data, setData, post, processing } = useForm({
         periods: 6,
         training_months: 6,
@@ -260,6 +344,25 @@ const ForecastingIndex = () => {
     useEffect(() => {
         console.log('Hasil forecast: ', forecasting);
     }, [forecasting]);
+
+    const fetchCashflow = async (startDate?: string, endDate?: string) => {
+        try {
+            const res = await axios.get('/cashflow', {
+                params: {
+                    start_date: startDate ? formatDate(startDate, 'yyyy-MM-dd') : undefined,
+                    end_date: endDate ? formatDate(endDate, 'yyyy-MM-dd') : undefined,
+                },
+            });
+            setListCashflow(res.data?.list_cashflow);
+            console.log('Res: ', res.data);
+        } catch (error) {
+            console.log('Error fetch cashflow: ', error);
+        }
+    };
+
+    useEffect(() => {
+        if (!endError) fetchCashflow(startDate?.toString(), endDate?.toString());
+    }, [startDate, endDate]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -502,6 +605,31 @@ const ForecastingIndex = () => {
                         </div>
                     </div>
                 )}
+            </div>
+            <div className="p-4">
+                <div className="flex flex-wrap items-end gap-3">
+                    <AppDatePicker
+                        granularity="month"
+                        label="Tanggal Mulai"
+                        value={startDate ?? undefined}
+                        onChange={(val) => setStartDate(val ?? null)}
+                    />
+                    <AppDatePicker
+                        granularity="month"
+                        label="Tanggal Akhir"
+                        value={endDate ?? undefined}
+                        onChange={(val) => setEndDate(val ?? null)}
+                        error={endError as string}
+                    />
+                </div>
+                <DataTable
+                    className="mt-3"
+                    emptyMessage="Tidak ada cashflow saat ini"
+                    data={listCashflow as CashflowProps[]}
+                    columns={COLUMN_CASHFLOW}
+                    key={listCashflow?.length as number}
+                    isPagination={false}
+                />
             </div>
         </AppLayout>
     );

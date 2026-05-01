@@ -277,7 +277,7 @@ const TransactionIndex = ({ filters, list_transaksi }: PageProps) => {
                 </div>
                 <DataTable
                     className="mt-4"
-                    emptyMessage="Tidak ada proyek saat ini"
+                    emptyMessage="Tidak ada transaksi saat ini"
                     data={list_transaksi?.data as TransaksiProps[]}
                     columns={columnsTransaksi}
                     key={list_transaksi?.data?.length}

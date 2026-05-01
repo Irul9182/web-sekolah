@@ -19,9 +19,10 @@ class DashboardController extends Controller
         $periode = $request->query('bulan', null);
 
         $defaultValue =
-            Carbon::now()->subMonths(5)->translatedFormat('F Y')
+            Carbon::now()->subMonths(5)->format('Y-m')
             . ':' .
-            Carbon::now()->translatedFormat('F Y');
+            Carbon::now()->format('Y-m');
+
 
         if (!$periode || !str_contains($periode, ':')) {
             $periode = $defaultValue;

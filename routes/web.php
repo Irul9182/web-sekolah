@@ -79,6 +79,7 @@ Route::middleware(['auth'])->group(function () {
     // Forecasting
     Route::get('/forecasting', [ForecastController::class, 'index'])->name('forecasting.index');
     Route::post('/forecasting', [ForecastController::class, 'generate'])->name('forecasting.generate');
+    Route::get('/cashflow', [ForecastController::class, 'list_cashflow'])->name('forecasting.list_cashflow');
 });
 
 require __DIR__ . '/settings.php';
