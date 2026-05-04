@@ -27,6 +27,7 @@ interface PropTypes {
     proyeks: PaginatedResponse<ProyekProps>;
     filters: {
         search: string;
+        status: StatusProyek;
         per_page: number;
     };
 }
@@ -40,6 +41,7 @@ const ProjectIndex = ({ proyeks, filters }: PropTypes) => {
     // const [loading, setLoading] = useState<boolean>(false);
     const form = useForm<ProyekProps>(initialProyek);
     const { processing } = form;
+    const [statusFilter, setStatusFilter] = useState<StatusProyek | null>(filters.status);
     const currentPage = new URLSearchParams(window.location.search).get('page') ?? '1';
     const currentPerPage = new URLSearchParams(window.location.search).get('per_page') ?? '10';
     const [search, setSearch] = useState(filters?.search ?? '');
@@ -84,6 +86,13 @@ const ProjectIndex = ({ proyeks, filters }: PropTypes) => {
             );
         }, 400);
     };
+
+    const handleFilterStatus = (val: StatusProyek | null) => {
+        setStatusFilter(val);
+
+        router.get(route('project.index'), { ...route().params, status: val }, { preserveState: true, replace: true });
+    };
+
     const handleUpdateOptionStatus = (proyek_id: string, status: StatusProyek, nama_proyek: string) => {
         if (!proyek_id) return;
         const currentPage = new URLSearchParams(window.location.search).get('page') ?? '1';
@@ -264,15 +273,29 @@ const ProjectIndex = ({ proyeks, filters }: PropTypes) => {
                         onChange={(e) => handleSearch(e.target.value)}
                         clearable={false}
                     />
-                    <Button
-                        className="cursor-pointer"
-                        disabled={processing}
-                        size={isMobile ? 'sm' : 'default'}
-                        onClick={() => router.visit('/project/create')}
-                    >
-                        <Plus />
-                        <p>Proyek Baru</p>
-                    </Button>
+                    <div className="flex items-center gap-3">
+                        <AppSelect
+                            options={[
+                                { label: 'Selesai', value: 'selesai' },
+                                { label: 'Berjalan', value: 'sedang_berjalan' },
+                                { label: 'Dibatalkan', value: 'dibatalkan' },
+                                { label: 'Semua Status', value: 'semua_status' },
+                            ]}
+                            defaultValue="semua_status"
+                            onValueChange={(val) => handleFilterStatus(val as StatusProyek)}
+                            triggerClassName="min-w-33"
+                            placeholder="Filter Status"
+                        />
+                        <Button
+                            className="cursor-pointer"
+                            disabled={processing}
+                            size={isMobile ? 'sm' : 'default'}
+                            onClick={() => router.visit('/project/create')}
+                        >
+                            <Plus />
+                            <p>Proyek Baru</p>
+                        </Button>
+                    </div>
                 </div>
                 <DataTable
                     className="mt-4"

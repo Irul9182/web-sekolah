@@ -26,6 +26,7 @@ class ProyekController extends Controller
     public function index(Request $request)
     {
         $search = $request->query('search');
+        $status = $request->query('status');
 
         $query = Proyek::with(['kategori', 'jenis'])->select([
             'proyek_id',
@@ -44,6 +45,13 @@ class ProyekController extends Controller
                 $q->where('nama_proyek', 'like', "%$search%");
             });
         }
+
+        $query->when(
+            $status && $status !== "semua_status",
+            function ($q) use ($status) {
+                $q->where('status', $status);
+            }
+        );
         $proyeks = $query
             ->latest()
             ->paginate($request->input('per_page', 10))
@@ -54,7 +62,8 @@ class ProyekController extends Controller
         return Inertia::render('project/index', [
             'proyeks' => $proyeks,
             'filters' => [
-                'search' => $search
+                'search' => $search,
+                'status' => $status
             ]
         ]);
     }
