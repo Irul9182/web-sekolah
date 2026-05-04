@@ -40,7 +40,7 @@ const ProjectDetailIndex = () => {
     const laba_rugi = props?.laba_rugi;
     const cashflow = props?.cashflow;
     const projectId = props?.proyek_id ?? null;
-    console.log('Proyek: ', proyek);
+    console.log('Props: ', props);
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Detail Proyek',
@@ -230,7 +230,7 @@ const ProjectDetailIndex = () => {
                             labelClassName=" text-[10px] sm:text-sm"
                             valueClassName=" text-[10px] sm:text-sm"
                             label="Material"
-                            value={formatPercent(realisasi?.material?.items?.persen) || '-'}
+                            value={formatCurrency(realisasi?.material?.items?.jumlah) || '-'}
                         />
                         <DetailItem
                             labelClassName=" text-[10px] sm:text-sm"
@@ -248,7 +248,13 @@ const ProjectDetailIndex = () => {
                             labelClassName=" text-[10px] sm:text-sm"
                             valueClassName=" text-[10px] sm:text-sm"
                             label="Biaya Tak Terduga"
-                            value={formatPercent(realisasi?.biaya_tak_terduga?.items?.persen) || '-'}
+                            value={formatCurrency(realisasi?.biaya_tak_terduga?.aktual) || '-'}
+                        />
+                        <DetailItem
+                            labelClassName=" text-[10px] sm:text-sm"
+                            valueClassName=" text-[10px] sm:text-sm"
+                            label="Biaya Operasional"
+                            value={formatCurrency(realisasi?.operasional?.aktual) || '-'}
                         />
                     </CardContent>
                 </Card>

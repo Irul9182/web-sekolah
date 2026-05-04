@@ -4,7 +4,7 @@ import { Calendar } from '@/components/ui-shadcn/calendar';
 import { Label } from '@/components/ui-shadcn/label';
 import { Modal, ModalBody, ModalContent } from '@/components/ui-shadcn/modal';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, formatDate } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import * as React from 'react';
@@ -156,7 +156,7 @@ const AppDatePicker = ({
     const resolvedPlaceholder = placeholder ?? (granularity === 'month' ? 'MM/YYYY' : 'DD/MM/YYYY');
     const resolvedFormat = dateFormat ?? (granularity === 'month' ? 'MMMM yyyy' : 'dd/MM/yyyy');
 
-    const displayValue = value ? format(value, resolvedFormat, { locale: id }) : '';
+    const displayValue = value ? formatDate(value, resolvedFormat, { locale: id }) : '';
 
     const handleSelect = (date: Date | undefined) => {
         if (!isControlled) setInternalValue(date);

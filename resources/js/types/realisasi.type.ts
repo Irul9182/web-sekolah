@@ -7,6 +7,7 @@ export interface RealisasiProps {
     staff_perpajakan: KategoriAnggaran;
     staff_entry_data: KategoriAnggaran;
     biaya_tak_terduga: KategoriAnggaran;
+    operasional: KategoriAnggaran;
 }
 
 export interface KategoriAnggaran {

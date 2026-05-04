@@ -203,8 +203,8 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' 
 
 export default function Dashboard() {
     const { props } = usePage<PageProps>();
-    const { summary, chartPemasukanBulanan, periodeOptions, chartCashflowBulanan, selectedBulan, chartStatusProyek, chartTopProyek } = props;
-    const [periode, setPeriode] = useState(String(selectedBulan));
+    const { summary, chartPemasukanBulanan, periodeOptions, chartCashflowBulanan, chartStatusProyek, chartTopProyek, selectedPeriode } = props;
+    const [periode, setPeriode] = useState(String(selectedPeriode));
     console.log('Props dashboard: ', props);
 
     const slicedPemasukan = chartPemasukanBulanan;
@@ -380,6 +380,7 @@ export default function Dashboard() {
         },
     };
 
+    const dumbPeriodeOption = [{}];
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
@@ -397,6 +398,7 @@ export default function Dashboard() {
                         <AppSelect
                             options={periodeOptions as SelectOptions}
                             value={periode ?? [{}]}
+                            emptyMsg="Belum ada periode saat ini"
                             onValueChange={handlePeriodeChange}
                             label="Pilih periode"
                             placeholder="Pilih . . ."
@@ -509,7 +511,7 @@ export default function Dashboard() {
 
                     <Card className="lg:col-span-3">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-semibold">Top 5 Proyek by Pagu</CardTitle>
+                            <CardTitle className="text-sm font-semibold">Top 5 Proyek dengan pagu tertinggi</CardTitle>
                             <CardDescription className="mt-0.5 text-[11px]">
                                 Warna: <span className="text-blue-400">berjalan</span> · <span className="text-emerald-400">selesai</span> ·{' '}
                                 <span className="text-rose-400">dibatalkan</span>

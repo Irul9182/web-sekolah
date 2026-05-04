@@ -122,12 +122,12 @@ const TransactionIndex = ({ filters, list_transaksi }: PageProps) => {
         {
             key: 'transaksi_id',
             label: 'No',
-            className: 'text-center',
+            className: 'text-center truncate max-w-[200px]',
             render: (_: any, __: any, index: number) => <span className="text-muted-foreground text-sm">{index + 1}</span>,
         },
         {
             key: 'proyek_name',
-            className: 'text-start',
+            className: 'text-start  truncate max-w-[200px]',
             label: 'Nama Proyek',
             render: (_: any, record: TransaksiProps) => <span className="text-muted-foreground text-sm">{record?.proyek?.nama_proyek || '-'}</span>,
         },

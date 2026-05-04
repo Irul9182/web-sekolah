@@ -2,8 +2,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import * as SelectPrimitive from '@radix-ui/react-select';
-import { Info } from 'lucide-react';
+import { CircleAlert, Info } from 'lucide-react';
 import * as React from 'react';
+import { EmptyContent } from './ui-shadcn/empty';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui-shadcn/tooltip';
 
 export interface SelectOption {
@@ -128,6 +129,7 @@ interface AppSelectProps extends React.ComponentPropsWithoutRef<typeof SelectPri
     label?: string;
     hint?: string;
     tooltip?: string;
+    emptyMsg?: string;
     /**
      * @deprecated Use `tone="error"` + `hint` instead.
      * Still supported for backward compatibility — when provided it forces tone="error".
@@ -149,6 +151,7 @@ const AppSelect = ({
     triggerClassName,
     required,
     disabled,
+    emptyMsg = 'Tidak ada opsi saat ini',
     tone: toneProp = 'default',
     ...props
 }: AppSelectProps) => {
@@ -215,30 +218,40 @@ const AppSelect = ({
                     />
                 </SelectTrigger>
 
-                <SelectContent>
-                    {isGrouped(options)
-                        ? options.map((group) => (
-                              <SelectGroup key={group.group}>
-                                  <SelectLabel className="text-[10px] sm:text-sm">{group.group}</SelectLabel>
-                                  {group.options.map((opt) => (
-                                      <SelectItem style={toneStyles[tone]} key={opt.value} value={opt.value} disabled={opt.disabled}>
-                                          {opt.label}
-                                      </SelectItem>
-                                  ))}
-                              </SelectGroup>
-                          ))
-                        : (options as SelectOption[]).map((opt) => (
-                              <SelectItem
-                                  style={toneStyles[tone]}
-                                  className="cursor-pointer text-[10px] font-semibold sm:text-sm"
-                                  key={opt.value}
-                                  value={opt.value}
-                                  disabled={opt.disabled}
-                              >
-                                  {opt.label}
-                              </SelectItem>
-                          ))}
-                </SelectContent>
+                {options.length > 0 && (
+                    <SelectContent className="max-h-[300px]">
+                        {isGrouped(options)
+                            ? options.map((group) => (
+                                  <SelectGroup key={group.group}>
+                                      <SelectLabel className="text-[10px] sm:text-sm">{group.group}</SelectLabel>
+                                      {group.options.map((opt) => (
+                                          <SelectItem style={toneStyles[tone]} key={opt.value} value={opt.value} disabled={opt.disabled}>
+                                              {opt.label}
+                                          </SelectItem>
+                                      ))}
+                                  </SelectGroup>
+                              ))
+                            : (options as SelectOption[]).map((opt) => (
+                                  <SelectItem
+                                      style={toneStyles[tone]}
+                                      className="cursor-pointer text-[10px] font-semibold sm:text-sm"
+                                      key={opt.value}
+                                      value={opt.value}
+                                      disabled={opt.disabled}
+                                  >
+                                      {opt.label}
+                                  </SelectItem>
+                              ))}
+                    </SelectContent>
+                )}
+                {options.length === 0 && (
+                    <SelectContent>
+                        <div className="flex flex-col items-center justify-center gap-3 p-4 text-[10px]">
+                            <CircleAlert />
+                            <EmptyContent>{emptyMsg}</EmptyContent>
+                        </div>
+                    </SelectContent>
+                )}
             </Select>
 
             {message && (

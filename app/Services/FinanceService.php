@@ -163,6 +163,12 @@ class FinanceService
                 'items' => $aktual['material']['items'][0] ?? null,
                 'selisih' => $rencana['material'] - ($aktual['material']['jumlah'] ?? 0),
             ],
+            'operasional' => [                                              // ← tambah ini
+                'rencana' => null,                                         // tidak ada di anggaran
+                'aktual'  => $aktual['operasional']['jumlah'] ?? 0,
+                'items'   => $aktual['operasional']['items'][0] ?? null,
+                'selisih' => null,
+            ],
             'mandor' => [
                 'rencana' => $rencana['mandor'],
                 'aktual'  => $aktual['mandor']['jumlah'] ?? 0,
@@ -230,30 +236,26 @@ class FinanceService
 
         $pengeluaran = Transaksi::query()
             ->selectRaw("DATE_FORMAT(tanggal, '%Y-%m-01') as bulan, SUM(jumlah) as total")
-            ->whereBetween('tanggal', [$start, $end])
+            ->whereBetween('tanggal', [$start->copy()->startOfMonth(), $end->copy()->endOfMonth()])
             ->groupByRaw("DATE_FORMAT(tanggal, '%Y-%m-01')")
             ->pluck('total', 'bulan');
 
-        $proyeks = Proyek::select('pagu_total', 'tanggal_mulai', 'tanggal_selesai')->get();
+        $pemasukan = Proyek::query()
+            ->selectRaw("DATE_FORMAT(tanggal_mulai, '%Y-%m-01') as bulan, SUM(pagu_total) as total")
+            ->whereBetween('tanggal_mulai', [$start->copy()->startOfMonth(), $end->copy()->endOfMonth()])
+            ->groupByRaw("DATE_FORMAT(tanggal_mulai, '%Y-%m-01')")
+            ->pluck('total', 'bulan');
 
-        $pemasukan = collect();
-        foreach ($proyeks as $p) {
-            $start    = Carbon::parse($p->tanggal_mulai)->startOfMonth();
-            $end      = Carbon::parse($p->tanggal_selesai)->startOfMonth();
-            $durasi   = max(1, $start->diffInMonths($end) + 1);
-            $perBulan = $p->pagu_total / $durasi;
+        // Generate semua bulan dalam range — termasuk bulan tanpa data (nilai 0)
+        $bulanRange = collect();
+        $cursor     = $start->copy()->startOfMonth();
 
-            $cursor = $start->copy();
-            while ($cursor->lte($end)) {
-                $bulan = $cursor->format('Y-m-01');
-                $pemasukan[$bulan] = ($pemasukan[$bulan] ?? 0) + $perBulan;
-                $cursor->addMonth();
-            }
+        while ($cursor->lte($end)) {
+            $bulanRange->push($cursor->format('Y-m-01'));
+            $cursor->addMonth();
         }
 
-        $bulan = collect($pemasukan->keys()->merge($pengeluaran->keys())->unique()->sort());
-
-        return $bulan->map(fn($b) => [
+        return $bulanRange->map(fn($b) => [
             'ds' => $b,
             'y'  => (float)($pemasukan[$b] ?? 0) - (float)($pengeluaran[$b] ?? 0),
         ])->values();

@@ -119,9 +119,16 @@ class DashboardController extends Controller
     {
         $bulanan = $this->financeService->aggregateCashflowBulanan($start, $end);
 
+        $filtered = $bulanan->filter(function ($item) use ($start, $end) {
+            $bulan = Carbon::parse($item['ds']);
+            return $bulan->gte($start) && $bulan->lte($end);
+        })->values();
+
         return [
-            'labels'   => $bulanan->map(fn($b) => Carbon::parse($b['ds'])->translatedFormat('M Y'))->values()->toArray(),
-            'cashflow' => $bulanan->pluck('y')->values()->toArray(),
+            'labels'   => $filtered->map(
+                fn($b) => Carbon::parse($b['ds'])->translatedFormat('M Y')
+            )->values()->toArray(),
+            'cashflow' => $filtered->pluck('y')->values()->toArray(),
         ];
     }
 

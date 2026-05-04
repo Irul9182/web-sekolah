@@ -315,7 +315,7 @@ const TransactionCreateIndex = () => {
                 </div>
             )}
 
-            <div className="mt-4 px-4 pb-7">
+            <div className="z-50 mt-4 px-4 pb-7">
                 <AppTextArea
                     className="min-h-50 px-3 py-4"
                     value={data?.keterangan || ''}

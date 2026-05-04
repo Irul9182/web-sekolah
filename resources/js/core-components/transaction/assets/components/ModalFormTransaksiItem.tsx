@@ -4,11 +4,11 @@ import AppTextArea from '@/components/app-textare';
 import { ModalContent } from '@/components/ui-shadcn/modal';
 import { Button } from '@/components/ui/button';
 import { Modal, ModalBody, ModalClose, ModalFooter, ModalHeader, ModalProps, ModalTitle } from '@/components/ui/modal';
-import { formatDate } from '@/helpers/format';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { initialTransaksiItem, KategoriTransaksi, TransaksiItem, TransaksiItemForm } from '@/types/transaction.type';
 import { router, useForm } from '@inertiajs/react';
 import axios from 'axios';
+import { format } from 'date-fns';
 import { LoaderCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -38,11 +38,11 @@ const ModalFormTransaksiItem = ({ open, item_id, item, kategori, onChange, trans
 
     const namaSatuan =
         kategori === 'biaya_tak_terduga'
-            ? 'Jumlah biaya'
+            ? 'Biaya tiap satuan'
             : kategori === 'material'
               ? 'Harga Satuan'
               : kategori === 'operasional'
-                ? 'Jumlah biaya'
+                ? 'Biaya tiap satuan'
                 : '';
     const [loading, setLoading] = useState<boolean>(false);
     const isMobile = useIsMobile();
@@ -191,7 +191,7 @@ const ModalFormTransaksiItem = ({ open, item_id, item, kategori, onChange, trans
                                         placeholder="Masukkan tanggal . . . "
                                         inputClassName="h-8"
                                         value={data?.tanggal ? new Date(data?.tanggal) : undefined}
-                                        onChange={(e) => setData('tanggal', e ? formatDate(e.toDateString()) : '')}
+                                        onChange={(e) => setData('tanggal', e ? format(e, 'yyyy-MM-dd') : '')}
                                         className="w-full"
                                         error={clientErrors?.tanggal}
                                     />

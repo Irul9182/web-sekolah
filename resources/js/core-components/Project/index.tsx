@@ -150,6 +150,7 @@ const ProjectIndex = ({ proyeks, filters }: PropTypes) => {
         {
             key: 'jenis',
             label: 'Jenis Proyek',
+            className: 'truncate max-w-[200px]',
             render: (_: any, record: ProyekProps) => {
                 return <span className="bg-secondary text-secondary-foreground rounded-md py-0.5 text-sm font-semibold">{record?.jenis?.nama}</span>;
             },

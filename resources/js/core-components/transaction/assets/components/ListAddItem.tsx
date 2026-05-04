@@ -1,8 +1,9 @@
 import AppDatePicker from '@/components/app-day-picker';
 import AppInput from '@/components/app-input';
 import { Button } from '@/components/ui/button';
-import { formatCurrency, formatDate } from '@/helpers/format';
+import { formatCurrency } from '@/helpers/format';
 import { KategoriTransaksi, TransaksiItem } from '@/types/transaction.type';
+import { format } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BadgeInfo, Plus, Trash2 } from 'lucide-react';
 type ItemForm = Omit<TransaksiItem, 'transaksi_id' | 'created_at' | 'updated_at'>;
@@ -57,11 +58,11 @@ const ListAddItem = ({ items = [], errors, onChange, kategori }: ItemTableProps)
 
     const namaSatuan =
         kategori === 'biaya_tak_terduga'
-            ? 'Jumlah biaya'
+            ? 'Biaya tiap satuan'
             : kategori === 'material'
               ? 'Harga Satuan'
               : kategori === 'operasional'
-                ? 'Jumlah biaya'
+                ? 'Biaya tiap satuan'
                 : '';
 
     return (
@@ -181,7 +182,7 @@ const ListAddItem = ({ items = [], errors, onChange, kategori }: ItemTableProps)
                                             placeholder="Masukkan tanggal . . . "
                                             inputClassName="h-8"
                                             value={item.tanggal ? new Date(item.tanggal) : undefined}
-                                            onChange={(e) => handleChange(realIndex, 'tanggal', e ? formatDate(e.toDateString()) : '')}
+                                            onChange={(e) => handleChange(realIndex, 'tanggal', e ? format(e, 'yyyy-MM-dd') : '')}
                                             className="w-full"
                                         />
                                         {errors[`items.${realIndex}.tanggal`] && (
