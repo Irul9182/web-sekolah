@@ -26,6 +26,7 @@ class TransaksiController extends Controller
     public function index(Request $request)
     {
         $search  = $request->query('search', '');
+        $kategori  = $request->query('kategori');
         $perPage = $request->query('per_page', 10);
 
         $transaksis = Transaksi::query()->latest()
@@ -35,7 +36,12 @@ class TransaksiController extends Controller
                 $q->whereHas('proyek', function ($q) use ($search) {
                     $q->where('nama_proyek', 'like', "%{$search}%");
                 });
-            })
+            })->when(
+                $kategori && $kategori !== "semua_kategori",
+                function ($q) use ($kategori) {
+                    $q->where('kategori', $kategori);
+                }
+            )
             ->latest('tanggal')
             ->paginate($perPage)
             ->withQueryString();

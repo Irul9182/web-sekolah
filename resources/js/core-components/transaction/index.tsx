@@ -1,6 +1,7 @@
 import DetailItem from '@/components/app-detail-item';
 import AppDropdownMenu from '@/components/app-dopdown-menu';
 import AppSearchInput from '@/components/app-input-search';
+import AppSelect from '@/components/app-select';
 import { Column, DataTable } from '@/components/app-table';
 import { DropdownMenuItem } from '@/components/ui-shadcn/dropdown-menu';
 import { Modal, ModalBody, ModalClose, ModalContent, ModalFooter, ModalHeader, ModalTitle } from '@/components/ui-shadcn/modal';
@@ -11,9 +12,9 @@ import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { BreadcrumbItem } from '@/types';
 import { PaginatedResponse } from '@/types/laravel.type';
-import { TransaksiProps } from '@/types/transaction.type';
+import { KategoriTransaksi, TransaksiProps } from '@/types/transaction.type';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { Edit, EllipsisVertical, Eye, Plus, Trash } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -29,13 +30,12 @@ interface PageProps extends InertiaPageProps {
     filters: {
         search: string;
         per_page: number;
+        kategori: KategoriTransaksi;
     };
 }
 
 type ModalType = 'detail' | 'delete';
 const TransactionIndex = ({ filters, list_transaksi }: PageProps) => {
-    const { props } = usePage<PageProps>();
-    const { errors } = props;
     const [open, setIsOpen] = useState<boolean>(false);
     const [modalType, setModalType] = useState<ModalType | null>(null);
     const [selectedTransaksiId, setSelectedTransaksiId] = useState<string | null>(null);
@@ -43,10 +43,9 @@ const TransactionIndex = ({ filters, list_transaksi }: PageProps) => {
     const currentPage = new URLSearchParams(window.location.search).get('page') ?? '1';
     const currentPerPage = new URLSearchParams(window.location.search).get('per_page') ?? '10';
     const [search, setSearch] = useState(filters.search ?? '');
+    const [kategoriFilter, setKategoriFilter] = useState<KategoriTransaksi | null>(filters.kategori ?? null);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    console.log('Transaksi response: ', list_transaksi);
     const form = useForm();
-    const { processing } = form;
     // const { processing } = form;
     const isMobile = useIsMobile();
     useEffect(() => {
@@ -80,6 +79,12 @@ const TransactionIndex = ({ filters, list_transaksi }: PageProps) => {
                 { preserveState: true, replace: true },
             );
         }, 400);
+    };
+
+    const handleFilterKategori = (val: KategoriTransaksi | null) => {
+        setKategoriFilter(val);
+
+        router.get(route('transaction.index'), { ...route().params, kategori: val }, { preserveState: true, replace: true });
     };
     const closeModal = () => {
         setSelectedTransaksiId(null);
@@ -265,15 +270,32 @@ const TransactionIndex = ({ filters, list_transaksi }: PageProps) => {
                         clearable={false}
                     />
 
-                    <Button
-                        className="cursor-pointer"
-                        // disabled={processing}
-                        size={isMobile ? 'sm' : 'default'}
-                        onClick={() => router.visit('/transaction/create')}
-                    >
-                        <Plus />
-                        <p>Transaksi Baru</p>
-                    </Button>
+                    <div className="flex items-center gap-3">
+                        <AppSelect
+                            options={[
+                                { value: 'material', label: 'Material' },
+                                { value: 'operasional', label: 'Operasional' },
+                                { value: 'jasa_tukang', label: 'Jasa Tukang' },
+                                { value: 'mandor', label: 'Mandor' },
+                                { value: 'staff_perpajakan', label: 'Staff Perpajakan' },
+                                { value: 'staff_entry_data', label: 'Staff Entry Data' },
+                                { value: 'biaya_tak_terduga', label: 'Biaya Tak Terduga' },
+                                { label: 'Semua Kategori', value: 'semua_kategori' },
+                            ]}
+                            value={(kategoriFilter as KategoriTransaksi) ?? 'semua_kategori'}
+                            placeholder="Filter Kategori"
+                            onValueChange={(val) => handleFilterKategori(val as KategoriTransaksi)}
+                        />
+                        <Button
+                            className="cursor-pointer"
+                            // disabled={processing}
+                            size={isMobile ? 'sm' : 'default'}
+                            onClick={() => router.visit('/transaction/create')}
+                        >
+                            <Plus />
+                            <p>Transaksi Baru</p>
+                        </Button>
+                    </div>
                 </div>
                 <DataTable
                     className="mt-4"

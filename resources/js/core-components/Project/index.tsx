@@ -47,8 +47,6 @@ const ProjectIndex = ({ proyeks, filters }: PropTypes) => {
     const [search, setSearch] = useState(filters?.search ?? '');
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    console.log('Proyeks: ', proyeks);
-
     useEffect(() => {
         const findedDataProyek = proyeks?.data?.find((item) => item.proyek_id === selectedProyekId);
 
@@ -281,6 +279,7 @@ const ProjectIndex = ({ proyeks, filters }: PropTypes) => {
                                 { label: 'Dibatalkan', value: 'dibatalkan' },
                                 { label: 'Semua Status', value: 'semua_status' },
                             ]}
+                            value={(statusFilter as StatusProyek) || 'semua_status'}
                             defaultValue="semua_status"
                             onValueChange={(val) => handleFilterStatus(val as StatusProyek)}
                             triggerClassName="min-w-33"
