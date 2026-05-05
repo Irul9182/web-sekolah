@@ -24,43 +24,68 @@ def main():
             "error": f"Data historis tidak cukup. Minimal 6 bulan, diterima {len(data)}."
         }))
         sys.exit(1)
-        
-        
 
+    # ── 1. Load dan bersihkan data ────────────────────────────────────────────
     df       = pd.DataFrame(data)
     df["ds"] = pd.to_datetime(df["ds"])
     df["y"]  = df["y"].astype(float)
 
+    # Sort ascending berdasarkan tanggal
+    df = df.sort_values("ds").reset_index(drop=True)
+
+    # ── 2. Isi gap bulan yang skip (bukan replace 0) ──────────────────────────
+    # Reindex ke semua bulan dalam range — bulan yang skip jadi NaN
+    full_range = pd.date_range(start=df["ds"].min(), end=df["ds"].max(), freq="MS")
+    df         = df.set_index("ds").reindex(full_range).reset_index()
+    df.columns = ["ds", "y"]
+
+    # Isi NaN dengan median rolling 3 bulan terdekat
+    df["y"] = df["y"].fillna(
+        df["y"].rolling(window=3, min_periods=1, center=True).median()
+    )
+
+    # Fallback — kalau masih ada NaN di ujung, isi dengan median keseluruhan
+    df["y"] = df["y"].fillna(df["y"].median())
+
+    # ── 3. Filter training months ─────────────────────────────────────────────
     if training_months and training_months < len(df):
         df = df.tail(training_months).reset_index(drop=True)
 
     n_months = len(df)
 
-    if n_months < 12:
-        model = Prophet(
-            yearly_seasonality=False,
-            weekly_seasonality=False,
-            daily_seasonality=False,
-            interval_width=0.95,
-        )
-    elif n_months < 24:
-        model = Prophet(
-            yearly_seasonality=False,
-            weekly_seasonality=False,
-            daily_seasonality=False,
-            interval_width=0.95,
-        )
-        model.add_seasonality(name="yearly", period=365.25, fourier_order=3)
-    else:
+    # ── 4. Pilih model Prophet sesuai jumlah data ─────────────────────────────
+    if n_months >= 24:
         model = Prophet(
             yearly_seasonality=True,
             weekly_seasonality=False,
             daily_seasonality=False,
             interval_width=0.95,
-            changepoint_prior_scale=0.05,  # default 0.05, coba 0.01–0.1
-            seasonality_prior_scale=10,    # default 10
+            changepoint_prior_scale=0.1,
+            seasonality_prior_scale=5,
+            seasonality_mode='multiplicative',
+        )
+    elif n_months >= 12:
+        model = Prophet(
+            yearly_seasonality=False,
+            weekly_seasonality=False,
+            daily_seasonality=False,
+            interval_width=0.95,
+            changepoint_prior_scale=0.1,
+            seasonality_prior_scale=5,
+        )
+        # Tambah seasonality manual karena data belum cukup untuk yearly otomatis
+        model.add_seasonality(name='yearly', period=365.25, fourier_order=3)
+    else:
+        # Data < 12 bulan — pakai model sederhana tanpa seasonality
+        model = Prophet(
+            yearly_seasonality=False,
+            weekly_seasonality=False,
+            daily_seasonality=False,
+            interval_width=0.95,
+            changepoint_prior_scale=0.05,
         )
 
+    # ── 5. Fit dan predict ────────────────────────────────────────────────────
     model.fit(df)
 
     future   = model.make_future_dataframe(periods=periods, freq="MS")
@@ -83,32 +108,27 @@ def main():
         else:
             result_forecast.append(entry)
 
-    # ── Metrik akurasi ────────────────────────────────────────────────────────
+    # ── 6. Metrik akurasi ─────────────────────────────────────────────────────
     forecast_train = forecast[forecast["ds"].isin(df["ds"])][["ds", "yhat"]]
     merged         = df.merge(forecast_train, on="ds")
 
     y    = merged["y"].values
     yhat = merged["yhat"].values
 
-    # MAE & RMSE — selalu valid
+    # MAE & RMSE
     mae  = float(np.mean(np.abs(y - yhat)))
     rmse = float(np.sqrt(np.mean((y - yhat) ** 2)))
 
-    # ── Relative MAE ──────────────────────────────────────────────────────────
-    # Bandingkan error terhadap SKALA DATA, bukan nilai individu.
-    # Ini menghindari masalah MAPE klasik saat y mendekati nol atau negatif.
-    #
+    # Relative MAE — lebih stabil dari MAPE untuk data keuangan
     # Formula: MAE / mean(|y|) * 100
-    # Interpretasi: "model meleset X% dari rata-rata magnitude cashflow"
-    #
-    # Contoh: MAE=50jt, mean(|y|)=300jt → relative_mae=16.7% → "Sangat akurat"
+    # Interpretasi: model meleset X% dari rata-rata magnitude cashflow
     scale = float(np.mean(np.abs(y)))
     if scale > 0:
         relative_mae = mae / scale * 100
     else:
         relative_mae = None
 
-    # Tentukan label akurasi dari relative_mae
+    # Label akurasi
     if relative_mae is None:
         accuracy_label = "Tidak dapat dihitung"
     elif relative_mae < 20:
@@ -120,24 +140,24 @@ def main():
     else:
         accuracy_label = "Tidak akurat"
 
-    # ── sMAPE tetap disertakan sebagai metrik sekunder ────────────────────────
+    # sMAPE — metrik sekunder, lebih stabil untuk data dengan nilai negatif
     denom      = np.abs(y) + np.abs(yhat)
     smape_vals = np.where(denom == 0, 0.0, 2 * np.abs(y - yhat) / denom)
     smape      = float(np.mean(smape_vals) * 100)
 
+    # ── 7. Output ─────────────────────────────────────────────────────────────
     print(json.dumps({
         "status":         "success",
         "periods":        periods,
         "trained_on":     n_months,
         "seasonality":    (
-            "none"   if n_months < 12 else
-            "manual" if n_months < 24 else
-            "full"
+            "full"   if n_months >= 24 else
+            "manual" if n_months >= 12 else
+            "none"
         ),
         "mae":            round(mae, 2),
         "rmse":           round(rmse, 2),
         "smape":          round(smape, 2),
-        # relative_mae menggantikan mape sebagai metrik utama akurasi
         "mape":           round(relative_mae, 2) if relative_mae is not None else None,
         "accuracy_label": accuracy_label,
         "actual":         result_actual,

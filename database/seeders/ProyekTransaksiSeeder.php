@@ -10,7 +10,6 @@ use Illuminate\Support\Carbon;
 
 class ProyekTransaksiSeeder extends Seeder
 {
-    // Total pengeluaran = 62% dari pagu → cashflow selalu positif ~38%
     private const PROPORSI_PERSEN = [
         'material'          => 0.35,
         'operasional'       => 0.05,
@@ -26,6 +25,26 @@ class ProyekTransaksiSeeder extends Seeder
 
     private const KATEGORI_DENGAN_ITEM = ['material', 'operasional', 'biaya_tak_terduga'];
 
+    // Bobot musiman per bulan (1=Jan ... 12=Des)
+    // Q1 & Q3 tinggi, Q2 & Q4 rendah — mencerminkan siklus konstruksi
+    private const BOBOT_MUSIMAN = [
+        1  => 1.3,  // Jan — awal tahun, banyak kontrak baru
+        2  => 1.1,  // Feb
+        3  => 1.4,  // Mar — akhir Q1, puncak
+        4  => 0.8,  // Apr — awal Q2, lebih sepi
+        5  => 0.7,  // Mei
+        6  => 0.9,  // Jun
+        7  => 1.2,  // Jul — awal Q3
+        8  => 1.4,  // Agt — puncak Q3
+        9  => 1.1,  // Sep
+        10 => 0.8,  // Okt — awal Q4, mulai sepi
+        11 => 0.7,  // Nov
+        12 => 0.9,  // Des — akhir tahun
+    ];
+
+    // Base pagu per bulan — akan dikalikan bobot musiman
+    private const BASE_PAGU = 250_000_000;
+
     public function run(): void
     {
         $kategoriIds = \App\Models\KategoriProyek::pluck('id')->toArray();
@@ -36,7 +55,7 @@ class ProyekTransaksiSeeder extends Seeder
             return;
         }
 
-        $jadwal = $this->generateJadwal(30);
+        $jadwal = $this->generateJadwal();
 
         foreach ($jadwal as $def) {
             $mulai   = $def['mulai'];
@@ -58,86 +77,67 @@ class ProyekTransaksiSeeder extends Seeder
                 'deskripsi_proyek'   => fake()->sentence(10),
             ]);
 
-            // Basis pengeluaran = pagu langsung (bukan dana_setelah_pajak)
-            // sehingga total pengeluaran pasti < pagu → cashflow selalu positif
-            $this->buatTransaksiPengeluaran($proyek, (float) $pagu, $mulai, $selesai);
+            $this->buatTransaksiPengeluaran($proyek, (float) $pagu, $mulai);
         }
 
-        $this->command->info('✓ Seeder selesai: 30 proyek, cashflow 24 bulan, pengeluaran < pagu.');
+        $this->command->info('✓ Seeder selesai: cashflow 24 bulan dengan pola musiman.');
     }
 
-    private function generateJadwal(int $total): array
+    private function generateJadwal(): array
     {
         $now         = Carbon::now()->startOfDay();
         $windowStart = $now->copy()->subMonths(24)->startOfMonth();
-        $windowEnd   = $now->copy();
+        $defs        = [];
 
-        $bobotQ     = [1 => 3, 2 => 1, 3 => 3, 4 => 2];
-        $totalBobot = array_sum($bobotQ);
+        $cursor = $windowStart->copy();
 
-        $perQ     = [];
-        $assigned = 0;
-        foreach ($bobotQ as $q => $b) {
-            $perQ[$q] = (int) round($total * $b / $totalBobot);
-            $assigned += $perQ[$q];
-        }
-        $perQ[1] += ($total - $assigned);
+        while ($cursor->lte($now)) {
+            $bulan  = (int) $cursor->format('n'); // 1-12
+            $bobot  = self::BOBOT_MUSIMAN[$bulan];
 
-        $defs = [];
+            // Jumlah proyek per bulan mengikuti bobot musiman
+            // Bobot tinggi = lebih banyak proyek
+            $jumlahProyek = (int) round($bobot * 1.5); // 1-3 proyek per bulan
+            $jumlahProyek = max(1, $jumlahProyek);
 
-        for ($siklus = 0; $siklus < 2; $siklus++) {
-            for ($q = 1; $q <= 4; $q++) {
-                $jumlahSlot = (int) ceil($perQ[$q] / 2);
-                if ($siklus === 1) {
-                    $jumlahSlot = $perQ[$q] - (int) ceil($perQ[$q] / 2);
-                }
+            for ($p = 0; $p < $jumlahProyek; $p++) {
+                $mulai = $cursor->copy()->addDays(rand(0, 20));
 
-                $bulanKuartalAwal = ($q - 1) * 3;
-                $offsetSiklus     = $siklus * 12;
-                $slotMulai        = $windowStart->copy()->addMonths($bulanKuartalAwal + $offsetSiklus);
-                $slotAkhir        = $slotMulai->copy()->addMonths(3)->subDay()->min($windowEnd);
+                // Durasi proyek: 1 bulan saja — pengeluaran di bulan yang sama
+                $selesai = $mulai->copy()->endOfMonth();
 
-                if ($slotMulai->gt($windowEnd)) continue;
+                // Pagu mengikuti bobot musiman + variasi kecil ±15%
+                $variasi = 0.85 + (mt_rand(0, 30) / 100); // 0.85 - 1.15
+                $pagu    = (int) round(self::BASE_PAGU * $bobot * $variasi / 5_000_000) * 5_000_000;
+                $pagu    = max(50_000_000, $pagu); // minimal 50jt
 
-                for ($p = 0; $p < $jumlahSlot; $p++) {
-                    $mulai = Carbon::createFromTimestamp(
-                        rand($slotMulai->timestamp, $slotAkhir->timestamp)
-                    )->startOfDay();
+                $pajak = fake()->randomElement([10, 11, 12]);
 
-                    $durasi  = rand(2, 8);
-                    $selesai = $mulai->copy()->addMonths($durasi)->endOfMonth();
-
-                    [$paguMin, $paguMax] = ($q % 2 === 1)
-                        ? [200_000_000, 500_000_000]
-                        : [80_000_000,  300_000_000];
-
-                    $pagu  = (int) round(rand($paguMin, $paguMax) / 5_000_000) * 5_000_000;
-                    $pajak = fake()->randomElement([10, 11, 12]);
-
-                    $defs[] = [
-                        'mulai'   => $mulai,
-                        'selesai' => $selesai,
-                        'pagu'    => $pagu,
-                        'pajak'   => $pajak,
-                    ];
-                }
+                $defs[] = compact('mulai', 'selesai', 'pagu', 'pajak');
             }
+
+            $cursor->addMonth();
         }
 
-        shuffle($defs);
-        return array_slice($defs, 0, $total);
+        return $defs;
     }
 
     private function buatTransaksiPengeluaran(
         Proyek $proyek,
         float  $pagu,
-        Carbon $mulai,
-        Carbon $selesai
+        Carbon $mulai
     ): void {
-        $maxTanggal = $selesai->isPast() ? $selesai->copy() : Carbon::now()->startOfDay();
-        if ($maxTanggal->lt($mulai)) $maxTanggal = $mulai->copy();
+        // Semua transaksi dalam bulan yang sama dengan tanggal_mulai
+        $batasBulan = $mulai->copy()->endOfMonth();
+        $now        = Carbon::now()->startOfDay();
 
-        $durasiHari = max(1, (int) $mulai->diffInDays($maxTanggal));
+        // Kalau bulan ini belum selesai, batasi sampai hari ini
+        if ($batasBulan->gt($now)) {
+            $batasBulan = $now->copy();
+        }
+
+        // Kalau mulai > now (edge case), skip
+        if ($mulai->gt($now)) return;
 
         $alokasi = [];
         foreach (self::PROPORSI_PERSEN as $kat => $pct) {
@@ -147,8 +147,10 @@ class ProyekTransaksiSeeder extends Seeder
             $alokasi[$kat] = (int) $nominal;
         }
 
-        $batasMaks    = (int) ($pagu * 0.75);
+        // Total maksimal 70% dari pagu — cashflow selalu positif 30%
+        $batasMaks    = (int) ($pagu * 0.70);
         $totalAlokasi = array_sum($alokasi);
+
         if ($totalAlokasi > $batasMaks) {
             $faktor = $batasMaks / $totalAlokasi;
             foreach ($alokasi as $kat => &$val) {
@@ -157,18 +159,15 @@ class ProyekTransaksiSeeder extends Seeder
             unset($val);
         }
 
-        // Batas akhir transaksi = akhir bulan tanggal_mulai
-        // Semua pengeluaran WAJIB dalam bulan yang sama dengan pemasukan
-        $batasBulanMulai = $mulai->copy()->endOfMonth()->min($maxTanggal);
-
         foreach ($alokasi as $kategori => $budget) {
             if ($budget <= 0) continue;
 
-            if (isset(self::PROPORSI_FIXED[$kategori])) {
-                $tanggal = Carbon::createFromTimestamp(
-                    rand($mulai->timestamp, $batasBulanMulai->timestamp)
-                );
+            // Tanggal transaksi dalam bulan mulai
+            $tanggal = Carbon::createFromTimestamp(
+                rand($mulai->timestamp, $batasBulan->timestamp)
+            );
 
+            if (isset(self::PROPORSI_FIXED[$kategori])) {
                 Transaksi::create([
                     'proyek_id'  => $proyek->proyek_id,
                     'kategori'   => $kategori,
@@ -180,60 +179,37 @@ class ProyekTransaksiSeeder extends Seeder
                 continue;
             }
 
-            $jumlahTermin = rand(2, 4);
-            $bobotTermin  = $this->sCurveWeights($jumlahTermin);
-            $sisaBudget   = $budget;
+            if (in_array($kategori, self::KATEGORI_DENGAN_ITEM, true)) {
+                $transaksi = Transaksi::create([
+                    'proyek_id'  => $proyek->proyek_id,
+                    'kategori'   => $kategori,
+                    'jumlah'     => 0,
+                    'persen'     => null,
+                    'tanggal'    => $tanggal,
+                    'keterangan' => "Transaksi {$kategori}",
+                ]);
 
-            foreach ($bobotTermin as $idx => $bobot) {
-                $isTerminAkhir = ($idx === $jumlahTermin - 1);
-
-                $jumlah     = $isTerminAkhir
-                    ? $sisaBudget
-                    : (int) round($budget * $bobot);
-                $jumlah     = max(1, min($jumlah, $sisaBudget));
-                $sisaBudget -= $jumlah;
-
-                // Semua termin dalam bulan yang sama dengan tanggal_mulai
-                $tanggal = Carbon::createFromTimestamp(
-                    rand($mulai->timestamp, $batasBulanMulai->timestamp)
+                $totalItem = $this->buatItemTransaksi(
+                    $transaksi,
+                    $budget,
+                    $kategori,
+                    $mulai,
+                    $batasBulan
                 );
 
-                $keterangan = "Termin " . ($idx + 1) . " – {$kategori}";
-
-                if (in_array($kategori, self::KATEGORI_DENGAN_ITEM, true)) {
-                    $transaksi = Transaksi::create([
-                        'proyek_id'  => $proyek->proyek_id,
-                        'kategori'   => $kategori,
-                        'jumlah'     => 0,
-                        'persen'     => null,
-                        'tanggal'    => $tanggal,
-                        'keterangan' => $keterangan,
-                    ]);
-
-                    $totalItem = $this->buatItemTransaksi(
-                        $transaksi,
-                        $jumlah,
-                        $kategori,
-                        $mulai,
-                        $batasBulanMulai
-                    );
-
-                    $transaksi->update([
-                        'jumlah' => $totalItem,
-                        'persen' => $this->hitungPersen($totalItem, $pagu),
-                    ]);
-                } else {
-                    Transaksi::create([
-                        'proyek_id'  => $proyek->proyek_id,
-                        'kategori'   => $kategori,
-                        'jumlah'     => $jumlah,
-                        'persen'     => $this->hitungPersen($jumlah, $pagu),
-                        'tanggal'    => $tanggal,
-                        'keterangan' => $keterangan,
-                    ]);
-                }
-
-                if ($sisaBudget <= 0) break;
+                $transaksi->update([
+                    'jumlah' => $totalItem,
+                    'persen' => $this->hitungPersen($totalItem, $pagu),
+                ]);
+            } else {
+                Transaksi::create([
+                    'proyek_id'  => $proyek->proyek_id,
+                    'kategori'   => $kategori,
+                    'jumlah'     => $budget,
+                    'persen'     => $this->hitungPersen($budget, $pagu),
+                    'tanggal'    => $tanggal,
+                    'keterangan' => "Transaksi {$kategori}",
+                ]);
             }
         }
     }
@@ -245,7 +221,7 @@ class ProyekTransaksiSeeder extends Seeder
         Carbon    $tanggalAwal,
         Carbon    $maxTanggal
     ): int {
-        $jumlahItem   = rand(2, 5);
+        $jumlahItem   = rand(2, 4);
         $sisaAnggaran = $targetTotal;
         $totalAktual  = 0;
 
@@ -264,16 +240,16 @@ class ProyekTransaksiSeeder extends Seeder
 
             if ($isItemAkhir) {
                 $subtotal = max(1, $sisaAnggaran);
-                $harga    = rand(10_000, 500_000);
+                $harga    = rand(10_000, 300_000);
                 $qty      = max(1, (int) round($subtotal / $harga));
                 $harga    = (int) round($subtotal / $qty);
                 $subtotal = $qty * $harga;
             } else {
                 $porsiBase = (int) round($sisaAnggaran / ($jumlahItem - $j + 1));
-                $porsi     = (int) ($porsiBase * (0.80 + lcg_value() * 0.40));
+                $porsi     = (int) ($porsiBase * (0.85 + lcg_value() * 0.30));
                 $porsi     = max(1_000, min($porsi, $sisaAnggaran - ($jumlahItem - $j) * 1_000));
 
-                $harga    = rand(10_000, 500_000);
+                $harga    = rand(10_000, 300_000);
                 $qty      = max(1, (int) round($porsi / $harga));
                 $harga    = (int) round($porsi / $qty);
                 $subtotal = $qty * $harga;
@@ -295,20 +271,6 @@ class ProyekTransaksiSeeder extends Seeder
         }
 
         return $totalAktual;
-    }
-
-    private function sCurveWeights(int $n): array
-    {
-        if ($n === 1) return [1.0];
-
-        $raw = [];
-        for ($i = 0; $i < $n; $i++) {
-            $t     = $i / ($n - 1);
-            $raw[] = exp(-pow(($t - 0.6) * 2.5, 2));
-        }
-
-        $sum = array_sum($raw);
-        return array_map(static fn($v) => $v / $sum, $raw);
     }
 
     private function hitungPersen(float $jumlah, float $pagu): float

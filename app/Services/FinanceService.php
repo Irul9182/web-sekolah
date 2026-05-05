@@ -377,9 +377,19 @@ class FinanceService
             ->groupByRaw("DATE_FORMAT(tanggal_mulai, '%Y-%m-01')")
             ->pluck('total', 'bulan');
 
-        $bulan = collect($pemasukan->keys()->merge($pengeluaran->keys())->unique()->sort());
+        $allKeys     = $pemasukan->keys()->merge($pengeluaran->keys());
+        $minBulan    = Carbon::parse($allKeys->min())->startOfMonth();
+        $maxBulan    = Carbon::now()->startOfMonth();
 
-        return $bulan->map(fn($b) => [
+        // Generate semua bulan — isi gap dengan 0
+        $semuaBulan = collect();
+        $cursor     = $minBulan->copy();
+        while ($cursor->lte($maxBulan)) {
+            $semuaBulan->push($cursor->format('Y-m-01'));
+            $cursor->addMonth();
+        }
+
+        return $semuaBulan->map(fn($b) => [
             'ds' => $b,
             'y'  => (float)($pemasukan[$b] ?? 0) - (float)($pengeluaran[$b] ?? 0),
         ])->values();
