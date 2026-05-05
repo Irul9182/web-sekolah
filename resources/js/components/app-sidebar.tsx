@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { NavGroup } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Blocks, Cog, LayoutGrid, Pickaxe, UtilityPoleIcon, Wallet, Wrench } from 'lucide-react';
+import { Blocks, ChartBar, Cog, LayoutGrid, Pickaxe, Wallet, Wrench } from 'lucide-react';
 import AppLogo from './app-logo';
 import { NavFooter } from './nav-footer';
 
@@ -31,7 +31,7 @@ const mainNavItems: NavGroup[] = [
     {
         title: 'Forecasting',
         url: '/forecasting',
-        icon: UtilityPoleIcon,
+        icon: ChartBar,
     },
     {
         title: 'Konfigurasi',

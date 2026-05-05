@@ -46,7 +46,11 @@ const ProjectIndex = ({ proyeks, filters }: PropTypes) => {
     const currentPerPage = new URLSearchParams(window.location.search).get('per_page') ?? '10';
     const [search, setSearch] = useState(filters?.search ?? '');
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+    useEffect(() => {
+        if (isMobile) {
+            router.reload();
+        }
+    }, [isMobile]);
     useEffect(() => {
         const findedDataProyek = proyeks?.data?.find((item) => item.proyek_id === selectedProyekId);
 

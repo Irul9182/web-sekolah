@@ -25,15 +25,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import axios from 'axios';
 import { formatDate } from 'date-fns';
 import { ChartNoAxesCombined, Loader2, TrendingUp, TriangleAlert } from 'lucide-react';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ForecastPoint {
     ds: string;
@@ -78,8 +75,6 @@ interface PageProps extends InertiaPageProps {
     errors: { data?: string; forecast?: string };
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 const fmt = (n: number) =>
     new Intl.NumberFormat('id-ID', {
         style: 'currency',
@@ -97,8 +92,6 @@ const fmtFull = (n: number) =>
 
 const fmtMonth = (ds: string) => new Date(ds).toLocaleDateString('id-ID', { month: 'short', year: '2-digit' });
 
-// ─── Opsi Select ──────────────────────────────────────────────────────────────
-
 const PERIOD_OPTIONS = [6, 9, 12, 15, 18, 21, 24].map((n) => ({
     value: String(n),
     label: `${n} bulan`,
@@ -108,8 +101,6 @@ const TRAINING_OPTIONS = [6, 9, 12, 15, 18, 21, 24].map((n) => ({
     value: String(n),
     label: `${n} bulan`,
 }));
-
-// ─── Chart Builder ────────────────────────────────────────────────────────────
 
 function buildChartConfig(forecasting: ForecastingResult): ChartData<'line'> {
     const actualLabels = forecasting?.actual.map((r) => fmtMonth(r.ds));
@@ -216,8 +207,6 @@ const chartOptions: ChartOptions<'line'> = {
     },
 };
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
 function MetricCard({ label, value, sub, valueClass }: { label: string; value: string; sub?: string; valueClass?: string }) {
     return (
         <Card>
@@ -309,8 +298,6 @@ const COLUMN_CASHFLOW: Column<CashflowProps>[] = [
     },
 ];
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 const ForecastingIndex = () => {
     const { props } = usePage<PageProps>();
     const { errors, forecasting } = props;
@@ -324,12 +311,8 @@ const ForecastingIndex = () => {
         training_months: 6,
     });
 
-    // ── Rebuild chart setiap kali forecasting props berubah ───────────────────
-    // useMemo memastikan chartData selalu sinkron dengan data terbaru dari server
     const chartData = useMemo(() => (forecasting ? buildChartConfig(forecasting) : null), [forecasting]);
 
-    // ── Buat key unik dari data forecasting untuk force re-mount chart ────────
-    // Tanpa ini, Chart.js kadang tidak update meski data sudah berubah
     const chartKey = useMemo(() => {
         if (!forecasting) return 'empty';
         return `${forecasting?.periods}-${forecasting?.trained_on}-${forecasting?.actual.length}-${forecasting?.forecast[0]?.yhat ?? 0}`;
@@ -422,7 +405,7 @@ const ForecastingIndex = () => {
                             <ChartNoAxesCombined className="text-muted-foreground/40 h-10 w-10" />
                             <p className="text-base font-semibold">Belum ada forecast</p>
                             <p className="text-muted-foreground text-center text-xs leading-relaxed">
-                                Pilih jumlah periode dan klik Generate
+                                Pilih Data training dan proyeksinya lalu klik generate
                                 <br />
                                 untuk memulai prediksi cashflow.
                             </p>
@@ -518,14 +501,14 @@ const ForecastingIndex = () => {
                                 </div>
                             </CardHeader>
                             <CardContent className="pt-2">
-                                <div className="relative h-[300px]">
+                                <div className="relative h-[300px] max-w-100 overflow-x-scroll sm:max-w-170 lg:max-w-full lg:overflow-x-hidden">
                                     <Line key={chartKey} data={chartData} options={chartOptions} />
                                 </div>
                             </CardContent>
                         </Card>
 
                         {/* Bottom grid */}
-                        <div className="flex w-full flex-col gap-5">
+                        <div className="flex max-w-full flex-col gap-5 overflow-x-scroll sm:max-w-170 sm:overflow-x-hidden lg:max-w-full">
                             {/* Tabel proyeksi */}
                             <Card className="w-full">
                                 <CardHeader className="pb-3">
@@ -588,7 +571,6 @@ const ForecastingIndex = () => {
                                                 value={fmt(summary.total_netto)}
                                                 valueClass={summary.total_netto >= 0 ? 'text-emerald-500' : 'text-destructive'}
                                             />
-                                            <Separator className="my-1" />
                                             <StatRow label="Proyek berjalan" value={String(summary.proyek_berjalan)} />
                                             <StatRow label="Proyek selesai" value={String(summary.proyek_selesai)} valueClass="text-emerald-500" />
                                             <StatRow
@@ -607,29 +589,40 @@ const ForecastingIndex = () => {
                 )}
             </div>
             <div className="p-4">
-                <div className="flex flex-wrap items-end gap-3">
-                    <AppDatePicker
-                        granularity="month"
-                        label="Tanggal Mulai"
-                        value={startDate ?? undefined}
-                        onChange={(val) => setStartDate(val ?? null)}
-                    />
-                    <AppDatePicker
-                        granularity="month"
-                        label="Tanggal Akhir"
-                        value={endDate ?? undefined}
-                        onChange={(val) => setEndDate(val ?? null)}
-                        error={endError as string}
+                <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">
+                            Cashflow <span className="text-primary">Hasil Agregasi</span>
+                        </h1>
+                        <p className="text-muted-foreground mt-1.5 text-xs tracking-wide">List detail cashflow hasil agregasi bulanan</p>
+                    </div>
+                    <div className="flex flex-wrap items-end gap-3">
+                        <AppDatePicker
+                            // granularity="month"
+                            label="Tanggal Mulai"
+                            value={startDate ?? undefined}
+                            onChange={(val) => setStartDate(val ?? null)}
+                        />
+                        <AppDatePicker
+                            // granularity="month"
+                            label="Tanggal Akhir"
+                            value={endDate ?? undefined}
+                            onChange={(val) => setEndDate(val ?? null)}
+                            error={endError as string}
+                        />
+                    </div>
+                </div>
+                <div className="max-w-full sm:max-w-170 lg:max-w-full">
+                    <DataTable
+                        className="mt-3"
+                        emptyMessage="Tidak ada cashflow saat ini"
+                        data={listCashflow as CashflowProps[]}
+                        mobileColumns={['no', 'total_pemasukan', 'total_pengeluaran', 'cashflow', 'date']}
+                        columns={COLUMN_CASHFLOW}
+                        key={listCashflow?.length as number}
+                        isPagination={false}
                     />
                 </div>
-                <DataTable
-                    className="mt-3"
-                    emptyMessage="Tidak ada cashflow saat ini"
-                    data={listCashflow as CashflowProps[]}
-                    columns={COLUMN_CASHFLOW}
-                    key={listCashflow?.length as number}
-                    isPagination={false}
-                />
             </div>
         </AppLayout>
     );
