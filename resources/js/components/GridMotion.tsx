@@ -53,7 +53,12 @@ const GridMotion: FC<GridMotionProps> = ({ items = [], gradientColor = 'black' }
 
     return (
         <div ref={gridRef} className="h-full w-full overflow-hidden">
-            <section className="bg-muted relative flex h-screen w-full items-center justify-center overflow-hidden">
+            <section
+                style={{
+                    background: `radial-gradient(circle, ${gradientColor} 0%, transparent 100%)`,
+                }}
+                className="relative flex h-screen w-full items-center justify-center overflow-hidden"
+            >
                 <div className="pointer-events-none absolute inset-0 z-[4] bg-[length:250px]"></div>
                 <div className="relative z-[2] grid h-[150vh] w-[150vw] flex-none origin-center rotate-[-15deg] grid-cols-1 grid-rows-4 gap-4">
                     {Array.from({ length: 4 }, (_, rowIndex) => (

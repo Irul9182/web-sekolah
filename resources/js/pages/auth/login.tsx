@@ -1,13 +1,14 @@
+import AppInput from '@/components/app-input';
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import AuthLayout from '@/layouts/auth-layout';
+import AuthSplitLayout from '@/layouts/auth/auth-split-layout';
 import { useForm } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 import { FormEventHandler } from 'react';
+import { toast } from 'sonner';
 
 interface LoginForm {
     email: string;
@@ -22,28 +23,57 @@ interface LoginProps {
 }
 
 export default function Login({ status, canResetPassword }: LoginProps) {
-    const { data, setData, post, processing, errors, reset } = useForm<LoginForm>({
+    const { data, setData, post, processing, errors, reset, setError } = useForm<LoginForm>({
         email: '',
         password: '',
         remember: false,
     });
 
+    const validation = (): boolean => {
+        const errs: Partial<LoginForm> = {};
+
+        if (!data.email) {
+            errs.email = 'Email wajib diisi.';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+            errs.email = 'Format email tidak valid.';
+        }
+
+        if (!data.password) {
+            errs.password = 'Password wajib diisi.';
+        } else {
+            if (data.password.length < 6) errs.password = 'Password minimal 6 karakter.';
+            else if (!/[A-Z]/.test(data.password)) errs.password = 'Password harus mengandung huruf kapital.';
+            else if (!/[^A-Za-z0-9]/.test(data.password)) errs.password = 'Password harus mengandung karakter unik (!@#$...).';
+        }
+
+        // set errors ke useForm jika ada
+        if (Object.keys(errs).length > 0) {
+            Object.entries(errs).forEach(([k, v]) => setError(k as keyof LoginForm, v!));
+            return false;
+        }
+        return true;
+    };
+
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
+        if (!validation()) {
+            return toast.error('Login Gagal', errors);
+        }
+
         post(route('login'), {
             onFinish: () => reset('password'),
         });
     };
 
     return (
-        <AuthLayout title="Log in to your account" description="Enter your email and password below to log in">
+        <AuthSplitLayout title="Log in to your account" description="Enter your email and password below to log in">
             {/* <Head title="Log in" /> */}
-            <div className="bg-muted rounded-xl p-4">
+            <div className="p-4">
                 <form className="flex flex-col gap-6 p-4" onSubmit={submit}>
                     <div className="grid gap-6">
                         <div className="grid gap-2">
                             <Label htmlFor="email">Email address</Label>
-                            <Input
+                            <AppInput
                                 id="email"
                                 type="email"
                                 required
@@ -66,7 +96,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     </TextLink>
                                 )}
                             </div>
-                            <Input
+                            <AppInput
                                 id="password"
                                 type="password"
                                 required
@@ -128,6 +158,6 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
                 {status && <div className="mb-4 text-center text-sm font-medium text-green-600">{status}</div>}
             </div>
-        </AuthLayout>
+        </AuthSplitLayout>
     );
 }

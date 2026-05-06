@@ -212,7 +212,7 @@ const BgGrid = () => {
     const isDark = appearance === 'dark';
     return (
         <div className="fixed top-0 left-[-5] z-[-10] min-h-screen min-w-full">
-            <GridMotion gradientColor={'--foreground'} items={items} />
+            <GridMotion gradientColor={'#ddfafe'} items={items} />
         </div>
     );
 };
