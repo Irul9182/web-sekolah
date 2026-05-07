@@ -31,9 +31,9 @@ class LoginRequest extends FormRequest
             'password' => [
                 'required',
                 'string',
-                'min:6',
-                'regex:/[A-Z]/',
-                'regex:/[^A-Za-z0-9]/'
+                // 'min:6',
+                // 'regex:/[A-Z]/',
+                // 'regex:/[^A-Za-z0-9]/'
             ],
         ];
     }

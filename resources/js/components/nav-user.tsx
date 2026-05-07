@@ -4,14 +4,16 @@ import { UserInfo } from '@/components/user-info';
 import { UserMenuContent } from '@/components/user-menu-content';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { type SharedData } from '@/types';
-import { usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { ChevronsUpDown } from 'lucide-react';
-
+import { useState } from 'react';
+import { Button } from './ui/button';
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, ModalTitle } from './ui/modal';
 export function NavUser() {
     const { auth } = usePage<SharedData>().props;
     const { state } = useSidebar();
     const isMobile = useIsMobile();
-
+    const [isOpen, setIsOpen] = useState<boolean>(false);
     return (
         <SidebarMenu>
             <SidebarMenuItem>
@@ -27,10 +29,27 @@ export function NavUser() {
                         align="end"
                         side={isMobile ? 'bottom' : state === 'collapsed' ? 'left' : 'bottom'}
                     >
-                        <UserMenuContent user={auth.user} />
+                        <UserMenuContent isOpen={isOpen} setIsOpen={setIsOpen} user={auth.user} />
                     </DropdownMenuContent>
                 </DropdownMenu>
             </SidebarMenuItem>
+
+            <Modal open={isOpen} key={'logout'}>
+                <ModalContent size="xl" hideClose>
+                    <ModalHeader>
+                        <ModalTitle>Log Out</ModalTitle>
+                    </ModalHeader>
+                    <ModalBody>
+                        <p>Anda yakin ingin log out?</p>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button variant={'outline'} onClick={() => setIsOpen(false)}>
+                            Batal
+                        </Button>
+                        <Button onClick={() => router.post('logout')}>Iya</Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
         </SidebarMenu>
     );
 }

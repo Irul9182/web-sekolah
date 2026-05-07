@@ -4,12 +4,15 @@ import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { type User } from '@/types';
 import { Link } from '@inertiajs/react';
 import { LogOut, Settings } from 'lucide-react';
+import { Dispatch, SetStateAction } from 'react';
 
 interface UserMenuContentProps {
     user: User;
+    isOpen: boolean;
+    setIsOpen: Dispatch<SetStateAction<boolean>>;
 }
 
-export function UserMenuContent({ user }: UserMenuContentProps) {
+export function UserMenuContent({ user, isOpen, setIsOpen }: UserMenuContentProps) {
     const cleanup = useMobileNavigation();
 
     return (
@@ -30,10 +33,10 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-                <Link className="block w-full" method="post" href={route('logout')} as="button" onClick={cleanup}>
+                <span className="block w-full" onClick={() => setIsOpen(true)}>
                     <LogOut className="mr-2" />
                     Log out
-                </Link>
+                </span>
             </DropdownMenuItem>
         </>
     );

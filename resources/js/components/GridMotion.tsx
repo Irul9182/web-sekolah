@@ -11,9 +11,14 @@ const GridMotion: FC<GridMotionProps> = ({ items = [], gradientColor = 'black' }
     const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
     const mouseXRef = useRef<number>(window.innerWidth / 2);
 
-    const totalItems = 28;
+    const cols = 7;
+    const rows = 4;
+
+    const totalItems = cols * rows;
+
     const defaultItems = Array.from({ length: totalItems }, (_, index) => `Item ${index + 1}`);
-    const combinedItems = items.length > 0 ? items.slice(0, totalItems) : defaultItems;
+
+    const combinedItems = items.length > 0 ? Array.from({ length: totalItems }, (_, i) => items[i % items.length]) : defaultItems;
 
     useEffect(() => {
         gsap.ticker.lagSmoothing(0);
@@ -64,8 +69,7 @@ const GridMotion: FC<GridMotionProps> = ({ items = [], gradientColor = 'black' }
                     {Array.from({ length: 4 }, (_, rowIndex) => (
                         <div
                             key={rowIndex}
-                            className="grid grid-cols-7 gap-4"
-                            style={{ willChange: 'transform, filter' }}
+                            className={`grid grid-cols-4 gap-4 sm:grid-cols-7`}
                             ref={(el) => {
                                 if (el) rowRefs.current[rowIndex] = el;
                             }}
@@ -75,7 +79,7 @@ const GridMotion: FC<GridMotionProps> = ({ items = [], gradientColor = 'black' }
                                 return (
                                     <div key={itemIndex} className="relative">
                                         <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-[10px] bg-[#111] text-[1.5rem] text-white">
-                                            {typeof content === 'string' && content.startsWith('http') ? (
+                                            {typeof content === 'string' ? (
                                                 <div
                                                     className="absolute top-0 left-0 h-full w-full bg-cover bg-center"
                                                     style={{ backgroundImage: `url(${content})` }}

@@ -7,7 +7,7 @@ import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import AuthSplitLayout from '@/layouts/auth/auth-split-layout';
+import AuthLayout from '@/layouts/auth-layout';
 
 interface RegisterForm {
     name: string;
@@ -33,9 +33,9 @@ export default function Register() {
     };
 
     return (
-        <AuthSplitLayout title="Create an account" description="Enter your details below to create your account">
+        <AuthLayout title="Create an account" description="Enter your details below to create your account">
             <Head title="Register" />
-            <form className="flex flex-col gap-6" onSubmit={submit}>
+            <form className="flex flex-col gap-6 p-4" onSubmit={submit}>
                 <div className="grid gap-6">
                     <div className="grid gap-2">
                         <Label htmlFor="name">Name</Label>
@@ -115,6 +115,6 @@ export default function Register() {
                     </TextLink>
                 </div>
             </form>
-        </AuthSplitLayout>
+        </AuthLayout>
     );
 }

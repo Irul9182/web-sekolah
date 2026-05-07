@@ -4,11 +4,10 @@ import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import AuthSplitLayout from '@/layouts/auth/auth-split-layout';
+import AuthLayout from '@/layouts/auth-layout';
 import { useForm } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 import { FormEventHandler } from 'react';
-import { toast } from 'sonner';
 
 interface LoginForm {
     email: string;
@@ -56,9 +55,9 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        if (!validation()) {
-            return toast.error('Login Gagal', errors);
-        }
+        // if (!validation()) {
+        //     return toast.error('Login Gagal', errors);
+        // }
 
         post(route('login'), {
             onFinish: () => reset('password'),
@@ -66,7 +65,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     };
 
     return (
-        <AuthSplitLayout title="Log in to your account" description="Enter your email and password below to log in">
+        <AuthLayout title="Log in to your account" description="Enter your email and password below to log in">
             {/* <Head title="Log in" /> */}
             <div className="p-4">
                 <form className="flex flex-col gap-6 p-4" onSubmit={submit}>
@@ -158,6 +157,6 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
                 {status && <div className="mb-4 text-center text-sm font-medium text-green-600">{status}</div>}
             </div>
-        </AuthSplitLayout>
+        </AuthLayout>
     );
 }
