@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Services\FinanceService;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class ForecastController extends Controller
 {
@@ -92,7 +93,10 @@ class ForecastController extends Controller
                 'forecast' => 'Prophet error: ' . ($result['error'] ?? $output),
             ]);
         }
-
+        $command = "{$pythonBin} {$scriptPath} {$encoded} 2>> " . storage_path('logs/python_debug.log');
+        $output  = shell_exec($command);
+        Log::info('Python output: ' . $output);
+        Log::info('Python command: ' . $command);
         return Inertia::render('forecasting/index', [
             'forecasting' => [
                 'actual'     => $result['actual'],

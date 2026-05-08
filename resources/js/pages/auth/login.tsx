@@ -91,7 +91,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                 <Label htmlFor="password">Password</Label>
                                 {canResetPassword && (
                                     <TextLink href={route('password.request')} className="ml-auto text-sm" tabIndex={5}>
-                                        Forgot password?
+                                        Lupa Password?
                                     </TextLink>
                                 )}
                             </div>
@@ -113,11 +113,11 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             <Label htmlFor="remember">Ingat Saya</Label>
                         </div>
                         <div className="flex flex-col items-center gap-0">
-                            <Button type="submit" className="mt-4 w-full" tabIndex={4} disabled={processing}>
+                            <Button type="submit" className="w-full" tabIndex={4} disabled={processing}>
                                 {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
                                 Log in
                             </Button>
-                            <Button type="button" className="mt-4 w-full" tabIndex={4} disabled={processing}>
+                            {/* <Button type="button" className="mt-4 w-full" tabIndex={4} disabled={processing}>
                                 {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
                                     <g fill="none" fill-rule="evenodd" clip-rule="evenodd">
@@ -143,16 +143,16 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                         />
                                     </g>
                                 </svg>
-                            </Button>
+                            </Button> */}
                         </div>
                     </div>
 
-                    <div className="text-muted-foreground text-center text-sm">
+                    {/* <div className="text-muted-foreground text-center text-sm">
                         Don't have an account?{' '}
                         <TextLink href={route('register')} tabIndex={5}>
                             Sign up
                         </TextLink>
-                    </div>
+                    </div> */}
                 </form>
 
                 {status && <div className="mb-4 text-center text-sm font-medium text-green-600">{status}</div>}

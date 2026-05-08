@@ -2,12 +2,12 @@ import sys
 import json
 import pandas as pd
 from prophet import Prophet
-import base64
 import numpy as np
 
 
 def main():
     try:
+        import base64
         input_data = base64.b64decode(sys.argv[1]).decode("utf-8")
         payload = json.loads(input_data)
     except Exception as e:
@@ -29,12 +29,9 @@ def main():
     df       = pd.DataFrame(data)
     df["ds"] = pd.to_datetime(df["ds"])
     df["y"]  = df["y"].astype(float)
+    df       = df.sort_values("ds").reset_index(drop=True)
 
-    # Sort ascending berdasarkan tanggal
-    df = df.sort_values("ds").reset_index(drop=True)
-
-    # ── 2. Isi gap bulan yang skip (bukan replace 0) ──────────────────────────
-    # Reindex ke semua bulan dalam range — bulan yang skip jadi NaN
+    # ── 2. Isi gap bulan yang skip ────────────────────────────────────────────
     full_range = pd.date_range(start=df["ds"].min(), end=df["ds"].max(), freq="MS")
     df         = df.set_index("ds").reindex(full_range).reset_index()
     df.columns = ["ds", "y"]
@@ -43,8 +40,7 @@ def main():
     df["y"] = df["y"].fillna(
         df["y"].rolling(window=3, min_periods=1, center=True).median()
     )
-
-    # Fallback — kalau masih ada NaN di ujung, isi dengan median keseluruhan
+    # Fallback — isi sisa NaN dengan median keseluruhan
     df["y"] = df["y"].fillna(df["y"].median())
 
     # ── 3. Filter training months ─────────────────────────────────────────────
@@ -73,10 +69,8 @@ def main():
             changepoint_prior_scale=0.1,
             seasonality_prior_scale=5,
         )
-        # Tambah seasonality manual karena data belum cukup untuk yearly otomatis
         model.add_seasonality(name='yearly', period=365.25, fourier_order=3)
     else:
-        # Data < 12 bulan — pakai model sederhana tanpa seasonality
         model = Prophet(
             yearly_seasonality=False,
             weekly_seasonality=False,
@@ -108,7 +102,7 @@ def main():
         else:
             result_forecast.append(entry)
 
-    # ── 6. Metrik akurasi ─────────────────────────────────────────────────────
+    # ── 6. Metrik akurasi (FIXED) ─────────────────────────────────────────────
     forecast_train = forecast[forecast["ds"].isin(df["ds"])][["ds", "yhat"]]
     merged         = df.merge(forecast_train, on="ds")
 
@@ -119,38 +113,40 @@ def main():
     mae  = float(np.mean(np.abs(y - yhat)))
     rmse = float(np.sqrt(np.mean((y - yhat) ** 2)))
 
-    # Relative MAE — lebih stabil dari MAPE untuk data keuangan
-    # Formula: MAE / mean(|y|) * 100
-    # Interpretasi: model meleset X% dari rata-rata magnitude cashflow
-    scale = float(np.mean(np.abs(y)))
-    if scale > 0:
-        relative_mae = mae / scale * 100
+    # MAPE standar — hitung per titik, skip titik dengan y = 0
+    nonzero_mask = y != 0
+    if nonzero_mask.sum() > 0:
+        mape = float(
+            np.mean(
+                np.abs((y[nonzero_mask] - yhat[nonzero_mask]) / y[nonzero_mask])
+            ) * 100
+        )
     else:
-        relative_mae = None
+        mape = None
 
-    # Label akurasi
-    if relative_mae is None:
-        accuracy_label = "Tidak dapat dihitung"
-    elif relative_mae < 20:
-        accuracy_label = "Sangat akurat"
-    elif relative_mae < 40:
-        accuracy_label = "Akurat"
-    elif relative_mae < 60:
-        accuracy_label = "Cukup akurat"
-    else:
-        accuracy_label = "Tidak akurat"
-
-    # sMAPE — metrik sekunder, lebih stabil untuk data dengan nilai negatif
+    # sMAPE — lebih stabil untuk data dengan nilai sangat variatif
     denom      = np.abs(y) + np.abs(yhat)
     smape_vals = np.where(denom == 0, 0.0, 2 * np.abs(y - yhat) / denom)
     smape      = float(np.mean(smape_vals) * 100)
+
+    # Label akurasi berdasarkan MAPE standar
+    if mape is None:
+        accuracy_label = "Tidak dapat dihitung"
+    elif mape < 10:
+        accuracy_label = "Sangat akurat (< 10%)"
+    elif mape < 20:
+        accuracy_label = "Akurat (< 20%)"
+    elif mape < 50:
+        accuracy_label = "Cukup akurat (< 50%)"
+    else:
+        accuracy_label = "Tidak akurat (≥ 50%)"
 
     # ── 7. Output ─────────────────────────────────────────────────────────────
     print(json.dumps({
         "status":         "success",
         "periods":        periods,
         "trained_on":     n_months,
-        "seasonality":    (
+        "seasonality": (
             "full"   if n_months >= 24 else
             "manual" if n_months >= 12 else
             "none"
@@ -158,7 +154,7 @@ def main():
         "mae":            round(mae, 2),
         "rmse":           round(rmse, 2),
         "smape":          round(smape, 2),
-        "mape":           round(relative_mae, 2) if relative_mae is not None else None,
+        "mape":           round(mape, 2) if mape is not None else None,
         "accuracy_label": accuracy_label,
         "actual":         result_actual,
         "forecast":       result_forecast,
