@@ -2,7 +2,6 @@ import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { NavGroup } from '@/types';
-import { Link } from '@inertiajs/react';
 import { Blocks, ChartBar, Cog, LayoutGrid, Pickaxe, Wallet, Wrench } from 'lucide-react';
 import AppLogo from './app-logo';
 import { NavFooter } from './nav-footer';
@@ -84,9 +83,9 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href="/dashboard" prefetch>
+                            <div>
                                 <AppLogo />
-                            </Link>
+                            </div>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>

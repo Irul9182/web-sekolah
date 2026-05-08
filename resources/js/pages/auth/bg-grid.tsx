@@ -3,7 +3,10 @@ import { useAppearance } from '@/hooks/use-appearance';
 const items = [
     // Menggantikan 'Item 1'
     'https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=2000&auto=format&fit=crop',
-    '/images/anime-girl-kuli.png',
+    // '/images/anime-girl-kuli.png',
+    '/images/construct-img-1.jpg',
+    '/images/construct-img-2.jpg',
+    '/images/construct-img-3.jpg',
 ];
 const BgGrid = () => {
     const { appearance } = useAppearance();
