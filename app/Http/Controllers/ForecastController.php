@@ -7,6 +7,7 @@ use App\Services\FinanceService;
 use Inertia\Inertia;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ForecastController extends Controller
 {
@@ -25,11 +26,13 @@ class ForecastController extends Controller
             'forecasting' => null,
         ]);
     }
+
+
     public function list_cashflow(Request $request)
     {
         $request->validate([
             'start_date' => 'nullable|date',
-            'end_date'   => 'nullable|date',
+            'end_date'   => 'nullable|date|after_or_equal:start_date',
         ]);
 
         $start = $request->query('start_date')
@@ -40,10 +43,21 @@ class ForecastController extends Controller
             ? Carbon::parse($request->query('end_date'))->endOfMonth()
             : null;
 
-        $cashflow = $this->financeService->aggregateCashflowDetail($start, $end);
+        $cashflow = $this->financeService
+            ->aggregateCashflowDetail($start, $end);
+
+        $page = request()->get('page', 1);
+        $perPage = $request->query('per_page', 20);
+
+        $paginated = new LengthAwarePaginator(
+            $cashflow->forPage($page, $perPage),
+            $cashflow->count(),
+            $perPage,
+            $page
+        );
 
         return response()->json([
-            'list_cashflow' => $cashflow,
+            'list_cashflow' => $paginated,
         ]);
     }
 

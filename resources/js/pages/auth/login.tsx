@@ -109,7 +109,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                         </div>
 
                         <div className="flex items-center space-x-3">
-                            <Checkbox id="remember" name="remember" tabIndex={3} />
+                            <Checkbox className="bg-accent" id="remember" name="remember" tabIndex={3} />
                             <Label htmlFor="remember">Ingat Saya</Label>
                         </div>
                         <div className="flex flex-col items-center gap-0">

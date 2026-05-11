@@ -53,7 +53,7 @@ export interface DataTableProps<T> {
         secondValue: number;
     };
     isPagination?: boolean;
-
+    isDisplayPageChange?: boolean;
     mobileColumns?: string[];
 }
 
@@ -81,9 +81,9 @@ export function DataTable<T extends object>({
     className,
     emptyMessage = 'Tidak ada data.',
     loading = false,
-    mobileSliced,
     mobileColumns = ['created_at', 'action'],
     isPagination = true,
+    isDisplayPageChange = true,
 }: DataTableProps<T>) {
     const [clientPage, setClientPage] = useState(1);
     const [clientPageSize, setClientPageSize] = useState(initialPageSize);
@@ -92,12 +92,12 @@ export function DataTable<T extends object>({
 
     const isServerSide = pagination !== undefined;
 
-    const currentPage = isServerSide ? pagination!.current_page : clientPage;
-    const totalPages = isServerSide ? pagination!.last_page : Math.max(1, Math.ceil(data?.length / clientPageSize));
-    const pageSize = isServerSide ? pagination!.per_page : clientPageSize;
-    const totalItems = isServerSide ? pagination!.total : data?.length;
-    const fromItem = isServerSide ? (pagination!.from ?? 0) : (clientPage - 1) * clientPageSize + 1;
-    const toItem = isServerSide ? (pagination!.to ?? 0) : Math.min(clientPage * clientPageSize, data?.length);
+    const currentPage = isServerSide ? pagination.current_page : clientPage;
+    const totalPages = isServerSide ? pagination.last_page : Math.max(1, Math.ceil(data?.length / clientPageSize));
+    const pageSize = isServerSide ? pagination.per_page : clientPageSize;
+    const totalItems = isServerSide ? pagination.total : data?.length;
+    const fromItem = isServerSide ? (pagination.from ?? 0) : (clientPage - 1) * clientPageSize + 1;
+    const toItem = isServerSide ? (pagination.to ?? 0) : Math.min(clientPage * clientPageSize, data?.length);
 
     const handleSort = (key: string) => {
         if (sortKey !== key) {
@@ -246,66 +246,71 @@ export function DataTable<T extends object>({
                         </div>
                     </div>
 
-                    <Pagination className="mx-0 w-fit">
-                        <PaginationContent>
-                            <PaginationItem>
-                                <PaginationLink
-                                    onClick={() => goTo(1)}
-                                    aria-disabled={currentPage === 1}
-                                    className={cn('h-8 w-8 cursor-pointer', currentPage === 1 && 'pointer-events-none opacity-40')}
-                                >
-                                    <ChevronsLeft className="h-4 w-4" />
-                                </PaginationLink>
-                            </PaginationItem>
+                    {isDisplayPageChange && (
+                        <Pagination className="mx-0 w-fit">
+                            <PaginationContent>
+                                <PaginationItem>
+                                    <PaginationLink
+                                        onClick={() => goTo(1)}
+                                        aria-disabled={currentPage === 1}
+                                        className={cn('h-8 w-8 cursor-pointer', currentPage === 1 && 'pointer-events-none opacity-40')}
+                                    >
+                                        <ChevronsLeft className="h-4 w-4" />
+                                    </PaginationLink>
+                                </PaginationItem>
 
-                            <PaginationItem>
-                                <PaginationPrevious
-                                    onClick={() => goTo(currentPage - 1)}
-                                    aria-disabled={currentPage === 1}
-                                    className={cn('h-8 cursor-pointer gap-1 px-2', currentPage === 1 && 'pointer-events-none opacity-40')}
-                                />
-                            </PaginationItem>
+                                <PaginationItem>
+                                    <PaginationPrevious
+                                        onClick={() => goTo(currentPage - 1)}
+                                        aria-disabled={currentPage === 1}
+                                        className={cn('h-8 cursor-pointer gap-1 px-2', currentPage === 1 && 'pointer-events-none opacity-40')}
+                                    />
+                                </PaginationItem>
 
-                            {pageNumbers?.map((p, i) =>
-                                p === '…' ? (
-                                    <PaginationItem key={`e-${i}`}>
-                                        <PaginationEllipsis className="h-8 w-8" />
-                                    </PaginationItem>
-                                ) : (
-                                    <PaginationItem key={p}>
-                                        <PaginationLink
-                                            onClick={() => goTo(Number(p))}
-                                            isActive={p === currentPage}
-                                            className={cn(
-                                                'h-8 w-8 cursor-pointer',
-                                                p === currentPage && 'shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_20%,transparent)]',
-                                            )}
-                                        >
-                                            {p}
-                                        </PaginationLink>
-                                    </PaginationItem>
-                                ),
-                            )}
+                                {pageNumbers?.map((p, i) =>
+                                    p === '…' ? (
+                                        <PaginationItem key={`e-${i}`}>
+                                            <PaginationEllipsis className="h-8 w-8" />
+                                        </PaginationItem>
+                                    ) : (
+                                        <PaginationItem key={p}>
+                                            <PaginationLink
+                                                onClick={() => goTo(Number(p))}
+                                                isActive={p === currentPage}
+                                                className={cn(
+                                                    'h-8 w-8 cursor-pointer',
+                                                    p === currentPage && 'shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_20%,transparent)]',
+                                                )}
+                                            >
+                                                {p}
+                                            </PaginationLink>
+                                        </PaginationItem>
+                                    ),
+                                )}
 
-                            <PaginationItem>
-                                <PaginationNext
-                                    onClick={() => goTo(currentPage + 1)}
-                                    aria-disabled={currentPage === totalPages}
-                                    className={cn('h-8 cursor-pointer gap-1 px-2', currentPage === totalPages && 'pointer-events-none opacity-40')}
-                                />
-                            </PaginationItem>
+                                <PaginationItem>
+                                    <PaginationNext
+                                        onClick={() => goTo(currentPage + 1)}
+                                        aria-disabled={currentPage === totalPages}
+                                        className={cn(
+                                            'h-8 cursor-pointer gap-1 px-2',
+                                            currentPage === totalPages && 'pointer-events-none opacity-40',
+                                        )}
+                                    />
+                                </PaginationItem>
 
-                            <PaginationItem>
-                                <PaginationLink
-                                    onClick={() => goTo(totalPages)}
-                                    aria-disabled={currentPage === totalPages}
-                                    className={cn('h-8 w-8 cursor-pointer', currentPage === totalPages && 'pointer-events-none opacity-40')}
-                                >
-                                    <ChevronsRight className="h-4 w-4" />
-                                </PaginationLink>
-                            </PaginationItem>
-                        </PaginationContent>
-                    </Pagination>
+                                <PaginationItem>
+                                    <PaginationLink
+                                        onClick={() => goTo(totalPages)}
+                                        aria-disabled={currentPage === totalPages}
+                                        className={cn('h-8 w-8 cursor-pointer', currentPage === totalPages && 'pointer-events-none opacity-40')}
+                                    >
+                                        <ChevronsRight className="h-4 w-4" />
+                                    </PaginationLink>
+                                </PaginationItem>
+                            </PaginationContent>
+                        </Pagination>
+                    )}
                 </div>
             )}
         </div>

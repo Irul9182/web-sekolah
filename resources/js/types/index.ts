@@ -50,3 +50,49 @@ export interface AuthProps {
     name: string;
     update_at: Date;
 }
+
+export interface BaseResponse<T> {
+    current_page: number;
+    data: T[];
+    first_page_url: string;
+    from: number;
+    last_page: number;
+    last_page_url: string;
+    links: PaginationLink[];
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
+}
+
+export interface CashflowItem {
+    date: string;
+    total_pemasukan: number;
+    total_pengeluaran: number;
+    cashflow: number;
+    detail_pemasukan: DetailPemasukan[];
+    detail_pengeluaran: DetailPengeluaran[];
+}
+
+export interface DetailPemasukan {
+    proyek_id: string;
+    nama_proyek: string;
+    pagu_total: number;
+}
+
+export interface DetailPengeluaran {
+    transaksi_id: string | null;
+    proyek_id: string;
+    nama_proyek: string;
+    jumlah: number;
+    keterangan: string;
+}
+
+export interface PaginationLink {
+    url: string | null;
+    label: string;
+    page: number | null;
+    active: boolean;
+}

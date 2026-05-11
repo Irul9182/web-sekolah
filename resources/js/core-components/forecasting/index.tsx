@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem } from '@/types';
+import { BaseResponse, BreadcrumbItem } from '@/types';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import {
@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils';
 import axios from 'axios';
 import { formatDate } from 'date-fns';
 import { ChartNoAxesCombined, Loader2, TrendingUp, TriangleAlert } from 'lucide-react';
+import { toast } from 'sonner';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
@@ -259,7 +260,7 @@ const COLUMN_CASHFLOW: Column<CashflowProps>[] = [
         sortable: true,
         render: (value) => {
             return (
-                <span className={cn('font-semibold tracking-wide', 'text-yellow-200')}>
+                <span className={cn('font-semibold tracking-wide', 'text-card-foreground')}>
                     {new Intl.NumberFormat('id-ID', {
                         style: 'currency',
                         currency: 'IDR',
@@ -301,10 +302,11 @@ const COLUMN_CASHFLOW: Column<CashflowProps>[] = [
 const ForecastingIndex = () => {
     const { props } = usePage<PageProps>();
     const { errors, forecasting } = props;
-    const [listCashflow, setListCashflow] = useState<CashflowProps[] | null>(null);
+    const [listCashflow, setListCashflow] = useState<BaseResponse<CashflowProps> | null>(null);
     const [startDate, setStartDate] = useState<Date | null>(null);
     const [endDate, setEndDate] = useState<Date | null>(null);
-
+    const [currentPage, setCurrentPage] = useState(1);
+    const [currentPerPage, setCurrentPerPage] = useState(20);
     const endError = startDate && endDate && endDate < startDate ? 'Tanggal akhir tidak boleh sebelum tanggal mulai' : null;
     const { data, setData, post, processing } = useForm({
         periods: 6,
@@ -324,27 +326,44 @@ const ForecastingIndex = () => {
     const minForecast = forecastList.length > 0 ? Math.min(...forecastList.map((r) => r.yhat_lower)) : 0;
     const summary = forecasting?.summary ?? null;
 
-    useEffect(() => {
-        console.log('Hasil forecast: ', forecasting);
-    }, [forecasting]);
-
-    const fetchCashflow = async (startDate?: string, endDate?: string) => {
+    // useEffect(() => {
+    //     console.log('Hasil forecast: ', forecasting);
+    // }, [forecasting]);
+    const fetchCashflow = async (page = currentPage, perPage = currentPerPage) => {
         try {
             const res = await axios.get('/cashflow', {
                 params: {
+                    page,
+                    per_page: perPage,
+
                     start_date: startDate ? formatDate(startDate, 'yyyy-MM-dd') : undefined,
+
                     end_date: endDate ? formatDate(endDate, 'yyyy-MM-dd') : undefined,
                 },
             });
-            setListCashflow(res.data?.list_cashflow);
-            console.log('Res: ', res.data);
+
+            setListCashflow(res.data.list_cashflow);
         } catch (error) {
-            console.log('Error fetch cashflow: ', error);
+            toast.error('Gagal mengambil data cashflow');
         }
     };
+    const handlePageChange = async (page: number) => {
+        setCurrentPage(page);
 
+        await fetchCashflow(page, currentPerPage);
+    };
+    const handlePageSizeChange = async (perPage: number) => {
+        setCurrentPerPage(perPage);
+        setCurrentPage(1);
+
+        await fetchCashflow(1, perPage);
+    };
     useEffect(() => {
-        if (!endError) fetchCashflow(startDate?.toString(), endDate?.toString());
+        const timer = setTimeout(() => {
+            fetchCashflow(1, currentPerPage);
+        }, 500);
+
+        return () => clearTimeout(timer);
     }, [startDate, endDate]);
 
     return (
@@ -616,11 +635,21 @@ const ForecastingIndex = () => {
                     <DataTable
                         className="mt-3"
                         emptyMessage="Tidak ada cashflow saat ini"
-                        data={listCashflow as CashflowProps[]}
+                        data={listCashflow?.data as CashflowProps[]}
                         mobileColumns={['no', 'total_pemasukan', 'total_pengeluaran', 'cashflow', 'date']}
                         columns={COLUMN_CASHFLOW}
-                        key={listCashflow?.length as number}
-                        isPagination={false}
+                        key={listCashflow?.data?.length as number}
+                        pagination={{
+                            current_page: listCashflow?.current_page as number,
+                            last_page: listCashflow?.last_page as number,
+                            per_page: listCashflow?.per_page as number,
+                            total: listCashflow?.total as number,
+                            from: listCashflow?.from as number,
+                            to: listCashflow?.to as number,
+                        }}
+                        isDisplayPageChange={false}
+                        onPageChange={handlePageChange}
+                        onPageSizeChange={handlePageSizeChange}
                     />
                 </div>
             </div>
