@@ -144,7 +144,7 @@ const ProjectIndex = ({ proyeks, filters }: PropTypes) => {
         {
             key: 'nama_proyek',
             label: 'Nama Proyek',
-            className: 'truncate max-w-[300px]',
+            className: 'truncate sm:max-w-[300px] max-w-[100px]',
             sortable: true,
         },
         {
@@ -267,15 +267,15 @@ const ProjectIndex = ({ proyeks, filters }: PropTypes) => {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Proyek" />
             <div className="p-4">
-                <div className="flex w-full items-center justify-between">
+                <div className="flex w-full flex-col-reverse items-start justify-between sm:flex-row sm:items-center">
                     <AppSearchInput
                         placeholder="Cari proyek dengan nama . . ."
                         value={search}
-                        className="w-[90%] sm:w-84!"
+                        className="w-full sm:w-84!"
                         onChange={(e) => handleSearch(e.target.value)}
                         clearable={false}
                     />
-                    <div className="flex items-center gap-3">
+                    <div className="mb-2 flex w-full items-center justify-between gap-3 sm:mb-0 sm:justify-end">
                         <AppSelect
                             options={[
                                 { label: 'Selesai', value: 'selesai' },
@@ -290,7 +290,7 @@ const ProjectIndex = ({ proyeks, filters }: PropTypes) => {
                             placeholder="Filter Status"
                         />
                         <Button
-                            className="cursor-pointer"
+                            className="mt-2 cursor-pointer"
                             disabled={processing}
                             size={isMobile ? 'sm' : 'default'}
                             onClick={() => router.visit('/project/create')}
