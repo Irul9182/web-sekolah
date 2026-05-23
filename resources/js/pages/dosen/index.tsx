@@ -19,7 +19,7 @@ const DosenPage = () => {
             <Head title='Dosen Page'/>
             <div className='flex items-center justify-center min-h-screen w-full'>
 
-            this is Dosen page
+            this is Dosen page perubahan herkal
                 </div>
         </AppLayout>
     )
