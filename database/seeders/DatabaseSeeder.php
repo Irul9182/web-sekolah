@@ -23,11 +23,11 @@ class DatabaseSeeder extends Seeder
             'email' => 'herkal@test.com',
             'password' => 'herkal123',
         ]);
-        $this->call([
-            KategoriProyekSeeder::class,
-            JenisProyekSeeder::class,
-            ProyekTransaksiSeeder::class,
-        ]);
+        // $this->call([
+        //     KategoriProyekSeeder::class,
+        //     JenisProyekSeeder::class,
+        //     ProyekTransaksiSeeder::class,
+        // ]);
 
         // $this->call(ProyekSeeder::class);
         // $this->call(TransaksiSeeder::class);

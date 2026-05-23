@@ -93,94 +93,94 @@ input[type='number']::-webkit-inner-spin-button {
 
 /*
  * ═══════════════════════════════════════════════════════
- *  PALETTE STRATEGY — Finance × Earth Teal
+ *  PALETTE STRATEGY — Finance × Ocean Blue
  *
- *  PRIMARY RAMP (palette yang diberikan, hue ~100–200°)
- *    #cad2c5  Ash Grey          → background light, muted
- *    #84a98c  Muted Teal        → secondary, primary dark-mode
- *    #52796f  Deep Teal         → primary light-mode, ring
- *    #354f52  Dark Slate Grey   → card dark, sidebar dark
- *    #2f3e46  Charcoal Blue     → background dark, foreground dark
+ *  PRIMARY RAMP (hue ~200–220°)
+ *    #C4E2F5  Pale Blue         → background light, muted wash
+ *    #4BB8FA  Sky Blue          → accent, highlight
+ *    #1591DC  Medium Blue       → secondary, interactive
+ *    #2C5EAD  Deep Blue         → primary light-mode, ring
+ *    #1a3a6b  Dark Navy         → background dark, foreground dark
  *
- *  BACKGROUND LIGHT — warm parchment agar tidak abu-abu flat
- *    #f5f0e8  Warm Parchment    → background (bukan putih/abu biasa)
+ *  BACKGROUND LIGHT — cool white-blue agar segar & bersih
+ *    #f0f7fd  Ice Blue          → background (tidak flat putih)
  *
- *  COMPLEMENTARY (hue jauh — warm side ~20–50°)
- *    #c9a84c  Saffron Gold      → accent, color-gold (wealth)
- *    #d4501a  Burnt Sienna      → warning, color-warning (risk/caution)
- *    #b03a3a  Deep Crimson      → destructive, color-error (loss)
+ *  COMPLEMENTARY (hue jauh — warm side ~30–50°)
+ *    #f5a623  Amber Gold        → accent, color-gold (wealth/CTA)
+ *    #e07020  Burnt Orange      → warning, color-warning (risk/caution)
+ *    #c0392b  Crimson Red       → destructive, color-error (loss)
  *
  *  SPLIT-COMPLEMENTARY (untuk chart variasi)
- *    #3a7a52  Forest Green      → chart-3, color-success (profit)
- *    #7a5c9e  Muted Violet      → chart-6 (premium/wealth tier)
+ *    #27ae60  Emerald Green     → chart-3, color-success (profit)
+ *    #8e44ad  Deep Purple       → chart-6 (premium/wealth tier)
  *
  * ═══════════════════════════════════════════════════════
  */
 
 :root {
     /* ── Surface ── */
-    --background: #f5f0e8; /* Warm Parchment — hangat, tidak flat */
-    --foreground: #1c2b2e; /* lebih gelap dari charcoal-blue */
+    --background: #f0f7fd; /* Ice Blue — segar, tidak flat */
+    --foreground: #0d1f3c; /* Dark Navy — kontras tinggi */
 
     /* ── Card & Popover ── */
     --card: #ffffff;
-    --card-foreground: #1c2b2e;
+    --card-foreground: #0d1f3c;
     --popover: #ffffff;
-    --popover-foreground: #1c2b2e;
+    --popover-foreground: #0d1f3c;
 
-    /* ── Primary — Deep Teal ── */
-    --primary: #52796f;
+    /* ── Primary — Deep Blue ── */
+    --primary: #2C5EAD;
     --primary-foreground: #ffffff;
 
-    /* ── Secondary — Muted Teal wash ── */
-    --secondary: #d6e4df; /* #84a98c @ ~20% opacity di white */
-    --secondary-foreground: #2f3e46;
+    /* ── Secondary — Medium Blue wash ── */
+    --secondary: #daeef9; /* #1591DC @ ~15% opacity di white */
+    --secondary-foreground: #1a3a6b;
 
-    /* ── Muted — Ash Grey wash ── */
-    --muted: #e8ede6; /* #cad2c5 sedikit lebih terang */
-    --muted-foreground: #52796f;
+    /* ── Muted — Pale Blue wash ── */
+    --muted: #e8f4fc; /* #C4E2F5 sedikit lebih terang */
+    --muted-foreground: #2C5EAD;
 
-    /* ── Accent — Saffron Gold ── */
-    --accent: #fdf3d8; /* gold wash, kontras hue dari teal */
-    --accent-foreground: #6b4c10;
+    /* ── Accent — Amber Gold ── */
+    --accent: #fef6e4; /* gold wash, kontras hue dari biru */
+    --accent-foreground: #7a4f0a;
 
-    /* ── Destructive — Deep Crimson ── */
-    --destructive: #b03a3a;
-    --destructive-foreground: #fff0f0;
+    /* ── Destructive — Crimson Red ── */
+    --destructive: #c0392b;
+    --destructive-foreground: #fff5f5;
 
     /* ── Border & Input ── */
-    --border: #b8cbc5; /* antara ash-grey dan muted-teal */
-    --input: #a8bfb8;
-    --ring: #52796f;
+    --border: #a8d4ef; /* antara pale-blue dan sky-blue */
+    --input: #92c8ea;
+    --ring: #2C5EAD;
 
     /* ── Chart — 6 warna, hue nyata berbeda ── */
-    --chart-1: #52796f; /* deep teal     — ekuitas */
-    --chart-2: #c9a84c; /* saffron gold  — komoditas */
-    --chart-3: #3a7a52; /* forest green  — profit/growth */
-    --chart-4: #b03a3a; /* deep crimson  — loss/deficit */
-    --chart-5: #d4501a; /* burnt sienna  — risiko/warning */
-    --chart-6: #7a5c9e; /* muted violet  — premium/wealth */
+    --chart-1: #2C5EAD; /* deep blue     — ekuitas */
+    --chart-2: #f5a623; /* amber gold    — komoditas */
+    --chart-3: #27ae60; /* emerald green — profit/growth */
+    --chart-4: #c0392b; /* crimson red   — loss/deficit */
+    --chart-5: #e07020; /* burnt orange  — risiko/warning */
+    --chart-6: #8e44ad; /* deep purple   — premium/wealth */
 
     /* ── Radius ── */
     --radius: 0.5rem;
 
     /* ── Sidebar ── */
-    --sidebar-background: #e4ece8; /* muted-teal wash */
-    --sidebar-foreground: #1c2b2e;
-    --sidebar-primary: #52796f;
+    --sidebar-background: #dceef8; /* pale-blue wash */
+    --sidebar-foreground: #0d1f3c;
+    --sidebar-primary: #2C5EAD;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #d6e4df;
-    --sidebar-accent-foreground: #2f3e46;
-    --sidebar-border: #b8cbc5;
-    --sidebar-ring: #52796f;
+    --sidebar-accent: #daeef9;
+    --sidebar-accent-foreground: #1a3a6b;
+    --sidebar-border: #a8d4ef;
+    --sidebar-ring: #2C5EAD;
 
     /* ── Semantic finance tokens ── */
-    --color-info: #52796f; /* deep teal */
-    --color-success: #3a7a52; /* forest green — profit */
-    --color-warning: #d4501a; /* burnt sienna — caution */
-    --color-error: #b03a3a; /* deep crimson — loss */
-    --color-gold: #c9a84c; /* saffron — premium/wealth */
-    --color-default: #1c2b2e;
+    --color-info: #1591DC; /* medium blue */
+    --color-success: #27ae60; /* emerald green — profit */
+    --color-warning: #e07020; /* burnt orange — caution */
+    --color-error: #c0392b; /* crimson red — loss */
+    --color-gold: #f5a623; /* amber — premium/wealth */
+    --color-default: #0d1f3c;
 
     --color-success-bg: color-mix(in srgb, var(--color-success) 12%, var(--popover));
     --color-error-bg: color-mix(in srgb, var(--color-error) 12%, var(--popover));
@@ -191,71 +191,71 @@ input[type='number']::-webkit-inner-spin-button {
 
 /* ═══════════════════════════════════════════════════════
    DARK MODE
-   Background: charcoal-blue (#2f3e46) dari palette
-   Primary naik ke muted-teal (#84a98c) agar terlihat
-   Teks: ash-grey (#cad2c5) — sudah ada di palette!
+   Background: dark navy (#1a3a6b) lebih dalam dari deep-blue
+   Primary naik ke sky-blue (#4BB8FA) agar terlihat di dark bg
+   Teks: pale-blue (#C4E2F5) — dari palette, sejuk & kontras
    ═══════════════════════════════════════════════════════ */
 .dark {
     /* ── Surface ── */
-    --background: #2f3e46; /* Charcoal Blue — dari palette */
-    --foreground: #cad2c5; /* Ash Grey — dari palette */
+    --background: #0d1f3c; /* Dark Navy — lebih dalam */
+    --foreground: #C4E2F5; /* Pale Blue — dari palette */
 
     /* ── Card & Popover ── */
-    --card: #354f52; /* Dark Slate Grey — dari palette */
-    --card-foreground: #cad2c5;
-    --popover: #354f52;
-    --popover-foreground: #cad2c5;
+    --card: #1a3a6b; /* Deep Blue darker card */
+    --card-foreground: #C4E2F5;
+    --popover: #1a3a6b;
+    --popover-foreground: #C4E2F5;
 
-    /* ── Primary — naik ke Muted Teal ── */
-    --primary: #84a98c; /* Muted Teal — dari palette */
-    --primary-foreground: #1c2b2e;
+    /* ── Primary — naik ke Sky Blue ── */
+    --primary: #4BB8FA; /* Sky Blue — dari palette */
+    --primary-foreground: #0d1f3c;
 
     /* ── Secondary ── */
-    --secondary: #354f52;
-    --secondary-foreground: #cad2c5;
+    --secondary: #1a3a6b;
+    --secondary-foreground: #C4E2F5;
 
     /* ── Muted ── */
-    --muted: #3a4f56;
-    --muted-foreground: #84a98c; /* Muted Teal */
+    --muted: #1e3f70;
+    --muted-foreground: #4BB8FA; /* Sky Blue */
 
-    /* ── Accent — gold tetap hangat di dark bg ── */
-    --accent: #3d3420;
-    --accent-foreground: #e8c45a;
+    /* ── Accent — amber tetap hangat di dark bg ── */
+    --accent: #3a2a0a;
+    --accent-foreground: #fdc84a;
 
     /* ── Destructive ── */
-    --destructive: #d45050;
-    --destructive-foreground: #fff0f0;
+    --destructive: #e74c3c;
+    --destructive-foreground: #fff5f5;
 
     /* ── Border & Input ── */
-    --border: #3e5a5e;
-    --input: #3e5a5e;
-    --ring: #84a98c;
+    --border: #244a80;
+    --input: #244a80;
+    --ring: #4BB8FA;
 
     /* ── Chart — satu stop lebih cerah di dark bg ── */
-    --chart-1: #84a98c; /* muted teal   — ekuitas */
-    --chart-2: #e8c45a; /* bright gold  — komoditas */
-    --chart-3: #4caf78; /* bright green — profit */
-    --chart-4: #d45050; /* bright red   — loss */
-    --chart-5: #e06040; /* bright sienna — risiko */
-    --chart-6: #9b7ece; /* bright violet — premium */
+    --chart-1: #4BB8FA; /* sky blue      — ekuitas */
+    --chart-2: #fdc84a; /* bright amber  — komoditas */
+    --chart-3: #2ecc71; /* bright green  — profit */
+    --chart-4: #e74c3c; /* bright red    — loss */
+    --chart-5: #f08030; /* bright orange — risiko */
+    --chart-6: #a569c8; /* bright purple — premium */
 
     /* ── Sidebar ── */
-    --sidebar-background: #263238; /* lebih gelap dari charcoal-blue */
-    --sidebar-foreground: #a8c4bc;
-    --sidebar-primary: #84a98c;
-    --sidebar-primary-foreground: #1c2b2e;
-    --sidebar-accent: #354f52;
-    --sidebar-accent-foreground: #cad2c5;
-    --sidebar-border: #3e5a5e;
-    --sidebar-ring: #84a98c;
+    --sidebar-background: #091529; /* lebih gelap dari dark navy */
+    --sidebar-foreground: #93c9e8;
+    --sidebar-primary: #4BB8FA;
+    --sidebar-primary-foreground: #0d1f3c;
+    --sidebar-accent: #1a3a6b;
+    --sidebar-accent-foreground: #C4E2F5;
+    --sidebar-border: #244a80;
+    --sidebar-ring: #4BB8FA;
 
     /* ── Semantic finance tokens ── */
-    --color-info: #84a98c;
-    --color-success: #4caf78;
-    --color-warning: #e06040;
-    --color-error: #d45050;
-    --color-gold: #e8c45a;
-    --color-default: #cad2c5;
+    --color-info: #4BB8FA;
+    --color-success: #2ecc71;
+    --color-warning: #f08030;
+    --color-error: #e74c3c;
+    --color-gold: #fdc84a;
+    --color-default: #C4E2F5;
 
     --color-success-bg: color-mix(in srgb, var(--color-success) 12%, var(--popover));
     --color-error-bg: color-mix(in srgb, var(--color-error) 12%, var(--popover));
