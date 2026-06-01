@@ -7,10 +7,10 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\BeritaController;
 
 // Halaman publik
-Route::get('/', [HomeController::class, 'index']);
+Route::get('/', [HomeController::class, 'index'])->name('welcome');
 
 // Redirect login default ke admin login
-Route::get('/login', function() {
+Route::get('/login', function () {
     return redirect('/admin/login');
 })->name('login');
 
