@@ -14,8 +14,8 @@ import {
 } from '@/components/ui/navigation-menu';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-
 
 type ThemeColor = 'info' | 'gold' | 'success' | 'warning' | 'error' | 'default';
 
@@ -47,7 +47,6 @@ interface JurusanData {
 }
 
 type JurusanKey = 'tkj' | 'dkv' | 'akuntansi' | 'perkantoran';
-
 
 const berita: BeritaItem[] = [
     { id: 1, judul: 'Kegiatan Study Tour Bandung', tanggal: '12 Mei 2025', img: '/images/card1.jpg' },
@@ -110,7 +109,6 @@ const sosmed: Array<{ label: string; icon: string }> = [
     { label: 'Twitter/X', icon: 'x' },
 ];
 
-
 interface JurusanBadgeProps {
     varColor: ThemeColor;
     label: string;
@@ -144,7 +142,6 @@ function SectionHeader({ title }: SectionHeaderProps) {
         </div>
     );
 }
-
 
 interface NavbarProps {
     isLoggedIn: boolean;
@@ -267,14 +264,13 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                 {/* Auth Buttons */}
                 <div className="flex items-center gap-2">
                     {!isLoggedIn ? (
-                        <Button
-                            onClick={onLoginClick}
-                            size="sm"
-                            className="text-xs"
+                        <Link
+                            href="/login"
+                            className="rounded-xl px-4 py-2 text-xs font-semibold text-white"
                             style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}
                         >
                             Login Admin
-                        </Button>
+                        </Link>
                     ) : (
                         <Button
                             onClick={onLogout}
@@ -324,7 +320,6 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
         </header>
     );
 }
-
 
 interface LoginDialogProps {
     open: boolean;
@@ -408,7 +403,6 @@ function LoginDialog({ open, onOpenChange, onLoginSuccess }: LoginDialogProps) {
     );
 }
 
-
 function HeroSection() {
     return (
         <section
@@ -464,8 +458,7 @@ function BeritaSection() {
                                 src={b.img}
                                 alt={b.judul}
                                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                                }}
+                                onError={(e: React.SyntheticEvent<HTMLImageElement>) => {}}
                             />
                         </div>
                         <CardContent className="p-4">
@@ -546,8 +539,7 @@ function JurusanSection() {
                                     src={j.img}
                                     alt={j.judul}
                                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                    onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                                    }}
+                                    onError={(e: React.SyntheticEvent<HTMLImageElement>) => {}}
                                 />
                             </div>
                             <CardContent className="p-4 text-center">
@@ -570,8 +562,7 @@ function JurusanSection() {
                             src={dataJurusan[activeJurusan].img}
                             alt={dataJurusan[activeJurusan].judul}
                             className="mb-2 h-48 w-full rounded-lg object-cover"
-                            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                            }}
+                            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {}}
                         />
                         <DialogHeader>
                             <DialogTitle>{dataJurusan[activeJurusan].judul}</DialogTitle>
@@ -599,8 +590,7 @@ function GaleriSection() {
                                 src={g.img}
                                 alt={g.nama}
                                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-                                onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                                }}
+                                onError={(e: React.SyntheticEvent<HTMLImageElement>) => {}}
                             />
                             <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                                 <span className="text-sm font-medium text-white">{g.nama}</span>
@@ -664,7 +654,6 @@ function Footer() {
         </footer>
     );
 }
-
 
 export default function SMKBaidhaulAhkam() {
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);

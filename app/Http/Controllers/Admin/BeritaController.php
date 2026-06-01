@@ -6,13 +6,27 @@ use App\Http\Controllers\Controller;
 use App\Models\Berita;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class BeritaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $beritas = Berita::latest()->get();
-        return view('admin.berita.index', compact('beritas'));
+        $search  = $request->query('search', '');
+        $perPage = $request->query('per_page', 10);
+
+        $beritas = Berita::query()
+            ->when($search, function ($q) use ($search) {
+                $q->where('judul', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->paginate($perPage)
+            ->withQueryString();
+        // $beritas = Berita::latest()->get();x
+        return Inertia::render('berita/index', ['beritas' => $beritas,  'filters' => [
+            'search'   => $search,
+            'per_page' => $perPage,
+        ],]);
     }
 
     public function create()
@@ -80,6 +94,4 @@ class BeritaController extends Controller
         $berita->delete();
         return redirect('/admin/berita')->with('success', 'Berita berhasil dihapus!');
     }
-
-    
 }

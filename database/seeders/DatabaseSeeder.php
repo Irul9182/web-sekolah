@@ -18,16 +18,14 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'herkaltest',
-            'email' => 'herkal@test.com',
-            'password' => 'herkal123',
-        ]);
-        // $this->call([
-        //     KategoriProyekSeeder::class,
-        //     JenisProyekSeeder::class,
-        //     ProyekTransaksiSeeder::class,
+        // User::factory()->create([
+        //     'name' => 'herkaltest',
+        //     'email' => 'herkal@test.com',
+        //     'password' => 'herkal123',
         // ]);
+        $this->call([
+            BeritaSeeder::class
+        ]);
 
         // $this->call(ProyekSeeder::class);
         // $this->call(TransaksiSeeder::class);

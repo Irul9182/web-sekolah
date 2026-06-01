@@ -13,42 +13,9 @@ class DashboardController extends Controller
 {
     public function __construct(protected FinanceService $financeService) {}
 
-    public function index(Request $request)
+    public function index()
     {
-        Carbon::setLocale('id');
-        $periode = $request->query('bulan', null);
-
-        $defaultValue =
-            Carbon::now()->subMonths(5)->format('Y-m')
-            . ':' .
-            Carbon::now()->format('Y-m');
-
-
-        if (!$periode || !str_contains($periode, ':')) {
-            $periode = $defaultValue;
-        }
-
-        [$startStr, $endStr] = explode(':', $periode, 2);
-
-        try {
-            $start = Carbon::parse($startStr)->startOfMonth();
-            $end   = Carbon::parse($endStr)->endOfMonth();
-        } catch (\Exception $e) {
-            $periode = $defaultValue;
-            [$startStr, $endStr] = explode(':', $periode, 2);
-            $start = Carbon::parse($startStr)->startOfMonth();
-            $end   = Carbon::parse($endStr)->endOfMonth();
-        }
-
-        return Inertia::render('dashboard', [
-            'summary'               => $this->financeService->summaryPerusahaan($start, $end),
-            'chartPemasukanBulanan' => $this->chartPemasukanPengeluaranBulanan($start, $end),
-            'chartCashflowBulanan'  => $this->chartCashflowBulanan($start, $end),
-            'chartStatusProyek'     => $this->chartStatusProyek(),
-            'chartTopProyek'        => $this->chartTopProyek(),
-            'periodeOptions'        => $this->generatePeriodeOptions(),
-            'selectedPeriode'       => $periode,
-        ]);
+        return Inertia::render('dashboard');
     }
 
     private function generatePeriodeOptions(int $perPeriode = 6, int $maxOpsi = 5): array

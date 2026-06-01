@@ -35,7 +35,7 @@ export interface PaginationMeta {
 
 export interface DataTableProps<T> {
     data: T[];
-    columns: Column<T>[];
+    columns: Column<T | any>[];
 
     pagination?: PaginationMeta;
     onPageChange?: (page: number) => void;

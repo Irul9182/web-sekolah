@@ -129,7 +129,7 @@ input[type='number']::-webkit-inner-spin-button {
     --popover-foreground: #0d1f3c;
 
     /* ── Primary — Deep Blue ── */
-    --primary: #2C5EAD;
+    --primary: #2c5ead;
     --primary-foreground: #ffffff;
 
     /* ── Secondary — Medium Blue wash ── */
@@ -138,7 +138,7 @@ input[type='number']::-webkit-inner-spin-button {
 
     /* ── Muted — Pale Blue wash ── */
     --muted: #e8f4fc; /* #C4E2F5 sedikit lebih terang */
-    --muted-foreground: #2C5EAD;
+    --muted-foreground: #2c5ead;
 
     /* ── Accent — Amber Gold ── */
     --accent: #fef6e4; /* gold wash, kontras hue dari biru */
@@ -151,10 +151,10 @@ input[type='number']::-webkit-inner-spin-button {
     /* ── Border & Input ── */
     --border: #a8d4ef; /* antara pale-blue dan sky-blue */
     --input: #92c8ea;
-    --ring: #2C5EAD;
+    --ring: #2c5ead;
 
     /* ── Chart — 6 warna, hue nyata berbeda ── */
-    --chart-1: #2C5EAD; /* deep blue     — ekuitas */
+    --chart-1: #2c5ead; /* deep blue     — ekuitas */
     --chart-2: #f5a623; /* amber gold    — komoditas */
     --chart-3: #27ae60; /* emerald green — profit/growth */
     --chart-4: #c0392b; /* crimson red   — loss/deficit */
@@ -167,15 +167,15 @@ input[type='number']::-webkit-inner-spin-button {
     /* ── Sidebar ── */
     --sidebar-background: #dceef8; /* pale-blue wash */
     --sidebar-foreground: #0d1f3c;
-    --sidebar-primary: #2C5EAD;
+    --sidebar-primary: #2c5ead;
     --sidebar-primary-foreground: #ffffff;
     --sidebar-accent: #daeef9;
     --sidebar-accent-foreground: #1a3a6b;
     --sidebar-border: #a8d4ef;
-    --sidebar-ring: #2C5EAD;
+    --sidebar-ring: #2c5ead;
 
     /* ── Semantic finance tokens ── */
-    --color-info: #1591DC; /* medium blue */
+    --color-info: #1591dc; /* medium blue */
     --color-success: #27ae60; /* emerald green — profit */
     --color-warning: #e07020; /* burnt orange — caution */
     --color-error: #c0392b; /* crimson red — loss */
@@ -198,25 +198,25 @@ input[type='number']::-webkit-inner-spin-button {
 .dark {
     /* ── Surface ── */
     --background: #0d1f3c; /* Dark Navy — lebih dalam */
-    --foreground: #C4E2F5; /* Pale Blue — dari palette */
+    --foreground: #c4e2f5; /* Pale Blue — dari palette */
 
     /* ── Card & Popover ── */
     --card: #1a3a6b; /* Deep Blue darker card */
-    --card-foreground: #C4E2F5;
+    --card-foreground: #c4e2f5;
     --popover: #1a3a6b;
-    --popover-foreground: #C4E2F5;
+    --popover-foreground: #c4e2f5;
 
     /* ── Primary — naik ke Sky Blue ── */
-    --primary: #4BB8FA; /* Sky Blue — dari palette */
+    --primary: #4bb8fa; /* Sky Blue — dari palette */
     --primary-foreground: #0d1f3c;
 
     /* ── Secondary ── */
     --secondary: #1a3a6b;
-    --secondary-foreground: #C4E2F5;
+    --secondary-foreground: #c4e2f5;
 
     /* ── Muted ── */
     --muted: #1e3f70;
-    --muted-foreground: #4BB8FA; /* Sky Blue */
+    --muted-foreground: #4bb8fa; /* Sky Blue */
 
     /* ── Accent — amber tetap hangat di dark bg ── */
     --accent: #3a2a0a;
@@ -229,10 +229,10 @@ input[type='number']::-webkit-inner-spin-button {
     /* ── Border & Input ── */
     --border: #244a80;
     --input: #244a80;
-    --ring: #4BB8FA;
+    --ring: #4bb8fa;
 
     /* ── Chart — satu stop lebih cerah di dark bg ── */
-    --chart-1: #4BB8FA; /* sky blue      — ekuitas */
+    --chart-1: #4bb8fa; /* sky blue      — ekuitas */
     --chart-2: #fdc84a; /* bright amber  — komoditas */
     --chart-3: #2ecc71; /* bright green  — profit */
     --chart-4: #e74c3c; /* bright red    — loss */
@@ -242,20 +242,20 @@ input[type='number']::-webkit-inner-spin-button {
     /* ── Sidebar ── */
     --sidebar-background: #091529; /* lebih gelap dari dark navy */
     --sidebar-foreground: #93c9e8;
-    --sidebar-primary: #4BB8FA;
+    --sidebar-primary: #4bb8fa;
     --sidebar-primary-foreground: #0d1f3c;
     --sidebar-accent: #1a3a6b;
-    --sidebar-accent-foreground: #C4E2F5;
+    --sidebar-accent-foreground: #c4e2f5;
     --sidebar-border: #244a80;
-    --sidebar-ring: #4BB8FA;
+    --sidebar-ring: #4bb8fa;
 
     /* ── Semantic finance tokens ── */
-    --color-info: #4BB8FA;
+    --color-info: #4bb8fa;
     --color-success: #2ecc71;
     --color-warning: #f08030;
     --color-error: #e74c3c;
     --color-gold: #fdc84a;
-    --color-default: #C4E2F5;
+    --color-default: #c4e2f5;
 
     --color-success-bg: color-mix(in srgb, var(--color-success) 12%, var(--popover));
     --color-error-bg: color-mix(in srgb, var(--color-error) 12%, var(--popover));
