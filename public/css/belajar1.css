@@ -1,0 +1,879 @@
+*{
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	text-decoration: none;
+}
+
+html{
+	scroll-behavior: smooth;
+}
+
+body{
+	font-family: sans-serif;
+	background-size: 100% 100%;
+	background-attachment: fixed;
+	background-color: #f5f7fa;
+	max-height: 100%;
+	padding-top: 70px;
+}
+
+.SectionA{
+	display: flex;
+	width: 100%;
+	justify-content: space-between;
+	align-items: center;
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 9999;
+	transition: 0.3 ease;
+	padding: 0 30px;
+}
+
+.SectionA.scrolled{
+    background:#0f172a;
+    box-shadow:0 4px 12px rgba(0,0,0,0.2);
+	backdrop-filter:blur(8px);
+}
+
+.SectionA.scrolled a,
+.SectionA.scrolled p,
+.SectionA.scrolled i{
+    color:white;
+}
+
+
+.Logo{
+	display: flex;
+	flex: 2;
+	background-color: white;
+	gap: 10px;
+	align-items: center;
+	padding: 0 30px;
+}
+
+.Logo .teks{
+	width: fit-content;
+}
+
+.gambar{
+	width: 50px;
+	height: 50px;
+}
+
+.menu{
+	flex: 3;
+	margin-left: 50px;
+}
+
+.menu ul{
+	margin: 0;
+	padding: 5px;
+	background: none;
+	cursor: pointer;
+}
+
+.menu li{
+	display: inline-block;
+}
+
+.menu li a{
+	display: block;
+	padding: 19px;
+	color: grey;
+	text-decoration: none;
+}
+
+.menu li a:hover{
+	display: block;
+	color: black;
+}
+
+.menu li .dropdown{
+	display: none;
+}
+
+.menu li:hover .dropdown{
+	display: block;
+	position: absolute;
+	padding: 14px;
+	background: gray;
+}
+
+.menu li:hover .dropdown li{
+	display: block;
+}
+
+.menu li:hover .dropdown li a{
+	padding: 10px;
+	border-radius: 10px;
+	margin-bottom: 5px;
+}
+
+.menu li:hover .dropdown li a:hover{
+	background: aliceblue;
+	box-shadow: inset 0px 0px 5px gray;
+}
+
+.menu li .dropdown1{
+	display: none;
+}
+
+.menu li:hover .dropdown1{
+	display: block;
+	position: absolute;
+	padding: 0;
+	background: gray;
+}
+
+.menu li:hover .dropdown1 li{
+	display: block;
+}
+
+.menu li:hover .dropdown1 li a{
+	padding: 10px;
+	border-radius: 10px;
+	margin-bottom: 5px;
+}
+
+.menu li:hover .dropdown1 li a:hover{
+	background: aliceblue;
+	box-shadow: inset 0px 0px 5px gray;
+}
+
+.hamburger_menu{
+	display: none;
+	width:35px;
+   	height:28px;
+   	flex-direction:column;
+   	justify-content:space-between;
+   	cursor:pointer;
+	margin-left: auto;
+	padding-right: 30px;
+}
+
+.hamburger_icon{
+	display: none;
+    position:relative;
+    width:32px;
+    height:32px;
+}
+
+
+.hamburger_icon span{
+   display:block;
+   height:3px;
+   background:black;
+   border-radius:5px;
+   transition:0.3s;
+   position: absolute;
+   top: 0;
+   width: 100%;
+}
+
+span:nth-child(1){ top:6px; }
+span:nth-child(2){ top:14px; }
+span:nth-child(3){ top:22px; }
+
+.hamburger_icon.active span:nth-child(1){
+	top: 14px;
+   	transform:rotate(45deg);
+}
+
+.hamburger_icon.active span:nth-child(2){
+   	opacity:0;
+}
+
+.hamburger_icon.active span:nth-child(3){
+	top: 14px;
+   	transform:rotate(-45deg);
+}
+
+#menuList{
+	display: none;
+}
+
+.Login{
+	display: flex;
+	flex: 2;
+	gap: 10px;
+	justify-content: flex-start;
+	align-items: center;
+	padding-right: 25px;
+}
+
+.tombol_login{
+	box-sizing: border-box;
+	color: white;
+	background-color: blue;
+	width: fit-content;
+	padding: 10px;
+	margin: 0;
+	border: 2px solid;
+	border-radius: 10px;
+	transition: all 0.3s ease;
+	box-shadow: 0 6px 0 rgb(31, 0 156);
+	cursor: pointer;
+}
+
+.tombol_login:hover{
+	transform: translateY(-2px);
+   	box-shadow: 0 8px 12px rgba(0,0,0,0.3);
+}
+
+.tombol_login:active{
+   transform: translateY(2px);
+   box-shadow: 0 2px 0 rgb(31, 0, 156);
+}
+
+.tombol_logout{
+	box-sizing: border-box;
+	color: white;
+	background-color: blue;
+	width: fit-content;
+	padding: 10px;
+	margin: 0;
+	border: 2px solid;
+	border-radius: 10px;
+	transition: all 0.3s;
+	cursor: pointer;
+	display: none;
+}
+
+.tombol_logout:hover{
+	box-shadow: inset 200px 0 0 0 rgb(31, 0, 156);
+}
+
+.tombol_logout.active{
+	display: flex;
+	position: relative;
+	margin-left: 10px;
+}
+
+.menuLogin{
+	display: none;
+}
+
+.form_login,
+.form_daftar{
+   	display: none;
+	opacity: 0;
+   	transform: translateX(20px);
+   	transition: 0.3s;
+   	position: absolute;
+   	width: 100%;
+	cursor: pointer;
+
+}
+
+.form_login.active,
+.form_daftar.active{
+   	display: block;
+	opacity: 1;
+   	transform: translateX(0);
+   	position: relative;
+}
+
+.login_box{
+	width:350px;
+    background:white;
+    padding:30px 20px;
+    border-radius:12px;
+    position:relative;
+	transform:scale(1);
+	opacity:1;
+	transition:0.3s ease;
+}
+
+.login_box .close{
+	position:absolute;
+    top:10px;
+    right:15px;
+    cursor:pointer;
+}
+
+.login_box h2{
+	align-items: center;
+	justify-content: center;
+	display: flex;
+	top: 0;
+	margin-bottom: 20px;
+}
+
+.login_box .akun{
+	width: 100%;
+	height: 37px;
+	position: relative;
+	margin-bottom: 30px;
+}
+
+.login_box .akun label{
+	top: 50%;
+	position: absolute;
+	left: 0;
+	transition: 0.3s;
+	pointer-events: none;
+	transform: translateY(-50%);
+}
+
+.login_box .akun input{
+	width: 100%;
+	height: 40px;
+	border: none;
+	outline: none;
+	font-size: 16px;
+	border-bottom: 2px solid palevioletred;
+}
+
+.menuLogin .login_box .akun input:focus ~ label,
+.menuLogin .login_box .akun input:valid ~ label{
+	top: -8px;
+	color: rgb(91, 91, 243);
+}
+
+.login_box input .show{
+	animation:fadeUp 1s ease forwards;
+   	animation-delay:0.4s;
+	transform: translateY(-20px);
+}
+
+.login_box .Masuk{
+	box-sizing: border-box;
+	width: fit-content;
+	padding: 10px;
+	margin-bottom: 20px;
+	border: none;
+	border: 2px solid #42f;
+	border-radius: 10px;
+	transition: all 0.3s;
+	cursor: pointer;
+}
+
+.close:hover{
+   transform:rotate(85deg);
+   color:red;
+}
+
+.menuLogin.show{
+	display:flex;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100vh;
+    background:rgba(0,0,0,0.5);
+    justify-content:center;
+    align-items:center;
+    z-index:99999;
+	opacity:1;
+	visibility:visible;
+	transition:0.3s;
+}
+
+.menuLogin.show .login_box{
+	transform:scale(1);
+	opacity:1;
+}
+
+.hero-box {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 500px;
+}
+
+.hero-box::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+	background-image: url('/images/bgS.jpg');
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.6s ease;
+    z-index: 0;
+}
+
+.hero-box:hover::before {
+    transform: scale(1.1);
+}
+
+.hero_text {
+    position: relative;
+    z-index: 1;
+}
+
+.hero_text{
+   position:absolute;
+   top:45%;
+   left:50%;
+   transform:translate(-50%,-50%);
+   text-align:center;
+   color:black;
+}
+
+.hero_text h1,
+.hero_text p,
+.hero_text input{
+   opacity:0;
+   text-shadow: 0 4px 12px rgba(0.0.0.0.4);
+   transform:translateY(30px);
+}
+
+.hero_text.show h1{
+   animation:fadeUp 1s ease forwards;
+}
+
+.hero_text.show p{
+   animation:fadeUp 1s ease forwards;
+   animation-delay:0.4s;
+}
+
+.hero_text.show input{
+   animation:fadeUp 1s ease forwards;
+   animation-delay:0.8s;
+}
+
+.hero-box:hover{
+	background-size: 110%;
+}
+
+.tombol_profile{
+	background-color: blue;
+	color:white;
+	padding: 5px;
+	border-radius: 5px;
+	cursor: pointer;
+}
+
+.SectionB{
+	margin-top: 10px;	
+	padding: 30px 10px;
+	background: whitesmoke;
+	display: flex;
+	width: 100%;
+}
+
+.SectionB .Berita{
+	width: 100%;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 20px;	
+}
+
+.SectionB .card{
+	width: 30%;
+	flex:1;
+	display: flex;
+	flex-direction: column;
+	background: white;
+	border-radius: 12px;
+	overflow: hidden;
+	border: 2px solid;
+	border-radius: 10px;
+	transition: all 0.3s ease;
+	box-shadow: 0 6px 0 rgb(31, 0 156);
+	cursor: pointer;
+}
+
+.SectionB .card img{
+	width:100%;
+	height:220px;
+	position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+	object-fit: cover;
+	transition: transform 0.5s ease;
+}
+
+.SectionB .card:hover img{
+	transform: scale(1.1);
+}
+
+.SectionB .card .content{
+	padding: 15px;
+	justify-content: center;
+	align-items: center;
+	padding: 15px;
+	color: white;
+	background-color: blue;
+}
+
+.SectionB .card:hover{
+	transform: translateY(-2px);
+   	box-shadow: 0 8px 12px rgba(0,0,0,0.3);
+}
+
+.SectionB .card:active{
+   transform: translateY(2px);
+   box-shadow: 0 2px 0 rgb(31, 0, 156);
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 999;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.aktif {
+    display: flex;
+}
+
+.modal-box {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    width: 450px;
+    max-width: 90%;
+    text-align: center;
+    position: relative;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-box img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.SectionC{
+	margin-top: 10px;	
+	padding: 30px 10px;
+	background: whitesmoke;
+	display: flex;
+	width: 100%;
+}
+
+.SectionC .pengumuman{
+	width: 100%;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 20px;
+	height: 50px;
+}
+
+.SectionC .card{
+	padding: 20px auto;
+	width: 50%;
+	flex:1;
+	display: flex;
+	flex-direction: column;
+	background: white;
+	border-radius: 12px;
+	overflow: hidden;
+	text-shadow: 0 4px 10px rgba(0,0,0,0.8);
+}
+
+.SectionC .card p{
+	margin-left: 10px;
+	left: 10px;
+}
+
+.SectionD{
+	margin-top: 10px;	
+	padding: 30px 10px;
+	background: whitesmoke;
+	display: flex;
+	width: 100%;	
+}
+
+.SectionD .jurusan{
+	width: 100%;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 20px;	
+}
+
+.SectionD .card{
+	width: 30%;
+	flex:1;
+	display: flex;
+	flex-direction: column;
+	background: white;
+	border-radius: 12px;
+	overflow: hidden;
+	border: 2px solid;
+	border-radius: 10px;
+	transition: all 0.3s ease;
+	box-shadow: 0 6px 0 rgb(31, 0 156);
+	cursor: pointer;
+}
+
+.SectionD .card:hover{
+	transform: translateY(-2px);
+   	box-shadow: 0 8px 12px rgba(0,0,0,0.3);
+}
+
+.SectionD .card:active{
+   transform: translateY(2px);
+   box-shadow: 0 2px 0 rgb(31, 0, 156);
+}
+
+.SectionD .card img{
+	width:100%;
+	height:220px;
+	object-fit:cover;
+	display: block;
+}
+
+.SectionD .card .content{
+	justify-content: center;
+	align-items: center;
+	padding: 15px;
+	color: white;
+	background-color: blue;
+}
+
+.SectionE{
+	margin-top: 10px;	
+	padding: 30px 10px;
+	background: whitesmoke;
+	display: flex;
+	width: 100%;	
+}
+
+.SectionE .Galeri{
+	width: 100%;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.SectionE .card{
+	width: 30%;
+	flex:1;
+	display: flex;
+	flex-direction: column;
+	background: white;
+	border-radius: 12px;
+	overflow: hidden;
+}
+
+.SectionE .card img{
+	width:100%;
+	height:220px;
+	object-fit:cover;
+	display: block;
+}
+
+.SectionE .card .content{
+	justify-content: center;
+	align-items: center;
+	padding: 15px;
+	color: white;
+	background-color: blue;
+}
+
+.tombol_galeri{
+	color: white;
+	background-color: blue;
+	padding: 5px;
+	border-radius: 5px;
+	cursor: pointer;
+}
+
+.SectionF{
+	max-height: fit-content;
+	background-color: #0f172a;
+	color: white;
+	padding: 40px 80px;
+	border-top: 3px solid gold;
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.SectionF .card_top{
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	height: auto;
+	flex-direction:row;
+	justify-content:space-between;
+	align-items:center;
+}
+
+.card_top .card_left{
+	padding: 10px;
+	flex:1;
+	display: flex;
+	flex-wrap: wrap;
+	border-radius: 12px;
+	overflow: hidden;
+	align-items: center;
+	gap: 15px;
+}
+
+
+.card_top .card_right{
+	padding: 10px;
+	flex:1;
+	display: flex;
+	flex-wrap: wrap;
+	border-radius: 12px;
+	overflow: hidden;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 15px;
+}
+
+.card_bottom{
+	text-align:center;
+	border-top:1px solid rgba(255,255,255,.2);
+	padding-top:15px;
+}
+
+@media screen and (max-width:768px){
+	.SectionA{
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		position:fixed;
+		top:0;
+		left:0;
+		width:100%;
+		z-index:9999;
+		justify-content: space-between;
+	}
+
+	#menuList{
+		display: none;
+	}
+
+	#menuList.show{
+		display: flex;
+		flex-direction: column;
+	}
+
+	nav.hamburger_menu{
+		display: flex;
+        align-items: center;
+        padding-right: 15px;
+	}
+
+    .hamburger_menu {
+        display: flex;  /* ← baru muncul di mobile */
+        margin-left: auto;
+        padding-right: 15px;
+    }
+
+    .hamburger_icon {
+        display: flex;
+        position: relative;
+        width: 32px;
+        height: 32px;
+    }
+
+    .hamburger_icon span {
+        display: block;
+        width: 25px;
+        height: 3px;
+        background: black;
+        border-radius: 3px;
+        transition: all 0.3s ease;
+    }
+
+    /* Menu list mobile */
+    #menuList {
+		display:none;
+		flex: 1;
+		flex-direction:column;
+		background:white;
+		width:100%;
+		position:fixed;
+		top:80px;
+		left:0;
+		padding:10px;
+		z-index:9998;
+		justify-content: start;
+    }
+
+    #menuList.show {
+        display: flex;
+    }
+
+    #menuList li {
+        padding: 12px 15px;
+        border-bottom: 1px solid #eee;
+        list-style: none;
+    }
+
+	#menuList li a {
+        text-decoration: none;
+        color: black;
+        display: block;
+    }
+
+	.Logo{
+		background-color: transparent;
+		padding: 0 10px;
+		flex:0 0 auto;
+		max-width:70%;
+	}
+
+	.Logo h3{
+		font-size: 14px;
+	}
+
+    /* Sembunyikan nav menu desktop */
+    nav.menu {
+        display: none;
+    }
+
+	nav.hamburger_menu{
+		margin-left: auto;  /* ← pastikan ini ada */
+        display: flex;
+		justify-content: flex-end;
+        align-items: center;
+        padding-right: 15px;
+		flex-shrink: 0;
+		width: auto;
+	}
+
+    /* Sembunyikan tombol login di mobile */
+    .Login {
+        display: none;
+    }
+}
+
+@keyframes fadeUp{
+   from{
+      opacity:0;
+      transform:translateY(30px);
+   }
+
+   to{
+      opacity:1;
+      transform:translateY(0);
+   }
+}
+
+@keyframes fadeIn {
+    from{ 
+		opacity: 0; transform: translateY(-20px);
+	}
+    to{
+		opacity: 1; transform: translateY(0);
+	}
+}
