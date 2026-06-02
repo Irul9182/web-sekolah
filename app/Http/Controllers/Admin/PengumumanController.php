@@ -3,16 +3,33 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pengumuman;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class PengumumanController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         //
+
+        $search  = $request->query('search', '');
+        $perPage = $request->query('per_page', 10);
+
+        $pengumuman = Pengumuman::query()
+            ->when($search, function ($q) use ($search) {
+                $q->where('judul', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->paginate($perPage)
+            ->withQueryString();
+        return Inertia::render('pengumuman/index',  ['list_pengumuman' => $pengumuman,  'filters' => [
+            'search'   => $search,
+            'per_page' => $perPage,
+        ],]);
     }
 
     /**

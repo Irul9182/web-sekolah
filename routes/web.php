@@ -10,6 +10,8 @@ use App\Http\Controllers\KategoriProyekController;
 use App\Http\Controllers\JenisProyekController;
 use App\Http\Controllers\ForecastController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Admin\GaleriController;
+use App\Http\Controllers\Admin\PengumumanController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -22,6 +24,13 @@ Route::middleware(['auth'])->group(function () {
 
     // Berita =======================
     Route::get('/berita', [BeritaController::class, 'index'])->name('berita.index');
+    // Pengumuman =======================
+    Route::get('/pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
+    // Galeri =======================
+    Route::get('/galeri', [GaleriController::class, 'index'])->name('galeri.index');
+
+
+
 
     // Project =====================
     Route::get('/project', [ProyekController::class, 'index'])->name('project.index');

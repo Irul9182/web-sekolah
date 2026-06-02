@@ -2,7 +2,7 @@ import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { NavGroup } from '@/types';
-import { LayoutGrid, Newspaper, PersonStandingIcon, Pickaxe, Wallet } from 'lucide-react';
+import { BookImage, LayoutGrid, Megaphone, Newspaper, PersonStandingIcon, Pickaxe, Wallet } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import AppLogo from './app-logo';
 import { NavFooter } from './nav-footer';
@@ -22,6 +22,16 @@ const mainNavItemsAffren: NavGroup[] = [
         title: 'Berita',
         url: '/berita',
         icon: Newspaper,
+    },
+    {
+        title: 'Pengumuman',
+        url: '/pengumuman',
+        icon: Megaphone,
+    },
+    {
+        title: 'Galeri',
+        url: '/galeri',
+        icon: BookImage,
     },
     // {
     //     title: 'Transaksi',

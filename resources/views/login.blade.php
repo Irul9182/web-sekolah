@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Admin - SMK Islam Baidhaul Ahkam</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             font-family: Arial, sans-serif;
@@ -20,7 +25,7 @@
             background: white;
             padding: 40px;
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             width: 400px;
         }
 
@@ -81,6 +86,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="login-box">
@@ -91,9 +97,9 @@
 
         {{-- Tampilkan error jika login gagal --}}
         @if ($errors->any())
-            <div class="error-msg">
-                {{ $errors->first('email') }}
-            </div>
+        <div class="error-msg">
+            {{ $errors->first('email') }}
+        </div>
         @endif
 
         <form method="POST" action="/admin/login">
@@ -114,4 +120,5 @@
     </div>
 
 </body>
+
 </html>
