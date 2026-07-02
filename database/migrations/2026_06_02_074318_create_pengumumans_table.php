@@ -17,6 +17,12 @@ return new class extends Migration
             $table->string('judul');
             $table->timestamps();
         });
+
+            Schema::create('cache_locks', function (Blueprint $table) {
+            $table->string('key')->primary();
+            $table->string('owner');
+            $table->bigInteger('expiration')->index();
+        });
     }
 
     /**
@@ -24,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pengumuman');
+        Schema::dropIfExists('pengumumans');
     }
 };

@@ -22,16 +22,19 @@ class BeritaController extends Controller
             ->latest()
             ->paginate($perPage)
             ->withQueryString();
-        // $beritas = Berita::latest()->get();x
-        return Inertia::render('berita/index', ['beritas' => $beritas,  'filters' => [
-            'search'   => $search,
-            'per_page' => $perPage,
-        ],]);
+
+        return Inertia::render('berita/index', [
+            'beritas' => $beritas,
+            'filters' => [
+                'search'   => $search,
+                'per_page' => $perPage,
+            ],
+        ]);
     }
 
     public function create()
     {
-        return view('admin.berita.create');
+        return Inertia::render('berita/create');
     }
 
     public function store(Request $request)
@@ -54,13 +57,14 @@ class BeritaController extends Controller
             'slug'   => Str::slug($request->judul),
         ]);
 
-        return redirect('/admin/berita')->with('success', 'Berita berhasil ditambahkan!');
+        return redirect()->route('berita.index')
+            ->with('success', 'Berita berhasil ditambahkan!');
     }
 
     public function edit($id)
     {
         $berita = Berita::findOrFail($id);
-        return view('admin.berita.edit', compact('berita'));
+        return Inertia::render('berita/edit', ['berita' => $berita]);
     }
 
     public function update(Request $request, $id)
@@ -85,13 +89,16 @@ class BeritaController extends Controller
             'slug'   => Str::slug($request->judul),
         ]);
 
-        return redirect('/admin/berita')->with('success', 'Berita berhasil diupdate!');
+        return redirect()->route('berita.index')
+            ->with('success', 'Berita berhasil diupdate!');
     }
 
     public function destroy($id)
     {
         $berita = Berita::findOrFail($id);
         $berita->delete();
-        return redirect('/admin/berita')->with('success', 'Berita berhasil dihapus!');
+
+        return redirect()->route('berita.index')
+            ->with('success', 'Berita berhasil dihapus!');
     }
 }
