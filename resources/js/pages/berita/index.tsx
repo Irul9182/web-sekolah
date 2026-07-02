@@ -12,13 +12,6 @@ import { router, useForm, usePage } from '@inertiajs/react';
 import { Edit, EllipsisVertical, Eye, Trash } from 'lucide-react';
 import { useState } from 'react';
 
-interface Berita {
-    id: number;
-    judul: string;
-    gambar: string | null;
-    created_at: string;
-}
-
 interface PageProps {
     beritas: BaseResponse<BeritaProps>;
     flash?: {
@@ -75,36 +68,45 @@ function DeleteButton({ id, judul }: DeleteButtonProps) {
         </>
     );
 }
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Berita',
         href: '/berita',
     },
 ];
+
 export default function BeritaIndex() {
     const props = usePage<PageProps>().props;
-    console.log('Response: ', props.beritas.data);
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors, reset } = useForm({
         judul: '',
         isi: '',
         gambar: null as File | null,
     });
     const [isOpen, setIsOpen] = useState<boolean>(false);
+
     function submit(e: React.FormEvent) {
         e.preventDefault();
-
-        post('/admin/berita');
+        post('/admin/berita', {
+            onSuccess: () => {
+                reset();
+                setIsOpen(false);
+            },
+        });
     }
+
     const columnsBerita: Column<any>[] = [
         {
             key: 'no',
             label: 'No',
             className: 'text-center',
-            render: (_: any, __: any, index: number) => <span className="text-muted-foreground text-sm">{index + 1}</span>,
+            render: (_: any, __: any, index: number) => (
+                <span className="text-muted-foreground text-sm">{index + 1}</span>
+            ),
         },
         {
             key: 'gambar',
-            label: 'Gamber',
+            label: 'Gambar',
         },
         {
             key: 'judul',
@@ -125,30 +127,26 @@ export default function BeritaIndex() {
                         menuItem={
                             <>
                                 <div className="flex flex-col gap-2 p-2">
-                                    {/* Detail */}
                                     <DropdownMenuItem
-                                        onClick={() => router?.visit(`/project/${record?.id}/detail`)}
+                                        onClick={() => router?.visit(`/berita/${record?.id}/detail`)}
                                         className={cn('group hover:bg-muted! flex cursor-pointer items-center justify-between p-2')}
                                     >
                                         <p className={cn('text-foreground! group-hover:text-chart-1!')}>Detail</p>
                                         <Eye className={cn('text-muted-foreground! group-hover:text-chart-1!')} />
                                     </DropdownMenuItem>
 
-                                    {/* Ubah */}
                                     <DropdownMenuItem
-                                        onClick={() => router?.visit(`/project/${record?.id}/edit`)}
+                                        onClick={() => router?.visit(`/admin/berita/${record?.id}/edit`)}
                                         className={cn('group hover:bg-muted! flex cursor-pointer items-center justify-between p-2')}
                                     >
                                         <p className={cn('text-foreground! group-hover:text-chart-2!')}>Ubah</p>
                                         <Edit className={cn('text-muted-foreground! group-hover:text-chart-2!')} />
                                     </DropdownMenuItem>
 
-                                    {/* Hapus */}
                                     <DropdownMenuItem
-                                        // onClick={() => OpenDeleteModal(record?.id)}
                                         className={cn('group hover:bg-error/10! flex cursor-pointer items-center justify-between p-2 transition-all')}
                                     >
-                                        <p className={cn('text-foreground! group-hover:text-error!')}>Hapus</p>
+                                        <DeleteButton id={record.id} judul={record.judul} />
                                         <Trash className={cn('text-muted-foreground! group-hover:text-error!')} />
                                     </DropdownMenuItem>
                                 </div>
@@ -174,8 +172,7 @@ export default function BeritaIndex() {
                         }}
                         onClick={() => setIsOpen(true)}
                     >
-                        {/* <Link href="/admin/berita/create"> */}+ Tambah Berita
-                        {/* </Link> */}
+                        + Tambah Berita
                     </Button>
                 </div>
                 <div className="p-4">
@@ -188,8 +185,7 @@ export default function BeritaIndex() {
                     <div className="mx-auto max-w-2xl rounded-xl bg-white p-8 shadow-md">
                         <h2 className="mb-6 text-2xl font-semibold text-gray-800">Tambah Berita</h2>
 
-                        <div className="space-y-5">
-                            {/* Judul */}
+                        <form onSubmit={submit} className="space-y-5">
                             <div>
                                 <label className="mb-1 block text-sm text-gray-600">Judul Berita</label>
                                 <input
@@ -202,7 +198,6 @@ export default function BeritaIndex() {
                                 {errors.judul && <p className="mt-1 text-sm text-red-500">{errors.judul}</p>}
                             </div>
 
-                            {/* Isi */}
                             <div>
                                 <label className="mb-1 block text-sm text-gray-600">Isi Berita</label>
                                 <textarea
@@ -214,7 +209,6 @@ export default function BeritaIndex() {
                                 {errors.isi && <p className="mt-1 text-sm text-red-500">{errors.isi}</p>}
                             </div>
 
-                            {/* Gambar */}
                             <div>
                                 <label className="mb-1 block text-sm text-gray-600">Gambar (opsional)</label>
                                 <input
@@ -226,7 +220,6 @@ export default function BeritaIndex() {
                                 {errors.gambar && <p className="mt-1 text-sm text-red-500">{errors.gambar}</p>}
                             </div>
 
-                            {/* Buttons */}
                             <div className="flex gap-3 pt-2">
                                 <button
                                     type="submit"
@@ -235,15 +228,15 @@ export default function BeritaIndex() {
                                 >
                                     Simpan
                                 </button>
-
                                 <Button
+                                    type="button"
                                     onClick={() => setIsOpen(false)}
                                     className="rounded-lg bg-gray-400 px-5 py-2 text-white transition hover:bg-gray-500"
                                 >
                                     Batal
                                 </Button>
                             </div>
-                        </div>
+                        </form>
                     </div>
                 </ModalContent>
             </Modal>

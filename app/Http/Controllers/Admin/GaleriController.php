@@ -5,16 +5,34 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Galeri;
 
 class GaleriController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        return Inertia::render('galeri/index');
-    }
+    public function index(Request $request)
+{
+    $search  = $request->query('search', '');
+    $perPage = $request->query('per_page', 10);
+
+    $galeris = Galeri::query()
+        ->when($search, function ($q) use ($search) {
+            $q->where('judul', 'like', "%{$search}%");
+        })
+        ->latest()
+        ->paginate($perPage)
+        ->withQueryString();
+
+    return Inertia::render('galeri/index', [
+        'galeris' => $galeris,
+        'filters' => [
+            'search'   => $search,
+            'per_page' => $perPage,
+        ],
+    ]);
+}
 
     /**
      * Show the form for creating a new resource.
