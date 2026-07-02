@@ -29,7 +29,7 @@ const AppInput = React.forwardRef<HTMLInputElement, AppInputProps>(({ label, isT
                     error &&
                         'border-destructive focus-visible:border-destructive focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--destructive)_20%,transparent)]',
                     className,
-                )} text-[10px] sm:text-sm ${isType === 'date' && ''}`}
+                )} rounded-lg text-[10px] sm:text-sm ${isType === 'date' && ''}`}
                 {...props}
             />
 

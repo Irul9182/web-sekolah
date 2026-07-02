@@ -23,7 +23,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
     // Berita =======================
-    Route::middleware(['auth'])->group(function () {
+
+
+    // Route::post('/berita', [BeritaController::class, 'store'])->name('berita.store');
+
     Route::resource('berita', BeritaController::class)->names([
         'index'   => 'berita.index',
         'create'  => 'berita.create',
@@ -32,7 +35,10 @@ Route::middleware(['auth'])->group(function () {
         'update'  => 'berita.update',
         'destroy' => 'berita.destroy',
     ]);
-});
+
+
+
+
     // Pengumuman =======================
     Route::get('/pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
     // Galeri =======================

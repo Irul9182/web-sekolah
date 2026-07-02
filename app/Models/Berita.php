@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\BeritaImage;
 
 class Berita extends Model
 {
@@ -12,4 +13,9 @@ class Berita extends Model
         'gambar',
         'slug',
     ];
+
+    public function berita_image()
+    {
+        return $this->hasOne(BeritaImage::class);
+    }
 }
