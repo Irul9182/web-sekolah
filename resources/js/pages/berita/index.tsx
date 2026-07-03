@@ -5,6 +5,7 @@ import AppTextArea from '@/components/app-textare';
 import { DropdownMenuItem } from '@/components/ui-shadcn/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Modal, ModalBody, ModalContent, ModalHeader, ModalTitle } from '@/components/ui/modal';
+import { formatDate } from '@/helpers/format';
 import { useModal } from '@/hooks/use-modal';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
@@ -14,11 +15,14 @@ import { router, useForm, usePage } from '@inertiajs/react';
 import { Edit, EllipsisVertical, Eye, Trash } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-
 interface PageProps {
     beritas: BaseResponse<BeritaProps>;
     flash?: {
         success?: string;
+    };
+    filters: {
+        search: string;
+        per_page: number;
     };
 }
 
@@ -33,18 +37,41 @@ export default function BeritaIndex() {
     const props = usePage<PageProps>().props;
     const [loading, setLoading] = useState<boolean>(false);
     const listBerita = props?.beritas?.data;
-    const [existingImage, setExistingImage] = useState<string | null>(null);
+    const { filters, beritas } = props;
     const [file, setFile] = useState<File | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    const hasImage = !!file || !!existingImage;
     const { handleOpenModal, handleCloseModal, isOpen, modalType, selectedData, selectedId } = useModal<BeritaProps>();
-    const { data, setData, post, processing, errors, reset } = useForm<BeritaPropsForm>(initialBeritaValue);
-
+    const { data, setData, post, processing, errors, reset, delete: deleteBerita, put } = useForm<BeritaPropsForm>(initialBeritaValue);
+    const [search, setSearch] = useState(filters?.search ?? '');
+    const currentPerPage = new URLSearchParams(window.location.search).get('per_page') ?? '10';
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [existingImage, setExistingImage] = useState<string | null>(null);
+    const hasImage = !!file || !!existingImage;
     useEffect(() => {
         setData('uploaded_image', file as File);
 
         setData('existing_image', existingImage);
     }, [file, existingImage]);
+    const handleSearch = (val: string) => {
+        setSearch(val);
+
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+            router.get(
+                route('berita.index'),
+                { ...route().params, search: val, per_page: filters?.per_page },
+                { preserveState: true, replace: true },
+            );
+        }, 400);
+    };
+
+    const handlePageChange = (page: number) => {
+        router.get(route('berita.index'), { ...route().params, page: page, per_page: currentPerPage }, { preserveState: true, preserveScroll: true });
+    };
+
+    const handlePageSizeChange = (perPage: number) => {
+        router.get(route('berita.index'), { ...route().params, page: 1, per_page: perPage }, { preserveState: true, preserveScroll: true });
+    };
 
     const handleSubmit = () => {
         if (modalType === 'create') {
@@ -56,6 +83,32 @@ export default function BeritaIndex() {
                 },
                 onError: () => {
                     toast.error('Gagal upload berita, coba lagi nanti.');
+                },
+            });
+        }
+
+        if (modalType === 'update') {
+            post(route('berita.update', selectedId as string), {
+                forceFormData: true,
+                onSuccess: () => {
+                    toast.success(`Berhasil edit berita ${selectedData?.judul}.`);
+                    handleCloseModal();
+                },
+                onError: () => {
+                    toast.error('Gagal edit berita, coba lagi nanti.');
+                },
+            });
+        }
+
+        if (modalType === 'delete') {
+            deleteBerita(route('berita.destroy', selectedId as string), {
+                // forceFormData: true,
+                onSuccess: () => {
+                    toast.success(`Berhasil hapus berita ${selectedData?.judul}.`);
+                    handleCloseModal();
+                },
+                onError: () => {
+                    toast.error('Gagal hapus berita, coba lagi nanti.');
                 },
             });
         }
@@ -72,15 +125,14 @@ export default function BeritaIndex() {
     // }
 
     useEffect(() => {
-        console.log('Modal type: ', modalType);
-    }, [modalType]);
+        if (modalType === 'update' || modalType === 'delete' || modalType === 'detail') {
+            setData(selectedData as BeritaProps);
+            setExistingImage(selectedData?.berita_image?.image_url ?? '');
+        }
 
-    const handleDelete = (): void => {
-        setLoading(true);
-        router.delete(`/admin/berita/${selectedId}`, {
-            onFinish: () => setLoading(false),
-        });
-    };
+        console.log('modal type: ', modalType);
+        console.log('Selected id: ', selectedId);
+    }, [modalType, selectedId]);
 
     const columnsBerita: Column<any>[] = [
         {
@@ -90,16 +142,24 @@ export default function BeritaIndex() {
             render: (_: any, __: any, index: number) => <span className="text-muted-foreground text-sm">{index + 1}</span>,
         },
         {
-            key: 'gambar',
+            key: 'berita_image',
             label: 'Gambar',
+            render: (_: any, record: BeritaProps) => (
+                <div className="relative h-20 w-20 overflow-hidden rounded-lg border-2 sm:h-30 sm:w-40">
+                    <img src={record?.berita_image?.image_url || '/images/default-img.png'} alt="Berita" className="h-full w-full object-cover" />
+                </div>
+            ),
         },
         {
             key: 'judul',
             label: 'Judul',
+            className: ' truncate max-w-[100px] sm:max-w-[300px]',
+            render: (_: any, row: BeritaProps) => <span>{row.judul}</span>,
         },
         {
             key: 'created_at',
             label: 'Tanggal dibuat',
+            render: (_: any, record: BeritaProps) => <span className="text-muted-foreground text-sm">{formatDate(record?.created_at) || '-'}</span>,
         },
         {
             key: 'action',
@@ -113,16 +173,16 @@ export default function BeritaIndex() {
                             <>
                                 <div className="flex flex-col gap-2 p-2">
                                     <DropdownMenuItem
-                                        onClick={() => router?.visit(`/berita/${record?.id}/detail`)}
-                                        className={cn('group hover:bg-muted! flex cursor-pointer items-center justify-between p-2')}
+                                        onClick={() => handleOpenModal(record.id, 'detail', listBerita)}
+                                        className={cn('group hover:bg-muted! flex cursor-pointer items-center justify-between rounded-sm p-2')}
                                     >
                                         <p className={cn('text-foreground! group-hover:text-chart-1!')}>Detail</p>
                                         <Eye className={cn('text-muted-foreground! group-hover:text-chart-1!')} />
                                     </DropdownMenuItem>
 
                                     <DropdownMenuItem
-                                        onClick={() => router?.visit(`/admin/berita/${record?.id}/edit`)}
-                                        className={cn('group hover:bg-muted! flex cursor-pointer items-center justify-between p-2')}
+                                        onClick={() => handleOpenModal(record.id, 'update', listBerita)}
+                                        className={cn('group hover:bg-muted! flex cursor-pointer items-center justify-between rounded-sm p-2')}
                                     >
                                         <p className={cn('text-foreground! group-hover:text-chart-2!')}>Ubah</p>
                                         <Edit className={cn('text-muted-foreground! group-hover:text-chart-2!')} />
@@ -130,7 +190,9 @@ export default function BeritaIndex() {
 
                                     <DropdownMenuItem
                                         onClick={() => handleOpenModal(record.id, 'delete', listBerita)}
-                                        className={cn('group hover:bg-error/10! flex cursor-pointer items-center justify-between p-2 transition-all')}
+                                        className={cn(
+                                            'group hover:bg-error/10! flex cursor-pointer items-center justify-between rounded-sm p-2 transition-all',
+                                        )}
                                     >
                                         <p>Hapus</p>
                                         <Trash className={cn('text-muted-foreground! group-hover:text-error!')} />
@@ -147,7 +209,7 @@ export default function BeritaIndex() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div>
-                <div className="flex items-center justify-between p-4">
+                <div className="flex items-center justify-between px-4 pt-4">
                     <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
                         Kelola Berita
                     </h1>
@@ -161,14 +223,29 @@ export default function BeritaIndex() {
                         + Tambah Berita
                     </Button>
                 </div>
-                <div className="p-4">
-                    <DataTable data={props?.beritas?.data} columns={columnsBerita} />
+                <div className="px-4 pt-4">
+                    <DataTable
+                        data={props?.beritas?.data}
+                        columns={columnsBerita}
+                        emptyMessage="Tidak ada berita saat ini"
+                        mobileColumns={['berita_image', 'judul', 'action']}
+                        pagination={{
+                            current_page: beritas?.current_page as number,
+                            last_page: beritas?.last_page as number,
+                            per_page: beritas?.per_page as number,
+                            total: beritas?.total as number,
+                            from: beritas?.from as number,
+                            to: beritas?.to as number,
+                        }}
+                        onPageChange={handlePageChange}
+                        onPageSizeChange={handlePageSizeChange}
+                    />
                 </div>
             </div>
 
             <Modal open={isOpen} key={modalType}>
                 <ModalContent hideClose>
-                    {modalType === 'create' && (
+                    {(modalType === 'create' || modalType === 'update') && (
                         <ModalBody>
                             <ModalHeader>
                                 <ModalTitle className="text-2xl font-semibold">Tambah Berita</ModalTitle>
@@ -199,7 +276,7 @@ export default function BeritaIndex() {
                                             </Button>
 
                                             <Button type="button" onClick={() => inputRef.current?.click()}>
-                                                Tambah Foto
+                                                {existingImage || file ? 'Edit Foto' : 'Tambah Foto'}
                                             </Button>
 
                                             <input
@@ -223,6 +300,7 @@ export default function BeritaIndex() {
                                         className="bg-background/50"
                                         placeholder="Masukkan judul . . ."
                                         label="Judul"
+                                        value={data?.judul}
                                         onChange={(e) => setData('judul', e.target.value)}
                                     />
                                     {errors.judul && <p className="mt-1 text-sm text-red-500">{errors.judul}</p>}
@@ -231,7 +309,7 @@ export default function BeritaIndex() {
                                 <div>
                                     <AppTextArea
                                         label="Isi Berita"
-                                        value={data.isi}
+                                        value={data?.isi}
                                         onChange={(e) => setData('isi', e.target.value)}
                                         placeholder="Tulis isi berita di sini . . ."
                                         className="bg-background/50! h-48 w-full resize-y rounded-lg border p-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
@@ -270,11 +348,13 @@ export default function BeritaIndex() {
                                 <p>Anda yakin ingin menghapus berita {selectedData?.judul} ? </p>
                             </div>
 
-                            <div>
+                            <div className="flex items-center gap-2">
                                 <Button variant={'destructive'} onClick={handleCloseModal}>
                                     Batal
                                 </Button>
-                                <Button variant={'outline'}>Konfirmasi</Button>
+                                <Button onClick={() => handleSubmit()} variant={'outline'}>
+                                    Hapus
+                                </Button>
                             </div>
                         </div>
                     )}

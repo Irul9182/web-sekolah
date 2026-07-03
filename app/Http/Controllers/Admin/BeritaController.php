@@ -89,13 +89,13 @@ class BeritaController extends Controller
             'judul'  => 'required',
             'isi'    => 'required',
             // 'gambar' => 'nullable|image|max:2048',
-            'berita_image' => 'nullable|image|max:5120',
+            'uploaded_image' => 'nullable|image|max:5120',
         ]);
 
         $cloudinary = app(\Cloudinary\Cloudinary::class);
 
         // upload foto baru
-        if ($request->hasFile('berita_image')) {
+        if ($request->hasFile('uploaded_image')) {
 
             // hapus foto lama
             if ($berita->berita_image && $berita->berita_image->public_id) {
@@ -106,7 +106,7 @@ class BeritaController extends Controller
                 $berita->berita_image->delete();
             }
 
-            $image = $request->file('berita_image');
+            $image = $request->file('uploaded_image');
 
             $result = $cloudinary
                 ->uploadApi()
@@ -128,8 +128,7 @@ class BeritaController extends Controller
             'slug'   => Str::slug($request->judul),
         ]);
 
-        return redirect()->route('berita.index')
-            ->with('success', 'Berita berhasil diupdate!');
+        return back()->with('success', 'Berita berhasil diedit!');
     }
 
     public function destroy($id)

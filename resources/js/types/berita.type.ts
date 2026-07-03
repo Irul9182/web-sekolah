@@ -4,7 +4,7 @@ export interface BeritaProps {
     judul: string;
     isi: string;
     berita_image?: BeritaImage;
-    createdAt?: string;
+    created_at?: string;
 }
 
 export type BeritaPropsForm = BeritaProps & {
@@ -27,7 +27,7 @@ export const initialBeritaValue: BeritaPropsForm = {
     judul: '',
     isi: '',
     berita_image: undefined,
-    createdAt: '',
+    created_at: '',
     uploaded_image: undefined,
     existing_image_id: '',
 };

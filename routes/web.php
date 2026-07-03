@@ -25,16 +25,19 @@ Route::middleware(['auth'])->group(function () {
     // Berita =======================
 
 
-    // Route::post('/berita', [BeritaController::class, 'store'])->name('berita.store');
+    Route::get('/berita', [BeritaController::class, 'index'])->name('berita.index');
+    Route::post('/berita', [BeritaController::class, 'store'])->name('berita.store');
+    Route::post('/berita/{id}', [BeritaController::class, 'update'])->name('berita.update');
+    Route::delete('/berita/{id}', [BeritaController::class, 'destroy'])->name('berita.destroy');
 
-    Route::resource('berita', BeritaController::class)->names([
-        'index'   => 'berita.index',
-        'create'  => 'berita.create',
-        'store'   => 'berita.store',
-        'edit'    => 'berita.edit',
-        'update'  => 'berita.update',
-        'destroy' => 'berita.destroy',
-    ]);
+    // Route::resource('berita', BeritaController::class)->names([
+    //     'index'   => 'berita.index',
+    //     'create'  => 'berita.create',
+    //     'store'   => 'berita.store',
+    //     'edit'    => 'berita.edit',
+    //     'update'  => 'berita.update',
+    //     'delete' => 'berita.destroy',
+    // ]);
 
 
 
