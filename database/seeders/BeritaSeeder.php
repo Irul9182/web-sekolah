@@ -57,7 +57,6 @@ class BeritaSeeder extends Seeder
             DB::table('beritas')->insert([
                 'judul' => $item['judul'],
                 'isi' => $item['isi'],
-                'gambar' => null,
                 'slug' => Str::slug($item['judul']) . '-' . rand(1000, 9999),
                 'created_at' => now(),
                 'updated_at' => now(),

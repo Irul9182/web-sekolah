@@ -15,7 +15,7 @@ class BeritaController extends Controller
         $search  = $request->query('search', '');
         $perPage = $request->query('per_page', 10);
 
-        $beritas = Berita::query()
+        $beritas = Berita::query()->with('berita_image')
             ->when($search, function ($q) use ($search) {
                 $q->where('judul', 'like', "%{$search}%");
             })
@@ -42,23 +42,37 @@ class BeritaController extends Controller
         $request->validate([
             'judul'  => 'required',
             'isi'    => 'required',
-            'gambar' => 'nullable|image|max:2048',
+            'uploaded_image' => 'nullable|image|max:5120',
         ]);
 
-        $gambar = null;
-        if ($request->hasFile('gambar')) {
-            $gambar = $request->file('gambar')->store('berita', 'public');
-        }
 
-        Berita::create([
+        $berita =  Berita::create([
             'judul'  => $request->judul,
             'isi'    => $request->isi,
-            'gambar' => $gambar,
             'slug'   => Str::slug($request->judul),
         ]);
 
-        return redirect()->route('berita.index')
-            ->with('success', 'Berita berhasil ditambahkan!');
+        if ($request->hasFile('uploaded_image')) {
+
+            $image = $request->file('uploaded_image');
+
+            $cloudinary = app(\Cloudinary\Cloudinary::class);
+
+            $result = $cloudinary
+                ->uploadApi()
+                ->upload(
+                    $image->getRealPath(),
+                    [
+                        'folder' => 'web_sekolah/berita'
+                    ]
+                );
+
+            $berita->berita_image()->create([
+                'image_url' => $result['secure_url'],
+            ]);
+        }
+
+        return back()->with('success', 'Berita berhasil ditambahkan!');
     }
 
     public function edit($id)
@@ -74,28 +88,67 @@ class BeritaController extends Controller
         $request->validate([
             'judul'  => 'required',
             'isi'    => 'required',
-            'gambar' => 'nullable|image|max:2048',
+            // 'gambar' => 'nullable|image|max:2048',
+            'uploaded_image' => 'nullable|image|max:5120',
         ]);
 
-        $gambar = $berita->gambar;
-        if ($request->hasFile('gambar')) {
-            $gambar = $request->file('gambar')->store('berita', 'public');
-        }
+        $cloudinary = app(\Cloudinary\Cloudinary::class);
 
+        // upload foto baru
+        if ($request->hasFile('uploaded_image')) {
+
+            // hapus foto lama
+            if ($berita->berita_image && $berita->berita_image->public_id) {
+                $cloudinary
+                    ->uploadApi()
+                    ->destroy($berita->berita_image->public_id);
+
+                $berita->berita_image->delete();
+            }
+
+            $image = $request->file('uploaded_image');
+
+            $result = $cloudinary
+                ->uploadApi()
+                ->upload(
+                    $image->getRealPath(),
+                    [
+                        'folder' => 'web_sekolah/berita',
+                    ]
+                );
+
+            $berita->berita_image()->create([
+                'image_url' => $result['secure_url'],
+                'public_id' => $result['public_id'],
+            ]);
+        }
         $berita->update([
             'judul'  => $request->judul,
             'isi'    => $request->isi,
-            'gambar' => $gambar,
             'slug'   => Str::slug($request->judul),
         ]);
 
-        return redirect()->route('berita.index')
-            ->with('success', 'Berita berhasil diupdate!');
+        return back()->with('success', 'Berita berhasil diedit!');
     }
 
     public function destroy($id)
     {
         $berita = Berita::findOrFail($id);
+
+        $cloudinary = app(\Cloudinary\Cloudinary::class);
+
+        if ($berita->berita_image) {
+
+            if (!empty($berita->berita_image->public_id)) {
+                $cloudinary
+                    ->uploadApi()
+                    ->destroy($berita->berita_image->public_id);
+            }
+
+            $berita->berita_image->delete();
+        }
+
+
         $berita->delete();
 
         return redirect()->route('berita.index')
