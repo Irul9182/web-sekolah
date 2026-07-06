@@ -1,5 +1,7 @@
+import DetailItem from '@/components/app-detail-item';
 import AppDropdownMenu from '@/components/app-dopdown-menu';
 import AppInput from '@/components/app-input';
+import AppSearchInput from '@/components/app-input-search';
 import { Column, DataTable } from '@/components/app-table';
 import AppTextArea from '@/components/app-textare';
 import { DropdownMenuItem } from '@/components/ui-shadcn/dropdown-menu';
@@ -213,15 +215,18 @@ export default function BeritaIndex() {
                     <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
                         Kelola Berita
                     </h1>
-                    <Button
-                        style={{
-                            backgroundColor: 'var(--primary)',
-                            color: 'var(--primary-foreground)',
-                        }}
-                        onClick={() => handleOpenModal(null, 'create', listBerita)}
-                    >
-                        + Tambah Berita
-                    </Button>
+                    <div className="flex flex-row items-center gap-3">
+                        <AppSearchInput placeholder="Cari berdasarkan judul" onChange={(e) => handleSearch(e.target.value)} />
+                        <Button
+                            style={{
+                                backgroundColor: 'var(--primary)',
+                                color: 'var(--primary-foreground)',
+                            }}
+                            onClick={() => handleOpenModal(null, 'create', listBerita)}
+                        >
+                            + Tambah Berita
+                        </Button>
+                    </div>
                 </div>
                 <div className="px-4 pt-4">
                     <DataTable
@@ -244,7 +249,7 @@ export default function BeritaIndex() {
             </div>
 
             <Modal open={isOpen} key={modalType}>
-                <ModalContent hideClose className="custom-scrollbar!">
+                <ModalContent hideClose className="custom-scrollbar! overflow-x-hidden">
                     {(modalType === 'create' || modalType === 'update') && (
                         <ModalBody>
                             <ModalHeader>
@@ -365,10 +370,25 @@ export default function BeritaIndex() {
 
                     {modalType === 'detail' && (
                         <div className="p-4">
-                            <h4>Detail berita {selectedData?.judul}</h4>
-
-                            {/* Full properti / filed nya tinggal lu buat dibawah sini */}
-                            <div>Judul: {selectedData?.judul}</div>
+                            <ModalHeader>
+                                <ModalTitle className="font-semibold">Detail berita</ModalTitle>
+                            </ModalHeader>
+                            <ModalBody>
+                                <div className="mx-auto mb-4 h-50 w-full overflow-hidden rounded-md sm:w-70">
+                                    <img
+                                        className="h-full w-full object-cover"
+                                        src={selectedData?.berita_image?.image_url ?? '/images/default-img.png'}
+                                    />
+                                </div>
+                                <DetailItem value={selectedData?.judul ?? ''} valueClassName="max-w-70 break-words" label="Judul" />
+                                <DetailItem value={formatDate(selectedData?.created_at) ?? '-'} label="Dibuat pada" />
+                                <div>
+                                    <p className="mt-2 mb-2 font-semibold">Deskripsi :</p>
+                                    <div className="bg-background/50 max-w-70 rounded-md p-4 text-[12px] break-words sm:max-w-100 sm:text-sm">
+                                        {selectedData?.isi ?? ''}
+                                    </div>
+                                </div>
+                            </ModalBody>
                             <div>
                                 <Button onClick={handleCloseModal}>Tutup</Button>
                             </div>
