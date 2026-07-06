@@ -82,10 +82,14 @@ export default function BeritaIndex() {
                 forceFormData: true,
                 onSuccess: () => {
                     toast.success('Berhasil upload berita.');
-                    handleCloseModal();
                 },
                 onError: () => {
                     toast.error('Gagal upload berita, coba lagi nanti.');
+                },
+                onFinish: () => {
+                    handleCloseModal();
+                    setFile(null);
+                    setExistingImage(null);
                 },
             });
         }
@@ -95,10 +99,14 @@ export default function BeritaIndex() {
                 forceFormData: true,
                 onSuccess: () => {
                     toast.success(`Berhasil edit berita ${selectedData?.judul}.`);
-                    handleCloseModal();
                 },
                 onError: () => {
                     toast.error('Gagal edit berita, coba lagi nanti.');
+                },
+                onFinish: () => {
+                    handleCloseModal();
+                    setFile(null);
+                    setExistingImage(null);
                 },
             });
         }
@@ -112,6 +120,11 @@ export default function BeritaIndex() {
                 },
                 onError: () => {
                     toast.error('Gagal hapus berita, coba lagi nanti.');
+                },
+                onFinish: () => {
+                    handleCloseModal();
+                    setFile(null);
+                    setExistingImage(null);
                 },
             });
         }
@@ -133,8 +146,8 @@ export default function BeritaIndex() {
             setExistingImage(selectedData?.berita_image?.image_url ?? '');
         }
 
-        console.log('modal type: ', modalType);
-        console.log('Selected id: ', selectedId);
+        // console.log('modal type: ', modalType);
+        // console.log('Selected id: ', selectedId);
     }, [modalType, selectedId]);
 
     const columnsBerita: Column<any>[] = [
@@ -358,7 +371,12 @@ export default function BeritaIndex() {
                             </ModalBody>
                             <ModalFooter>
                                 <div className="mt-2 flex items-center gap-2">
-                                    <Button variant={'outline'} onClick={handleCloseModal}>
+                                    <Button
+                                        variant={'outline'}
+                                        onClick={() => {
+                                            handleCloseModal(), setExistingImage(null), setFile(null);
+                                        }}
+                                    >
                                         Batal
                                     </Button>
                                     <Button onClick={() => handleSubmit()} variant={'destructive'}>
@@ -391,7 +409,13 @@ export default function BeritaIndex() {
                                 </div>
                             </ModalBody>
                             <div>
-                                <Button onClick={handleCloseModal}>Tutup</Button>
+                                <Button
+                                    onClick={() => {
+                                        handleCloseModal(), setExistingImage(null), setFile(null);
+                                    }}
+                                >
+                                    Tutup
+                                </Button>
                             </div>
                         </div>
                     )}

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use App\Models\Galeri;
 
@@ -14,26 +14,26 @@ class GaleriController extends Controller
      * Display a listing of the resource.
      */
     public function index(Request $request)
-{
-    $search  = $request->query('search', '');
-    $perPage = $request->query('per_page', 10);
+    {
+        $search  = $request->query('search', '');
+        $perPage = $request->query('per_page', 10);
 
-    $galeris = Galeri::query()
-        ->when($search, function ($q) use ($search) {
-            $q->where('judul', 'like', "%{$search}%");
-        })
-        ->latest()
-        ->paginate($perPage)
-        ->withQueryString();
+        $galeris = Galeri::query()->with('galeri_image')
+            ->when($search, function ($q) use ($search) {
+                $q->where('judul', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->paginate($perPage)
+            ->withQueryString();
 
-    return Inertia::render('galeri/index', [
-        'galeris' => $galeris,
-        'filters' => [
-            'search'   => $search,
-            'per_page' => $perPage,
-        ],
-    ]);
-}
+        return Inertia::render('galeri/index', [
+            'galeris' => $galeris,
+            'filters' => [
+                'search'   => $search,
+                'per_page' => $perPage,
+            ],
+        ]);
+    }
 
     /**
      * Show the form for creating a new resource.
@@ -49,20 +49,42 @@ class GaleriController extends Controller
     public function store(Request $request)
     {
         //
-         $request->validate([
-        'judul'  => 'required',
-        'gambar' => 'required|image|max:5120',
+        $request->validate([
+            'judul'  => 'required',
+            'isi'    => 'required',
+            'uploaded_image' => 'nullable|image|max:5120',
         ]);
 
-        $path = $request->file('gambar')->store('galeri', 'public');
 
-        Galeri::create([
+
+        $galeri = Galeri::create([
             'judul'  => $request->judul,
-            'gambar' => $path,
+            'isi'    => $request->isi,
+            'slug'   => Str::slug($request->judul),
         ]);
 
-        return redirect()->route('galeri.index')
-            ->with('success', 'Foto berhasil ditambahkan!');
+        if ($request->hasFile('uploaded_image')) {
+
+            $image = $request->file('uploaded_image');
+
+            $cloudinary = app(\Cloudinary\Cloudinary::class);
+
+            $result = $cloudinary
+                ->uploadApi()
+                ->upload(
+                    $image->getRealPath(),
+                    [
+                        'folder' => 'web_sekolah/galeri'
+                    ]
+                );
+
+            $galeri->galeri_image()->create([
+                'image_url' => $result['secure_url'],
+                'public_id' => $result['public_id'],
+            ]);
+        }
+
+        return back()->with('success', 'Foto berhasil ditambahkan!');
     }
 
     /**
@@ -91,25 +113,51 @@ class GaleriController extends Controller
 
         $request->validate([
             'judul'  => 'required',
-            'gambar' => 'nullable|image|max:5120',
+            // 'gambar' => 'nullable|image|max:5120',
+            'isi'    => 'required',
+            'uploaded_image' => 'nullable|image|max:5120',
         ]);
 
-        $data = [
-            'judul' => $request->judul,
-        ];
 
-        if ($request->hasFile('gambar')) {
-            if ($galeri->gambar && Storage::disk('public')->exists($galeri->gambar)) {
-                Storage::disk('public')->delete($galeri->gambar);
+
+        $cloudinary = app(\Cloudinary\Cloudinary::class);
+
+        // upload foto baru
+        if ($request->hasFile('uploaded_image')) {
+
+            // hapus foto lama
+            if ($galeri->galeri_image && $galeri->galeri_image->public_id) {
+                $cloudinary
+                    ->uploadApi()
+                    ->destroy($galeri->galeri_image->public_id);
+
+                $galeri->galeri_image->delete();
             }
 
-            $data['gambar'] = $request->file('gambar')->store('galeri', 'public');
+            $image = $request->file('uploaded_image');
+
+            $result = $cloudinary
+                ->uploadApi()
+                ->upload(
+                    $image->getRealPath(),
+                    [
+                        'folder' => 'web_sekolah/galeri',
+                    ]
+                );
+
+            $galeri->galeri_image()->create([
+                'image_url' => $result['secure_url'],
+                'public_id' => $result['public_id'],
+            ]);
         }
+        $galeri->update([
+            'judul'  => $request->judul,
+            'isi'    => $request->isi,
+            'slug'   => Str::slug($request->judul),
+        ]);
 
-        $galeri->update($data);
 
-        return redirect()->route('galeri.index')
-            ->with('success', 'Foto berhasil diedit!');
+        return back()->with('success', 'Galeri berhasil diedit!.');
     }
 
     /**
@@ -118,15 +166,24 @@ class GaleriController extends Controller
     public function destroy(string $id)
     {
         //
-            $galeri = Galeri::findOrFail($id);
+        $galeri = Galeri::findOrFail($id);
 
-        if ($galeri->gambar && Storage::disk('public')->exists($galeri->gambar)) {
-            Storage::disk('public')->delete($galeri->gambar);
+        $cloudinary = app(\Cloudinary\Cloudinary::class);
+
+        if ($galeri->galeri_image) {
+
+            if (!empty($galeri->galeri_image->public_id)) {
+                $cloudinary
+                    ->uploadApi()
+                    ->destroy($galeri->galeri_image->public_id);
+            }
+
+            $galeri->galeri_image->delete();
         }
 
         $galeri->delete();
 
         return redirect()->route('galeri.index')
-            ->with('success', 'Foto berhasil dihapus!');
+            ->with('success', 'Galeri berhasil dihapus!');
     }
 }

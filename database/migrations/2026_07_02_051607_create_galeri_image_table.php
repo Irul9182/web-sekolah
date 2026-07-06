@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('galeri_image', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('berita_id')
-                ->constrained('beritas')
+            $table->foreignId('galeri_id')
+                ->constrained('galeris')
                 ->cascadeOnDelete();
 
             $table->string('image_url');
