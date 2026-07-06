@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use App\Models\Galeri;
 
@@ -48,6 +49,20 @@ class GaleriController extends Controller
     public function store(Request $request)
     {
         //
+         $request->validate([
+        'judul'  => 'required',
+        'gambar' => 'required|image|max:5120',
+        ]);
+
+        $path = $request->file('gambar')->store('galeri', 'public');
+
+        Galeri::create([
+            'judul'  => $request->judul,
+            'gambar' => $path,
+        ]);
+
+        return redirect()->route('galeri.index')
+            ->with('success', 'Foto berhasil ditambahkan!');
     }
 
     /**
@@ -72,6 +87,29 @@ class GaleriController extends Controller
     public function update(Request $request, string $id)
     {
         //
+        $galeri = Galeri::findOrFail($id);
+
+        $request->validate([
+            'judul'  => 'required',
+            'gambar' => 'nullable|image|max:5120',
+        ]);
+
+        $data = [
+            'judul' => $request->judul,
+        ];
+
+        if ($request->hasFile('gambar')) {
+            if ($galeri->gambar && Storage::disk('public')->exists($galeri->gambar)) {
+                Storage::disk('public')->delete($galeri->gambar);
+            }
+
+            $data['gambar'] = $request->file('gambar')->store('galeri', 'public');
+        }
+
+        $galeri->update($data);
+
+        return redirect()->route('galeri.index')
+            ->with('success', 'Foto berhasil diedit!');
     }
 
     /**
@@ -80,5 +118,15 @@ class GaleriController extends Controller
     public function destroy(string $id)
     {
         //
+            $galeri = Galeri::findOrFail($id);
+
+        if ($galeri->gambar && Storage::disk('public')->exists($galeri->gambar)) {
+            Storage::disk('public')->delete($galeri->gambar);
+        }
+
+        $galeri->delete();
+
+        return redirect()->route('galeri.index')
+            ->with('success', 'Foto berhasil dihapus!');
     }
 }
