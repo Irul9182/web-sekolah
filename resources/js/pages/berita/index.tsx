@@ -4,7 +4,7 @@ import { Column, DataTable } from '@/components/app-table';
 import AppTextArea from '@/components/app-textare';
 import { DropdownMenuItem } from '@/components/ui-shadcn/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Modal, ModalBody, ModalContent, ModalHeader, ModalTitle } from '@/components/ui/modal';
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, ModalTitle } from '@/components/ui/modal';
 import { formatDate } from '@/helpers/format';
 import { useModal } from '@/hooks/use-modal';
 import AppLayout from '@/layouts/app-layout';
@@ -244,11 +244,13 @@ export default function BeritaIndex() {
             </div>
 
             <Modal open={isOpen} key={modalType}>
-                <ModalContent hideClose>
+                <ModalContent hideClose className="custom-scrollbar!">
                     {(modalType === 'create' || modalType === 'update') && (
                         <ModalBody>
                             <ModalHeader>
-                                <ModalTitle className="text-2xl font-semibold">Tambah Berita</ModalTitle>
+                                <ModalTitle className="text-2xl font-semibold">
+                                    {modalType === 'create' ? 'Tambah' : modalType === 'update' ? 'Ubah' : ''} Berita
+                                </ModalTitle>
                             </ModalHeader>
 
                             <div className="mt-4 space-y-3">
@@ -341,21 +343,23 @@ export default function BeritaIndex() {
                     )}
 
                     {modalType === 'delete' && (
-                        <div className="p-4">
-                            <h4>Hapus berita</h4>
-
-                            <div>
-                                <p>Anda yakin ingin menghapus berita {selectedData?.judul} ? </p>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <Button variant={'destructive'} onClick={handleCloseModal}>
-                                    Batal
-                                </Button>
-                                <Button onClick={() => handleSubmit()} variant={'outline'}>
-                                    Hapus
-                                </Button>
-                            </div>
+                        <div className="p-0 sm:p-4">
+                            <ModalHeader>
+                                <ModalTitle>Hapus berita</ModalTitle>
+                            </ModalHeader>
+                            <ModalBody className="max-w-150 text-[10px] break-words sm:text-sm">
+                                Anda yakin ingin menghapus berita {selectedData?.judul} ?
+                            </ModalBody>
+                            <ModalFooter>
+                                <div className="mt-2 flex items-center gap-2">
+                                    <Button variant={'outline'} onClick={handleCloseModal}>
+                                        Batal
+                                    </Button>
+                                    <Button onClick={() => handleSubmit()} variant={'destructive'}>
+                                        Hapus
+                                    </Button>
+                                </div>
+                            </ModalFooter>
                         </div>
                     )}
 
