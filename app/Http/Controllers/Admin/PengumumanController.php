@@ -3,22 +3,36 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Pengumumans;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Support\Str;
+use App\Models\Pengumuman;
 
 class PengumumanController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        //
-        return Inertia::render('pengumuman/index');
+    public function index(Request $request)
+{
+    $search  = $request->query('search', '');
+    $perPage = $request->query('per_page', 10);
 
-    }
+    $pengumuman = Pengumuman::query()
+        ->when($search, function ($q) use ($search) {
+            $q->where('judul', 'like', "%{$search}%");
+        })
+        ->latest()
+        ->paginate($perPage)
+        ->withQueryString();
+
+    return Inertia::render('pengumuman/index', [
+        'pengumumans' => $pengumuman,
+        'filters' => [
+            'search'   => $search,
+            'per_page' => $perPage,
+        ],
+    ]);
+}
 
     /**
      * Show the form for creating a new resource.
@@ -34,6 +48,18 @@ class PengumumanController extends Controller
     public function store(Request $request)
     {
         //
+        $request->validate([
+        'judul'     => 'required',
+        'deskripsi' => 'required',
+    ]);
+
+    Pengumuman::create([
+        'judul'     => $request->judul,
+        'deskripsi' => $request->deskripsi,
+    ]);
+
+    return redirect()->route('pengumuman.index')
+        ->with('success', 'Pengumuman berhasil ditambahkan!');
     }
 
     /**
@@ -57,7 +83,20 @@ class PengumumanController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $pengumuman = Pengumuman::findOrFail($id);
+
+        $request->validate([
+            'judul'     => 'required',
+            'deskripsi' => 'required',
+        ]);
+
+        $pengumuman->update([
+            'judul'     => $request->judul,
+            'deskripsi' => $request->deskripsi,
+        ]);
+
+    return redirect()->route('pengumuman.index')
+        ->with('success', 'Pengumuman berhasil diedit!');
     }
 
     /**
@@ -65,6 +104,10 @@ class PengumumanController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $pengumuman = Pengumuman::findOrFail($id);
+        $pengumuman->delete();
+
+        return redirect()->route('pengumuman.index')
+            ->with('success', 'Pengumuman berhasil dihapus!');
     }
 }

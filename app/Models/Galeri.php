@@ -14,8 +14,8 @@ class Galeri extends Model
     ];
 
 
-    public function berita_image()
+    public function galeri_image()
     {
-        return $this->hasOne(BeritaImage::class);
+        return $this->hasOne(GaleriImage::class);
     }
 }

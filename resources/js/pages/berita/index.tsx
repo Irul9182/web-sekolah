@@ -17,6 +17,7 @@ import { router, useForm, usePage } from '@inertiajs/react';
 import { Edit, EllipsisVertical, Eye, Trash } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+
 interface PageProps {
     beritas: BaseResponse<BeritaProps>;
     flash?: {

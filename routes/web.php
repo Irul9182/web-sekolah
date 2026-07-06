@@ -44,8 +44,17 @@ Route::middleware(['auth'])->group(function () {
 
     // Pengumuman =======================
     Route::get('/pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
+    Route::post('/pengumuman', [PengumumanController::class, 'store'])->name('pengumuman.store');
+    Route::post('/pengumuman/{id}', [PengumumanController::class, 'update'])->name('pengumuman.update');
+    Route::delete('/pengumuman/{id}', [PengumumanController::class, 'destroy'])->name('pengumuman.destroy');
+
+
     // Galeri =======================
     Route::get('/galeri', [GaleriController::class, 'index'])->name('galeri.index');
+    Route::post('/galeri', [GaleriController::class, 'store'])->name('galeri.store');
+    Route::post('/galeri/{id}', [GaleriController::class, 'update'])->name('galeri.update');
+    Route::delete('/galeri/{id}', [GaleriController::class, 'destroy'])->name('galeri.destroy');
+
 });
 
 require __DIR__ . '/settings.php';
