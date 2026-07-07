@@ -1,10 +1,12 @@
+import DetailItem from '@/components/app-detail-item';
 import AppDropdownMenu from '@/components/app-dopdown-menu';
 import AppInput from '@/components/app-input';
+import AppSearchInput from '@/components/app-input-search';
 import { Column, DataTable } from '@/components/app-table';
 import AppTextArea from '@/components/app-textare';
 import { DropdownMenuItem } from '@/components/ui-shadcn/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Modal, ModalBody, ModalContent, ModalHeader, ModalTitle } from '@/components/ui/modal';
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, ModalTitle } from '@/components/ui/modal';
 import { formatDate } from '@/helpers/format';
 import { useModal } from '@/hooks/use-modal';
 import AppLayout from '@/layouts/app-layout';
@@ -80,10 +82,14 @@ export default function BeritaIndex() {
                 forceFormData: true,
                 onSuccess: () => {
                     toast.success('Berhasil upload berita.');
-                    handleCloseModal();
                 },
                 onError: () => {
                     toast.error('Gagal upload berita, coba lagi nanti.');
+                },
+                onFinish: () => {
+                    handleCloseModal();
+                    setFile(null);
+                    setExistingImage(null);
                 },
             });
         }
@@ -93,10 +99,14 @@ export default function BeritaIndex() {
                 forceFormData: true,
                 onSuccess: () => {
                     toast.success(`Berhasil edit berita ${selectedData?.judul}.`);
-                    handleCloseModal();
                 },
                 onError: () => {
                     toast.error('Gagal edit berita, coba lagi nanti.');
+                },
+                onFinish: () => {
+                    handleCloseModal();
+                    setFile(null);
+                    setExistingImage(null);
                 },
             });
         }
@@ -110,6 +120,11 @@ export default function BeritaIndex() {
                 },
                 onError: () => {
                     toast.error('Gagal hapus berita, coba lagi nanti.');
+                },
+                onFinish: () => {
+                    handleCloseModal();
+                    setFile(null);
+                    setExistingImage(null);
                 },
             });
         }
@@ -131,8 +146,8 @@ export default function BeritaIndex() {
             setExistingImage(selectedData?.berita_image?.image_url ?? '');
         }
 
-        console.log('modal type: ', modalType);
-        console.log('Selected id: ', selectedId);
+        // console.log('modal type: ', modalType);
+        // console.log('Selected id: ', selectedId);
     }, [modalType, selectedId]);
 
     const columnsBerita: Column<any>[] = [
@@ -214,15 +229,18 @@ export default function BeritaIndex() {
                     <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
                         Kelola Berita
                     </h1>
-                    <Button
-                        style={{
-                            backgroundColor: 'var(--primary)',
-                            color: 'var(--primary-foreground)',
-                        }}
-                        onClick={() => handleOpenModal(null, 'create', listBerita)}
-                    >
-                        + Tambah Berita
-                    </Button>
+                    <div className="flex flex-row items-center gap-3">
+                        <AppSearchInput placeholder="Cari berdasarkan judul" onChange={(e) => handleSearch(e.target.value)} />
+                        <Button
+                            style={{
+                                backgroundColor: 'var(--primary)',
+                                color: 'var(--primary-foreground)',
+                            }}
+                            onClick={() => handleOpenModal(null, 'create', listBerita)}
+                        >
+                            + Tambah Berita
+                        </Button>
+                    </div>
                 </div>
                 <div className="px-4 pt-4">
                     <DataTable
@@ -245,11 +263,13 @@ export default function BeritaIndex() {
             </div>
 
             <Modal open={isOpen} key={modalType}>
-                <ModalContent hideClose>
+                <ModalContent hideClose className="custom-scrollbar! overflow-x-hidden">
                     {(modalType === 'create' || modalType === 'update') && (
                         <ModalBody>
                             <ModalHeader>
-                                <ModalTitle className="text-2xl font-semibold">Tambah Berita</ModalTitle>
+                                <ModalTitle className="text-2xl font-semibold">
+                                    {modalType === 'create' ? 'Tambah' : modalType === 'update' ? 'Ubah' : ''} Berita
+                                </ModalTitle>
                             </ModalHeader>
 
                             <div className="mt-4 space-y-3">
@@ -342,32 +362,60 @@ export default function BeritaIndex() {
                     )}
 
                     {modalType === 'delete' && (
-                        <div className="p-4">
-                            <h4>Hapus berita</h4>
-
-                            <div>
-                                <p>Anda yakin ingin menghapus berita {selectedData?.judul} ? </p>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <Button variant={'destructive'} onClick={handleCloseModal}>
-                                    Batal
-                                </Button>
-                                <Button onClick={() => handleSubmit()} variant={'outline'}>
-                                    Hapus
-                                </Button>
-                            </div>
+                        <div className="p-0 sm:p-4">
+                            <ModalHeader>
+                                <ModalTitle>Hapus berita</ModalTitle>
+                            </ModalHeader>
+                            <ModalBody className="max-w-150 text-[10px] break-words sm:text-sm">
+                                Anda yakin ingin menghapus berita {selectedData?.judul} ?
+                            </ModalBody>
+                            <ModalFooter>
+                                <div className="mt-2 flex items-center gap-2">
+                                    <Button
+                                        variant={'outline'}
+                                        onClick={() => {
+                                            handleCloseModal(), setExistingImage(null), setFile(null);
+                                        }}
+                                    >
+                                        Batal
+                                    </Button>
+                                    <Button onClick={() => handleSubmit()} variant={'destructive'}>
+                                        Hapus
+                                    </Button>
+                                </div>
+                            </ModalFooter>
                         </div>
                     )}
 
                     {modalType === 'detail' && (
                         <div className="p-4">
-                            <h4>Detail berita {selectedData?.judul}</h4>
-
-                            {/* Full properti / filed nya tinggal lu buat dibawah sini */}
-                            <div>Judul: {selectedData?.judul}</div>
+                            <ModalHeader>
+                                <ModalTitle className="font-semibold">Detail berita</ModalTitle>
+                            </ModalHeader>
+                            <ModalBody>
+                                <div className="mx-auto mb-4 h-50 w-full overflow-hidden rounded-md sm:w-70">
+                                    <img
+                                        className="h-full w-full object-cover"
+                                        src={selectedData?.berita_image?.image_url ?? '/images/default-img.png'}
+                                    />
+                                </div>
+                                <DetailItem value={selectedData?.judul ?? ''} valueClassName="max-w-70 break-words" label="Judul" />
+                                <DetailItem value={formatDate(selectedData?.created_at) ?? '-'} label="Dibuat pada" />
+                                <div>
+                                    <p className="mt-2 mb-2 font-semibold">Deskripsi :</p>
+                                    <div className="bg-background/50 max-w-70 rounded-md p-4 text-[12px] break-words sm:max-w-100 sm:text-sm">
+                                        {selectedData?.isi ?? ''}
+                                    </div>
+                                </div>
+                            </ModalBody>
                             <div>
-                                <Button onClick={handleCloseModal}>Tutup</Button>
+                                <Button
+                                    onClick={() => {
+                                        handleCloseModal(), setExistingImage(null), setFile(null);
+                                    }}
+                                >
+                                    Tutup
+                                </Button>
                             </div>
                         </div>
                     )}

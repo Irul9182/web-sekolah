@@ -5,9 +5,8 @@ namespace Database\Seeders;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Database\Seeders\ProyekSeeder;
-use Database\Seeders\TransaksiSeeder;
-use Database\Seeders\ProyekTransaksiSeeder;
+use Database\Seeders\GaleriSeeder;
+use Database\Seeders\GaleriImageSeeder;
 use Database\Seeders\PengumumanSeeder;
 
 class DatabaseSeeder extends Seeder
@@ -26,7 +25,9 @@ class DatabaseSeeder extends Seeder
         ]);
         $this->call([
             BeritaSeeder::class,
-            PengumumanSeeder::class
+            PengumumanSeeder::class,
+            GaleriSeeder::class,
+            GaleriImageSeeder::class,
         ]);
 
         // $this->call(ProyekSeeder::class);

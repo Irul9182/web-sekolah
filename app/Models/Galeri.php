@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\GaleriImage;
 use Illuminate\Database\Eloquent\Model;
 
 class Galeri extends Model

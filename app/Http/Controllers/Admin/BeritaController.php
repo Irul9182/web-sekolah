@@ -69,6 +69,7 @@ class BeritaController extends Controller
 
             $berita->berita_image()->create([
                 'image_url' => $result['secure_url'],
+                'public_id' => $result['public_id'],
             ]);
         }
 
@@ -81,7 +82,7 @@ class BeritaController extends Controller
         return Inertia::render('berita/edit', ['berita' => $berita]);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, string $id)
     {
         $berita = Berita::findOrFail($id);
 

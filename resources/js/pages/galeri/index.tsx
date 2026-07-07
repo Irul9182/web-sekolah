@@ -41,26 +41,17 @@ export default function GaleriIndex() {
     const [file, setFile] = useState<File | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const { handleOpenModal, handleCloseModal, isOpen, modalType, selectedData, selectedId } = useModal<GaleriProps>();
-    const {
-        data,
-        setData,
-        post,
-        processing,
-        errors,
-        reset,
-        delete: deleteGaleri,
-    } = useForm<GaleriPropsForm>(initialGaleriValue);
+    const { data, setData, post, processing, errors, reset, delete: deleteGaleri } = useForm<GaleriPropsForm>(initialGaleriValue);
     const [search, setSearch] = useState(filters?.search ?? '');
     const currentPerPage = new URLSearchParams(window.location.search).get('per_page') ?? '10';
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [existingImage, setExistingImage] = useState<string | null>(null);
     const hasImage = !!file || !!existingImage;
 
-    
-
+    console.log('Galeri: ', galeris);
     useEffect(() => {
-    setData('gambar', file as File);
-    setData('existing_gambar', existingImage);
+        setData('uploaded_image', file as File);
+        setData('existing_gambar', existingImage);
     }, [file, existingImage]);
 
     const handleSearch = (val: string) => {
@@ -77,19 +68,11 @@ export default function GaleriIndex() {
     };
 
     const handlePageChange = (page: number) => {
-        router.get(
-            route('galeri.index'),
-            { ...route().params, page: page, per_page: currentPerPage },
-            { preserveState: true, preserveScroll: true },
-        );
+        router.get(route('galeri.index'), { ...route().params, page: page, per_page: currentPerPage }, { preserveState: true, preserveScroll: true });
     };
 
     const handlePageSizeChange = (perPage: number) => {
-        router.get(
-            route('galeri.index'),
-            { ...route().params, page: 1, per_page: perPage },
-            { preserveState: true, preserveScroll: true },
-        );
+        router.get(route('galeri.index'), { ...route().params, page: 1, per_page: perPage }, { preserveState: true, preserveScroll: true });
     };
 
     const handleSubmit = () => {
@@ -98,10 +81,14 @@ export default function GaleriIndex() {
                 forceFormData: true,
                 onSuccess: () => {
                     toast.success('Berhasil menambah foto galeri.');
-                    handleCloseModal();
                 },
                 onError: () => {
                     toast.error('Gagal menambah foto galeri, coba lagi nanti.');
+                },
+                onFinish: () => {
+                    handleCloseModal();
+                    setFile(null);
+                    setExistingImage(null);
                 },
             });
         }
@@ -111,10 +98,14 @@ export default function GaleriIndex() {
                 forceFormData: true,
                 onSuccess: () => {
                     toast.success(`Berhasil edit foto ${selectedData?.judul}.`);
-                    handleCloseModal();
                 },
                 onError: () => {
                     toast.error('Gagal edit foto, coba lagi nanti.');
+                },
+                onFinish: () => {
+                    handleCloseModal();
+                    setFile(null);
+                    setExistingImage(null);
                 },
             });
         }
@@ -123,10 +114,14 @@ export default function GaleriIndex() {
             deleteGaleri(route('galeri.destroy', selectedId as string), {
                 onSuccess: () => {
                     toast.success(`Berhasil hapus foto ${selectedData?.judul}.`);
-                    handleCloseModal();
                 },
                 onError: () => {
                     toast.error('Gagal hapus foto, coba lagi nanti.');
+                },
+                onFinish: () => {
+                    handleCloseModal();
+                    setFile(null);
+                    setExistingImage(null);
                 },
             });
         }
@@ -135,7 +130,7 @@ export default function GaleriIndex() {
     useEffect(() => {
         if (modalType === 'update' || modalType === 'delete' || modalType === 'detail') {
             setData(selectedData as GaleriProps);
-            setExistingImage(selectedData?.gambar ? `/storage/${selectedData.gambar}` : '');
+            setExistingImage(selectedData?.galeri_image?.image_url ?? '');
         }
     }, [modalType, selectedId]);
 
@@ -147,15 +142,11 @@ export default function GaleriIndex() {
             render: (_: any, __: any, index: number) => <span className="text-muted-foreground text-sm">{index + 1}</span>,
         },
         {
-            key: 'gambar',
+            key: 'galeri_image',
             label: 'Foto',
             render: (_: any, record: GaleriProps) => (
                 <div className="relative h-20 w-20 overflow-hidden rounded-lg border-2 sm:h-30 sm:w-40">
-                    <img
-                        src={record?.gambar ? `/storage/${record.gambar}` : '/images/default-img.png'}
-                        alt="Galeri"
-                        className="h-full w-full object-cover"
-                    />
+                    <img src={record?.galeri_image?.image_url ?? '/images/default-img.png'} alt="Galeri" className="h-full w-full object-cover" />
                 </div>
             ),
         },
@@ -168,9 +159,7 @@ export default function GaleriIndex() {
         {
             key: 'created_at',
             label: 'Tanggal Ditambahkan',
-            render: (_: any, record: GaleriProps) => (
-                <span className="text-muted-foreground text-sm">{formatDate(record?.created_at) || '-'}</span>
-            ),
+            render: (_: any, record: GaleriProps) => <span className="text-muted-foreground text-sm">{formatDate(record?.created_at) || '-'}</span>,
         },
         {
             key: 'action',
@@ -270,7 +259,7 @@ export default function GaleriIndex() {
                                         <div className="relative aspect-auto w-full overflow-hidden rounded-lg border-2">
                                             <img
                                                 src={file ? URL.createObjectURL(file) : existingImage || '/images/default-img.png'}
-                                                alt="Galeri"
+                                                alt="Berita"
                                                 className="h-full w-full object-cover"
                                             />
                                         </div>
@@ -298,10 +287,10 @@ export default function GaleriIndex() {
                                                 accept="image/*"
                                                 className="hidden"
                                                 onChange={(e) => {
-                                                const selectedFile = e.target.files?.[0];
-                                                if (selectedFile) {
-                                                    setFile(selectedFile);
-                                                    setData('gambar', selectedFile);
+                                                    const selectedFile = e.target.files?.[0];
+                                                    if (selectedFile) {
+                                                        setFile(selectedFile);
+                                                        setData('uploaded_image', selectedFile);
                                                     }
                                                 }}
                                             />
@@ -319,6 +308,16 @@ export default function GaleriIndex() {
                                         onChange={(e) => setData('judul', e.target.value)}
                                     />
                                     {errors.judul && <p className="mt-1 text-sm text-red-500">{errors.judul}</p>}
+                                </div>
+                                <div>
+                                    <AppInput
+                                        className="bg-background/50"
+                                        placeholder="Contoh: Kegiatan Olahraga"
+                                        label="Isi"
+                                        value={data?.isi}
+                                        onChange={(e) => setData('isi', e.target.value)}
+                                    />
+                                    {errors.isi && <p className="mt-1 text-sm text-red-500">{errors.isi}</p>}
                                 </div>
 
                                 <div className="flex gap-3 pt-2">
@@ -353,7 +352,12 @@ export default function GaleriIndex() {
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <Button variant={'destructive'} onClick={handleCloseModal}>
+                                <Button
+                                    variant={'destructive'}
+                                    onClick={() => {
+                                        handleCloseModal(), setExistingImage(null), setFile(null);
+                                    }}
+                                >
                                     Batal
                                 </Button>
                                 <Button onClick={() => handleSubmit()} variant={'outline'}>
@@ -369,14 +373,20 @@ export default function GaleriIndex() {
 
                             <div className="relative aspect-auto w-full overflow-hidden rounded-lg border-2">
                                 <img
-                                    src={selectedData?.gambar ? `/storage/${selectedData.gambar}` : '/images/default-img.png'}
+                                    src={selectedData?.galeri_image?.image_url ?? '/images/default-img.png'}
                                     alt="Galeri"
                                     className="h-full w-full object-cover"
                                 />
                             </div>
                             <div>Judul: {selectedData?.judul}</div>
                             <div>
-                                <Button onClick={handleCloseModal}>Tutup</Button>
+                                <Button
+                                    onClick={() => {
+                                        handleCloseModal(), setExistingImage(null), setFile(null);
+                                    }}
+                                >
+                                    Tutup
+                                </Button>
                             </div>
                         </div>
                     )}
