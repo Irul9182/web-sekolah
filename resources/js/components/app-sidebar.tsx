@@ -7,59 +7,48 @@ import { useEffect, useState } from 'react';
 import AppLogo from './app-logo';
 import { NavFooter } from './nav-footer';
 
+// const mainNavItemsAffren: NavGroup[] = [
+//     {
+//         title: 'Dashboard',
+//         url: '/admin/dashboard',
+//         icon: LayoutGrid,
+//     },
+//     {
+//         title: 'Berita',
+//         url: '/admin/berita',
+//         icon: Newspaper,
+//     },
+//     {
+//         title: 'Pengumuman',
+//         url: '/admin/pengumuman',
+//         icon: Megaphone,
+//     },
+//     {
+//         title: 'Galeri',
+//         url: '/admin/galeri',
+//         icon: BookImage,
+//     },
 const mainNavItemsAffren: NavGroup[] = [
     {
         title: 'Dashboard',
-        url: '/dashboard',
+        url: route('dashboard.index'),
         icon: LayoutGrid,
     },
     {
         title: 'Berita',
-        url: '/berita',
+        url: route('berita.index'),
         icon: Newspaper,
     },
     {
         title: 'Pengumuman',
-        url: '/pengumuman',
+        url: route('pengumuman.index'),
         icon: Megaphone,
     },
     {
         title: 'Galeri',
-        url: '/galeri',
+        url: route('galeri.index'),
         icon: BookImage,
     },
-    // {
-    //     title: 'Transaksi',
-    //     url: '/transaction',
-    //     icon: Wallet,
-    // },
-    // {
-    //     title: 'Cashflow',
-    //     url: '/cashflow',
-    //     icon: ChartBar,
-    // },
-    // {
-    //     title: 'Forecasting',
-    //     url: '/forecasting',
-    //     icon: ChartBar,
-    // },
-    // {
-    //     title: 'Konfigurasi',
-    //     url: '/config',
-    //     icon: Cog,
-    //     items: [
-    //         {
-    //             title: 'Kategori Proyek',
-    //             url: '/config/project-config/category',
-    //             icon: Blocks,
-    //         },
-    //         {
-    //             title: 'Jenis Proyek',
-    //             url: '/config/project-config/type',
-    //             icon: Wrench,
-    //         },
-    //     ],
-    // },
 ];
 
 const mainNavItems2: NavGroup[] = [

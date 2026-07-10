@@ -367,7 +367,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                             className="flex-shrink-0"
                                             style={{ display: 'inline-block', width: 16, height: 1.5, background: 'var(--muted-foreground)' }}
                                         />
-                                        Manajemen Keuangan Konstruksi
+                                        Sekolah Unggulan Berbasis Teknologi
                                     </div>
                                     <h1
                                         style={{
@@ -390,7 +390,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                             margin: 0,
                                         }}
                                     >
-                                        Gunakan kredensial yang diberikan admin proyek Anda.
+                                        Gunakan akun yang sudah anda buat.
                                     </p>
                                 </div>
 
@@ -672,7 +672,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     style={{ fontSize: 10.5, color: 'var(--muted-foreground)', opacity: 0.65 }}
                                 >
                                     <ShieldCheck size={12} style={{ color: '#84a98c' }} />
-                                    Koneksi terenkripsi SSL · Data proyek terlindungi
+                                    Koneksi terenkripsi SSL · Data anda terlindungi
                                 </div>
                             </div>
                         </div>

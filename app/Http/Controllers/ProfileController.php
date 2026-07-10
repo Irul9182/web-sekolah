@@ -6,14 +6,9 @@ use Inertia\Inertia;
 
 class ProfileController extends Controller
 {
-    public function visi()
+    public function visiMisi()
     {
-        return Inertia::render('profile/visi');
-    }
-
-    public function misi()
-    {
-        return Inertia::render('profile/misi');
+        return Inertia::render('profile/visi-misi');
     }
 
     public function sejarah()

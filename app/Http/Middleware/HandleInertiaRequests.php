@@ -13,11 +13,6 @@ class HandleInertiaRequests extends Middleware
 
     public function handle(Request $request, Closure $next): Response
     {
-        // Skip Inertia untuk semua route admin
-        if ($request->is('admin') || $request->is('admin/*')) {
-            return $next($request);
-        }
-
         return parent::handle($request, $next);
     }
 
@@ -26,13 +21,12 @@ class HandleInertiaRequests extends Middleware
         return parent::version($request);
     }
 
-    public function share(Request $request): array
+        public function share(Request $request): array
     {
-        return [
-            ...parent::share($request),
+        return array_merge(parent::share($request), [
             'auth' => [
                 'user' => $request->user(),
             ],
-        ];
+        ]);
     }
 }

@@ -104,8 +104,7 @@ const sosmed: Array<{ label: string; icon: string }> = [
 
 // Menu dropdown "Profile" -> arahkan href sesuai routing profil sekolah kamu
 const profileMenu: Array<{ label: string; href: string }> = [
-    { label: 'Visi', href: '/profile/visi' },
-    { label: 'Misi', href: '/profile/misi' },
+    { label: 'Visi & Misi', href: '/profile/visi-misi' },
     { label: 'Sejarah', href: '/profile/sejarah' },
     { label: 'Struktur Organisasi', href: '/profile/struktur-organisasi' },
 ];
@@ -204,7 +203,6 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                 {/* Desktop Nav */}
                 <NavigationMenu className="hidden lg:flex">
                     <NavigationMenuList>
-                        {/* Beranda: hover disamakan pakai navigationMenuTriggerStyle */}
                         <NavigationMenuItem>
                             <NavigationMenuLink href="/" className={cn(navigationMenuTriggerStyle())}>
                                 Beranda
@@ -255,7 +253,7 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                             </NavigationMenuContent>
                         </NavigationMenuItem>
 
-                        {/* Berita, Pengumuman, Galeri: hover disamakan pakai navigationMenuTriggerStyle */}
+
                         <NavigationMenuItem>
                             <NavigationMenuLink href="/berita" className={cn(navigationMenuTriggerStyle())}>
                                 Berita
