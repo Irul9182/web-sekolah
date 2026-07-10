@@ -3,15 +3,11 @@
 use App\Http\Controllers\Admin\BeritaController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\ProyekController;
-use App\Http\Controllers\TransaksiController;
-use App\Http\Controllers\ItemTransaksiController;
-use App\Http\Controllers\KategoriProyekController;
-use App\Http\Controllers\JenisProyekController;
-use App\Http\Controllers\ForecastController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\GaleriController;
 use App\Http\Controllers\Admin\PengumumanController;
+use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Controllers\Settings\JurusanController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -55,6 +51,17 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/galeri/{id}', [GaleriController::class, 'update'])->name('galeri.update');
     Route::delete('/galeri/{id}', [GaleriController::class, 'destroy'])->name('galeri.destroy');
 
+    //  Profile ======================
+    Route::get('/profile/visi', [ProfileController::class, 'visi'])->name('profile.visi');
+    Route::get('/profile/misi', [ProfileController::class, 'misi'])->name('profile.misi');
+    Route::get('/profile/sejarah', [ProfileController::class, 'sejarah'])->name('profile.sejarah');
+    Route::get('/profile/struktur-organisasi', [ProfileController::class, 'struktur'])->name('profile.struktur');
+
+    // Jurusan ======================
+    Route::get('/tkj', [JurusanController::class, 'tkj'])->name('jurusan.tkj');
+    Route::get('/ap', [JurusanController::class, 'ap'])->name('jurusan.ap');
+    Route::get('/ak', [JurusanController::class, 'ak'])->name('jurusan.ak');
+    Route::get('/mavib', [JurusanController::class, 'mavib'])->name('jurusan.mavib');
 });
 
 require __DIR__ . '/settings.php';

@@ -1,6 +1,5 @@
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,94 +12,10 @@ import {
     NavigationMenuTrigger,
     navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
-import { Separator } from '@/components/ui/separator';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { formatDate } from '@/helpers/format';
 import { cn } from '@/lib/utils';
-import { Link, usePage } from '@inertiajs/react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-
-type ThemeColor = 'info' | 'gold' | 'success' | 'warning' | 'error' | 'default';
-
-// ==== Tipe data sesuai kolom asli di database ====
-interface BeritaItem {
-    id: number;
-    judul: string;
-    created_at: string;
-    berita_image?: { image_url: string } | null;
-}
-
-interface PengumumanItem {
-    id: number;
-    judul: string;
-    deskripsi: string;
-    created_at: string;
-}
-
-interface GaleriItem {
-    id: number;
-    judul: string;
-    gambar: string | null;
-}
-
-interface PageProps {
-    beritas: BeritaItem[];
-    pengumumans: PengumumanItem[];
-    galeris: GaleriItem[];
-}
-
-interface JurusanData {
-    judul: string;
-    img: string;
-    deskripsi: string;
-    link: string;
-    varColor: ThemeColor;
-}
-
-type JurusanKey = 'tkj' | 'dkv' | 'akuntansi' | 'perkantoran';
-
-// Jurusan masih statis (bukan dari database) karena kontennya jarang berubah.
-const dataJurusan: Record<JurusanKey, JurusanData> = {
-    tkj: {
-        judul: 'Teknik Komputer & Jaringan',
-        img: '/images/tkj.jpg',
-        deskripsi:
-            'Jurusan TKJ mempelajari instalasi jaringan komputer, troubleshooting hardware, dan administrasi sistem. Lulusan siap bekerja sebagai teknisi jaringan dan IT support.',
-        link: '/tkj',
-        varColor: 'info',
-    },
-    dkv: {
-        judul: 'Desain Komunikasi Visual',
-        img: '/images/dkv.jpg',
-        deskripsi:
-            'Jurusan DKV mempelajari desain grafis, fotografi, dan multimedia kreatif. Lulusan siap berkarir di industri kreatif, periklanan, dan media digital.',
-        link: '/dkv',
-        varColor: 'gold',
-    },
-    akuntansi: {
-        judul: 'Akuntansi & Keuangan',
-        img: '/images/akuntansi.jpg',
-        deskripsi:
-            'Jurusan Akuntansi mempelajari pembukuan, laporan keuangan, dan perpajakan. Lulusan siap bekerja di perusahaan maupun membuka usaha sendiri.',
-        link: '/akuntansi',
-        varColor: 'success',
-    },
-    perkantoran: {
-        judul: 'Otomatisasi & Tata Kelola Perkantoran',
-        img: '/images/perkantoran.jpg',
-        deskripsi:
-            'Jurusan Perkantoran mempelajari administrasi bisnis, korespondensi, dan manajemen arsip. Lulusan siap bekerja sebagai staf administrasi profesional.',
-        link: '/perkantoran',
-        varColor: 'warning',
-    },
-};
-
-const sosmed: Array<{ label: string; icon: string }> = [
-    { label: 'Facebook', icon: 'f' },
-    { label: 'Instagram', icon: 'in' },
-    { label: 'YouTube', icon: 'yt' },
-    { label: 'Twitter/X', icon: 'x' },
-];
 
 // Menu dropdown "Profile" -> arahkan href sesuai routing profil sekolah kamu
 const profileMenu: Array<{ label: string; href: string }> = [
@@ -110,7 +25,7 @@ const profileMenu: Array<{ label: string; href: string }> = [
     { label: 'Struktur Organisasi', href: '/profile/struktur-organisasi' },
 ];
 
-// Menu dropdown "Jurusan" -> arahkan href sesuai routing jurusan kamu
+// Menu dropdown "Jurusan" -> TKJ, AP, AK, MAVIB
 const jurusanMenu: Array<{ label: string; href: string }> = [
     { label: 'TKJ', href: '/tkj' },
     { label: 'AP', href: '/ap' },
@@ -118,30 +33,18 @@ const jurusanMenu: Array<{ label: string; href: string }> = [
     { label: 'MAVIB', href: '/mavib' },
 ];
 
-interface JurusanBadgeProps {
-    varColor: ThemeColor;
-    label: string;
-}
+const sosmed: Array<{ label: string; icon: string }> = [
+    { label: 'Facebook', icon: 'f' },
+    { label: 'Instagram', icon: 'in' },
+    { label: 'YouTube', icon: 'yt' },
+    { label: 'Twitter/X', icon: 'x' },
+];
 
-function JurusanBadge({ varColor, label }: JurusanBadgeProps) {
-    return (
-        <span
-            style={{
-                backgroundColor: `color-mix(in srgb, var(--color-${varColor}) 15%, transparent)`,
-                color: `var(--color-${varColor})`,
-            }}
-            className="inline-block rounded-full px-3 py-1 text-xs font-semibold"
-        >
-            {label}
-        </span>
-    );
-}
-
-interface SectionHeaderProps {
+export interface SectionHeaderProps {
     title: string;
 }
 
-function SectionHeader({ title }: SectionHeaderProps) {
+export function SectionHeader({ title }: SectionHeaderProps) {
     return (
         <div className="mb-6 flex items-center gap-3">
             <div className="h-6 w-1 rounded-full" style={{ backgroundColor: 'var(--primary)' }} />
@@ -187,7 +90,7 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
         >
             <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4">
                 {/* Logo */}
-                <div className="flex flex-shrink-0 items-center gap-3">
+                <Link href="/" className="flex flex-shrink-0 items-center gap-3">
                     <img
                         src="/images/OIP.jpg"
                         alt="Logo SMK"
@@ -199,12 +102,11 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                         <br />
                         Baidhaul Ahkam
                     </span>
-                </div>
+                </Link>
 
                 {/* Desktop Nav */}
                 <NavigationMenu className="hidden lg:flex">
                     <NavigationMenuList>
-                        {/* Beranda: hover disamakan pakai navigationMenuTriggerStyle */}
                         <NavigationMenuItem>
                             <NavigationMenuLink href="/" className={cn(navigationMenuTriggerStyle())}>
                                 Beranda
@@ -255,7 +157,6 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                             </NavigationMenuContent>
                         </NavigationMenuItem>
 
-                        {/* Berita, Pengumuman, Galeri: hover disamakan pakai navigationMenuTriggerStyle */}
                         <NavigationMenuItem>
                             <NavigationMenuLink href="/berita" className={cn(navigationMenuTriggerStyle())}>
                                 Berita
@@ -499,234 +400,6 @@ function LoginDialog({ open, onOpenChange, onLoginSuccess }: LoginDialogProps) {
     );
 }
 
-function HeroSection() {
-    return (
-        <section
-            className="relative flex min-h-[520px] items-center justify-center overflow-hidden pt-16"
-            style={{ backgroundColor: 'var(--primary)' }}
-        >
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-white/5" />
-                <div className="absolute bottom-0 -left-20 h-72 w-72 rounded-full bg-white/5" />
-            </div>
-
-            <div className="relative z-10 px-4 py-16 text-center">
-                <Badge
-                    className="mb-4 border"
-                    style={{
-                        backgroundColor: 'color-mix(in srgb, var(--primary-foreground) 15%, transparent)',
-                        color: 'var(--primary-foreground)',
-                        borderColor: 'color-mix(in srgb, var(--primary-foreground) 30%, transparent)',
-                    }}
-                >
-                    🏫 Sekolah Unggulan
-                </Badge>
-                <h1
-                    className="mx-auto mb-4 max-w-2xl text-3xl leading-tight font-bold sm:text-4xl md:text-5xl"
-                    style={{ color: 'var(--primary-foreground)' }}
-                >
-                    Selamat Datang Di Sekolah Baidhaul Ahkam
-                </h1>
-                <p className="mb-8 text-lg" style={{ color: 'color-mix(in srgb, var(--primary-foreground) 75%, transparent)' }}>
-                    Sekolah Unggulan Berbasis Teknologi
-                </p>
-                <Button size="lg" className="font-semibold shadow-lg" style={{ backgroundColor: 'var(--background)', color: 'var(--primary)' }}>
-                    Lihat Profile Sekolah →
-                </Button>
-            </div>
-        </section>
-    );
-}
-
-// ==== Section yang sudah tersambung ke database ====
-
-function BeritaSection({ data }: { data: BeritaItem[] }) {
-    return (
-        <section className="mx-auto max-w-7xl px-4 py-12" style={{ backgroundColor: 'var(--background)' }}>
-            <SectionHeader title="Berita Terbaru" />
-            {data.length === 0 ? (
-                <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                    Belum ada berita.
-                </p>
-            ) : (
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                    {data.map((b) => (
-                        <Card
-                            key={b.id}
-                            className="group cursor-pointer overflow-hidden transition-shadow duration-300 hover:shadow-lg"
-                            style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}
-                        >
-                            <div className="aspect-video overflow-hidden" style={{ backgroundColor: 'var(--muted)' }}>
-                                <img
-                                    src={b.berita_image?.image_url || '/images/default-img.png'}
-                                    alt={b.judul}
-                                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                />
-                            </div>
-                            <CardContent className="p-4">
-                                <p className="mb-1 line-clamp-2 text-sm font-semibold" style={{ color: 'var(--card-foreground)' }}>
-                                    {b.judul}
-                                </p>
-                                <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                                    {formatDate(b.created_at)}
-                                </p>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-            )}
-        </section>
-    );
-}
-
-function PengumumanSection({ data }: { data: PengumumanItem[] }) {
-    return (
-        <section className="py-12" style={{ backgroundColor: 'var(--secondary)' }}>
-            <div className="mx-auto max-w-7xl px-4">
-                <SectionHeader title="Pengumuman Sekolah" />
-                {data.length === 0 ? (
-                    <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                        Belum ada pengumuman.
-                    </p>
-                ) : (
-                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                        {data.map((p) => (
-                            <Card
-                                key={p.id}
-                                className="border-l-4"
-                                style={{
-                                    borderLeftColor: 'var(--primary)',
-                                    borderColor: 'var(--border)',
-                                    backgroundColor: 'var(--card)',
-                                }}
-                            >
-                                <CardContent className="p-5">
-                                    <Badge
-                                        className="mb-2 border-0"
-                                        style={{
-                                            backgroundColor: 'color-mix(in srgb, var(--color-info) 15%, transparent)',
-                                            color: 'var(--color-info)',
-                                        }}
-                                    >
-                                        Pengumuman
-                                    </Badge>
-                                    <p className="mb-1 font-bold" style={{ color: 'var(--card-foreground)' }}>
-                                        {p.judul}
-                                    </p>
-                                    <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                                        {p.deskripsi}
-                                    </p>
-                                    <p className="mt-2 text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                                        {formatDate(p.created_at)}
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                )}
-            </div>
-        </section>
-    );
-}
-
-function JurusanSection() {
-    const [activeJurusan, setActiveJurusan] = useState<JurusanKey | null>(null);
-    const jurusanKeys = Object.keys(dataJurusan) as JurusanKey[];
-
-    return (
-        <section className="mx-auto max-w-7xl px-4 py-12" style={{ backgroundColor: 'var(--background)' }}>
-            <SectionHeader title="Sekilas Sekolah SMK Islam Baidhaul Ahkam" />
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                {jurusanKeys.map((key) => {
-                    const j = dataJurusan[key];
-                    return (
-                        <Card
-                            key={key}
-                            onClick={() => setActiveJurusan(key)}
-                            className="group cursor-pointer overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                            style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}
-                        >
-                            <div className="aspect-video overflow-hidden" style={{ backgroundColor: 'var(--muted)' }}>
-                                <img
-                                    src={j.img}
-                                    alt={j.judul}
-                                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                />
-                            </div>
-                            <CardContent className="p-4 text-center">
-                                <JurusanBadge varColor={j.varColor} label={key.toUpperCase()} />
-                            </CardContent>
-                        </Card>
-                    );
-                })}
-            </div>
-
-            <Dialog
-                open={!!activeJurusan}
-                onOpenChange={(o) => {
-                    if (!o) setActiveJurusan(null);
-                }}
-            >
-                {activeJurusan && (
-                    <DialogContent className="sm:max-w-lg">
-                        <img
-                            src={dataJurusan[activeJurusan].img}
-                            alt={dataJurusan[activeJurusan].judul}
-                            className="mb-2 h-48 w-full rounded-lg object-cover"
-                        />
-                        <DialogHeader>
-                            <DialogTitle>{dataJurusan[activeJurusan].judul}</DialogTitle>
-                            <DialogDescription>{dataJurusan[activeJurusan].deskripsi}</DialogDescription>
-                        </DialogHeader>
-                        <Button asChild className="mt-2" style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}>
-                            <a href={dataJurusan[activeJurusan].link}>Lihat Detail Jurusan →</a>
-                        </Button>
-                    </DialogContent>
-                )}
-            </Dialog>
-        </section>
-    );
-}
-
-function GaleriSection({ data }: { data: GaleriItem[] }) {
-    return (
-        <section className="py-12" style={{ backgroundColor: 'var(--secondary)' }}>
-            <div className="mx-auto max-w-7xl px-4">
-                <SectionHeader title="Galeri Sekolah" />
-                {data.length === 0 ? (
-                    <p className="mb-8 text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                        Belum ada foto galeri.
-                    </p>
-                ) : (
-                    <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                        {data.map((g) => (
-                            <div key={g.id} className="group relative aspect-square cursor-pointer overflow-hidden rounded-xl">
-                                <img
-                                    src={g.gambar ? `/storage/${g.gambar}` : '/images/default-img.png'}
-                                    alt={g.judul}
-                                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-                                />
-                                <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                                    <span className="text-sm font-medium text-white">{g.judul}</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-                <div className="text-center">
-                    <Link
-                        href="/galeri"
-                        className="inline-block rounded-md border px-4 py-2 text-sm font-medium"
-                        style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}
-                    >
-                        Lihat Semua Foto →
-                    </Link>
-                </div>
-            </div>
-        </section>
-    );
-}
-
 function Footer() {
     return (
         <footer style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}>
@@ -774,8 +447,11 @@ function Footer() {
     );
 }
 
-export default function SMKBaidhaulAhkam() {
-    const { beritas, pengumumans, galeris } = usePage<PageProps>().props;
+interface PublicLayoutProps {
+    children: React.ReactNode;
+}
+
+export default function PublicLayout({ children }: PublicLayoutProps) {
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
     const [showLogin, setShowLogin] = useState<boolean>(false);
 
@@ -785,13 +461,7 @@ export default function SMKBaidhaulAhkam() {
 
             <LoginDialog open={showLogin} onOpenChange={setShowLogin} onLoginSuccess={() => setIsLoggedIn(true)} />
 
-            <main>
-                <HeroSection />
-                <BeritaSection data={beritas ?? []} />
-                <PengumumanSection data={pengumumans ?? []} />
-                <JurusanSection />
-                <GaleriSection data={galeris ?? []} />
-            </main>
+            <main>{children}</main>
 
             <Footer />
         </div>
