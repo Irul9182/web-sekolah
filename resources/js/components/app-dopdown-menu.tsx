@@ -6,14 +6,14 @@ interface PropTypes {
     openDisplay?: ReactNode;
     menuLabel?: string;
     menuItem?: ReactNode;
+    isLabelCustom?: boolean;
+    labelCustom?: ReactNode;
 }
 
-const AppDropdownMenu = ({ menuItem, menuLabel, openDisplay = 'open' }: PropTypes) => {
+const AppDropdownMenu = ({ menuItem, menuLabel, openDisplay = 'open', isLabelCustom = false, labelCustom }: PropTypes) => {
     return (
         <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="outline">{openDisplay}</Button>
-            </DropdownMenuTrigger>
+            <DropdownMenuTrigger asChild>{isLabelCustom ? <>{labelCustom}</> : <Button variant="outline">{openDisplay}</Button>}</DropdownMenuTrigger>
             <DropdownMenuContent>
                 <DropdownMenuGroup>
                     {menuLabel && <DropdownMenuLabel>{menuLabel}</DropdownMenuLabel>}
