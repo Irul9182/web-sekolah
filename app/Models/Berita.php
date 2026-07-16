@@ -12,6 +12,7 @@ class Berita extends Model
         'isi',
         'gambar',
         'slug',
+        'status'
     ];
 
     public function berita_image()

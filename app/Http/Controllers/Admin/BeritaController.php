@@ -7,6 +7,7 @@ use App\Models\Berita;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use phpDocumentor\Reflection\Types\Boolean;
 
 class BeritaController extends Controller
 {
@@ -43,6 +44,7 @@ class BeritaController extends Controller
             'judul'  => 'required',
             'isi'    => 'required',
             'uploaded_image' => 'nullable|image|max:5120',
+            'status' => 'required'
         ]);
 
 
@@ -50,6 +52,7 @@ class BeritaController extends Controller
             'judul'  => $request->judul,
             'isi'    => $request->isi,
             'slug'   => Str::slug($request->judul),
+            'status' => $request->status
         ]);
 
         if ($request->hasFile('uploaded_image')) {
@@ -91,6 +94,7 @@ class BeritaController extends Controller
             'isi'    => 'required',
             // 'gambar' => 'nullable|image|max:2048',
             'uploaded_image' => 'nullable|image|max:5120',
+            'status' => 'required'
         ]);
 
         $cloudinary = app(\Cloudinary\Cloudinary::class);
@@ -127,9 +131,23 @@ class BeritaController extends Controller
             'judul'  => $request->judul,
             'isi'    => $request->isi,
             'slug'   => Str::slug($request->judul),
+            'status' => $request->status
         ]);
 
         return back()->with('success', 'Berita berhasil diedit!');
+    }
+
+    public function updateStatus(Request $request, string $id)
+    {
+        $berita = Berita::findOrFail($id);
+
+        $request->validate([
+            'status' => 'required'
+        ]);
+
+        $berita->update(['status' => $request->status]);
+
+        return back()->with('success', 'Status berhasil diedit!.');
     }
 
     public function destroy($id)

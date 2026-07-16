@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, ModalTitle } from '@/components/ui/modal';
 import {
     NavigationMenu,
     NavigationMenuContent,
@@ -13,6 +14,16 @@ import {
     NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
 import { Separator } from '@/components/ui/separator';
+import { User } from '@/types';
+import { PageProps as InertiaPageProps, router } from '@inertiajs/core';
+import { usePage } from '@inertiajs/react';
+
+interface PageProps extends InertiaPageProps {
+    auth: {
+        user: User;
+    };
+}
+
 import { InstagramIcon, X, Youtube } from 'lucide-react';
 import type React from 'react';
 import { useEffect, useState } from 'react';
@@ -150,8 +161,11 @@ const sosmed: SosmedItem[] = [
 const navLinks: string[] = ['Beranda', 'Berita', 'Galeri'];
 
 export default function SMKBaidhaulAhkam(): React.JSX.Element {
+    const { props } = usePage<PageProps>();
+    const { auth } = props;
+    console.log('Props welcome: ', props);
     // ---- state (auth) ----
-    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+    const [isOpen, setIsOpen] = useState<boolean>(false);
     const [showLogin, setShowLogin] = useState<boolean>(false);
 
     // ---- state (navbar) ----
@@ -205,7 +219,7 @@ export default function SMKBaidhaulAhkam(): React.JSX.Element {
         if (!password) return void alert('Password wajib diisi');
         if (username === 'admin' && password === '123') {
             alert('Login berhasil');
-            setIsLoggedIn(true);
+            setIsOpen(true);
             setShowLogin(false);
         } else {
             alert('Username atau password salah');
@@ -315,16 +329,6 @@ export default function SMKBaidhaulAhkam(): React.JSX.Element {
                             </NavigationMenuItem>
                         </NavigationMenuList>
                     </NavigationMenu>
-
-                    <Button
-                        size="sm"
-                        className="hidden sm:inline-flex"
-                        style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}
-                        onMouseEnter={handleNavbarCtaMouseEnter}
-                        onMouseLeave={handleNavbarCtaMouseLeave}
-                    >
-                        Daftar Sekarang
-                    </Button>
                 </div>
             </header>
 
@@ -755,28 +759,23 @@ export default function SMKBaidhaulAhkam(): React.JSX.Element {
                             </div>
 
                             <div className="mt-4 flex items-center gap-2">
-                                {!isLoggedIn ? (
+                                {!auth?.user ? (
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => setShowLogin(true)}
-                                        className="rounded-full text-xs!"
-                                        style={{
-                                            color: 'var(--background)',
-                                            borderColor: 'color-mix(in srgb, var(--background) 30%, transparent)',
-                                        }}
+                                        onClick={() => router.visit('/login')}
+                                        className="text-foreground rounded-full text-xs!"
                                     >
                                         Login Admin
                                     </Button>
                                 ) : (
                                     <Button
-                                        onClick={() => setIsLoggedIn(false)}
+                                        onClick={() => setIsOpen(true)}
                                         variant="outline"
                                         size="sm"
-                                        className="rounded-full text-xs"
-                                        style={{ color: 'var(--destructive)', borderColor: 'var(--destructive)' }}
+                                        className="text-destructive rounded-full text-xs"
                                     >
-                                        Logout
+                                        Log out
                                     </Button>
                                 )}
                             </div>
@@ -815,6 +814,28 @@ export default function SMKBaidhaulAhkam(): React.JSX.Element {
                         © Copyright 2025 SMK Baidhaul Ahkam
                     </p>
                 </div>
+                <Modal open={isOpen} key={'logout'}>
+                    <ModalContent size="xl" hideClose>
+                        <ModalHeader>
+                            <ModalTitle>Log Out</ModalTitle>
+                        </ModalHeader>
+                        <ModalBody>
+                            <p>Anda yakin ingin log out?</p>
+                        </ModalBody>
+                        <ModalFooter>
+                            <Button variant={'outline'} onClick={() => setIsOpen(false)}>
+                                Batal
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    router.post('logout'), setIsOpen(false);
+                                }}
+                            >
+                                Iya
+                            </Button>
+                        </ModalFooter>
+                    </ModalContent>
+                </Modal>
             </footer>
         </div>
     );

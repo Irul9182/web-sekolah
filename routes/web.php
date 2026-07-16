@@ -28,6 +28,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/berita', [BeritaController::class, 'index'])->name('berita.index');
     Route::post('/berita', [BeritaController::class, 'store'])->name('berita.store');
     Route::post('/berita/{id}', [BeritaController::class, 'update'])->name('berita.update');
+    Route::patch('/berita/{id}', [BeritaController::class, 'updateStatus'])->name('berita.updateStatus');
     Route::delete('/berita/{id}', [BeritaController::class, 'destroy'])->name('berita.destroy');
 
     // Route::resource('berita', BeritaController::class)->names([
@@ -54,7 +55,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/galeri', [GaleriController::class, 'store'])->name('galeri.store');
     Route::post('/galeri/{id}', [GaleriController::class, 'update'])->name('galeri.update');
     Route::delete('/galeri/{id}', [GaleriController::class, 'destroy'])->name('galeri.destroy');
-
 });
 
 require __DIR__ . '/settings.php';

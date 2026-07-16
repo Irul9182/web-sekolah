@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { Eye, EyeOff, Loader2, Lock, LogIn, Mail, ShieldCheck } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
 
@@ -301,7 +301,11 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         if (!validate()) return;
-        post(route('login'), { onFinish: () => reset('password') });
+        post(route('login'), {
+            onFinish: () => {
+                reset('password'), router.visit('/dashboard');
+            },
+        });
     };
 
     return (

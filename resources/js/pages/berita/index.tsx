@@ -5,6 +5,7 @@ import AppSearchInput from '@/components/app-input-search';
 import { Column, DataTable } from '@/components/app-table';
 import AppTextArea from '@/components/app-textare';
 import { DropdownMenuItem } from '@/components/ui-shadcn/dropdown-menu';
+import { Switch } from '@/components/ui-shadcn/switch';
 import { Button } from '@/components/ui/button';
 import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, ModalTitle } from '@/components/ui/modal';
 import { formatDate } from '@/helpers/format';
@@ -44,7 +45,7 @@ export default function BeritaIndex() {
     const [file, setFile] = useState<File | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const { handleOpenModal, handleCloseModal, isOpen, modalType, selectedData, selectedId } = useModal<BeritaProps>();
-    const { data, setData, post, processing, errors, reset, delete: deleteBerita, put } = useForm<BeritaPropsForm>(initialBeritaValue);
+    const { data, setData, post, processing, errors, reset, delete: deleteBerita, put, patch } = useForm<BeritaPropsForm>(initialBeritaValue);
     const [search, setSearch] = useState(filters?.search ?? '');
     const currentPerPage = new URLSearchParams(window.location.search).get('per_page') ?? '10';
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -76,6 +77,26 @@ export default function BeritaIndex() {
         router.get(route('berita.index'), { ...route().params, page: 1, per_page: perPage }, { preserveState: true, preserveScroll: true });
     };
 
+    const handleUpdateStatus = async (status: boolean, id: string) => {
+        if (!id) {
+            toast.error('Id invalid');
+            return;
+        }
+
+        await setData('status', status);
+
+        await patch(route('berita.updateStatus', id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Berhasil update status berita.');
+                router.reload({ only: ['beritas'] });
+            },
+            onError: () => {
+                toast.error('Gagal update status berita.');
+                router.reload({ only: ['beritas'] });
+            },
+        });
+    };
     const handleSubmit = () => {
         if (modalType === 'create') {
             post(route('berita.store'), {
@@ -171,6 +192,19 @@ export default function BeritaIndex() {
             label: 'Judul',
             className: ' truncate max-w-[100px] sm:max-w-[300px]',
             render: (_: any, row: BeritaProps) => <span>{row.judul}</span>,
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            className: ' truncate max-w-[100px] sm:max-w-[300px]',
+            render: (_: any, row: BeritaProps) => (
+                <Switch
+                    className="cursor-pointer"
+                    disabled={processing}
+                    checked={row.status}
+                    onCheckedChange={(checked) => handleUpdateStatus(checked, row.id)}
+                />
+            ),
         },
         {
             key: 'created_at',
