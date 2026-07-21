@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { FaFacebook, FaInstagram, FaYoutube, FaXTwitter } from 'react-icons/fa6';
 import { Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
@@ -33,11 +34,19 @@ const jurusanMenu: Array<{ label: string; href: string }> = [
     { label: 'MAVIB', href: '/mavib' },
 ];
 
-const sosmed: Array<{ label: string; icon: string }> = [
-    { label: 'Facebook', icon: 'f' },
-    { label: 'Instagram', icon: 'in' },
-    { label: 'YouTube', icon: 'yt' },
-    { label: 'Twitter/X', icon: 'x' },
+// Menu dropdown "Kontak" -> link sosial media/kontak sekolah (dibuka di tab baru)
+const kontakMenu: Array<{ label: string; href: string }> = [
+    { label: 'Facebook', href: 'https://www.facebook.com/profile.php?id=100052537687507' },
+    { label: 'Instagram', href: 'https://www.instagram.com/khoirulmauludi/' },
+    { label: 'WhatsApp', href: 'https://wa.me/6285778601851' },
+];
+
+// Ikon Media Sosial di footer
+const sosmed: Array<{ label: string; icon: React.ElementType; href: string }> = [
+    { label: 'Facebook', icon: FaFacebook, href: 'https://www.facebook.com/profile.php?id=100052537687507' },
+    { label: 'Instagram', icon: FaInstagram, href: 'https://www.instagram.com/khoirulmauludi/' },
+    { label: 'YouTube', icon: FaYoutube, href: 'https://youtube.com' },
+    { label: 'X', icon: FaXTwitter, href: 'https://x.com/' },
 ];
 
 export interface SectionHeaderProps {
@@ -108,26 +117,26 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                 <NavigationMenu className="hidden lg:flex">
                     <NavigationMenuList>
                         <NavigationMenuItem>
-                            <NavigationMenuLink href="/" className={cn(navigationMenuTriggerStyle())}>
-                                Beranda
+                            <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), 'bg-transparent! hover:bg-accent!')}>
+                                <Link href="/">Beranda</Link>
                             </NavigationMenuLink>
                         </NavigationMenuItem>
 
                         {/* Profile: Visi, Misi, Sejarah, Struktur Organisasi */}
                         <NavigationMenuItem>
-                            <NavigationMenuTrigger className="text-sm font-medium">Profile</NavigationMenuTrigger>
+                            <NavigationMenuTrigger className="bg-transparent! text-sm font-medium hover:bg-accent!">Profile</NavigationMenuTrigger>
                             <NavigationMenuContent>
                                 <ul className="grid w-52 gap-1 p-2">
                                     {profileMenu.map((p) => (
                                         <li key={p.label}>
                                             <NavigationMenuLink
-                                                href={p.href}
+                                                asChild
                                                 className="block rounded-md px-3 py-2 text-sm transition-colors"
                                                 style={{ color: 'var(--foreground)' }}
                                                 onMouseEnter={handleDropdownMouseEnter}
                                                 onMouseLeave={handleDropdownMouseLeave}
                                             >
-                                                {p.label}
+                                                <Link href={p.href}>{p.label}</Link>
                                             </NavigationMenuLink>
                                         </li>
                                     ))}
@@ -137,19 +146,19 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
 
                         {/* Jurusan: TKJ, AP, AK, MAVIB */}
                         <NavigationMenuItem>
-                            <NavigationMenuTrigger className="text-sm font-medium">Jurusan</NavigationMenuTrigger>
+                            <NavigationMenuTrigger className="bg-transparent! text-sm font-medium hover:bg-accent!">Jurusan</NavigationMenuTrigger>
                             <NavigationMenuContent>
                                 <ul className="grid w-40 gap-1 p-2">
                                     {jurusanMenu.map((j) => (
                                         <li key={j.label}>
                                             <NavigationMenuLink
-                                                href={j.href}
+                                                asChild
                                                 className="block rounded-md px-3 py-2 text-sm transition-colors"
                                                 style={{ color: 'var(--foreground)' }}
                                                 onMouseEnter={handleDropdownMouseEnter}
                                                 onMouseLeave={handleDropdownMouseLeave}
                                             >
-                                                {j.label}
+                                                <Link href={j.href}>{j.label}</Link>
                                             </NavigationMenuLink>
                                         </li>
                                     ))}
@@ -158,37 +167,39 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                         </NavigationMenuItem>
 
                         <NavigationMenuItem>
-                            <NavigationMenuLink href="/berita" className={cn(navigationMenuTriggerStyle())}>
-                                Berita
+                            <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), 'bg-transparent! hover:bg-accent!')}>
+                                <Link href="/berita">Berita</Link>
                             </NavigationMenuLink>
                         </NavigationMenuItem>
 
                         <NavigationMenuItem>
-                            <NavigationMenuLink href="/pengumuman" className={cn(navigationMenuTriggerStyle())}>
-                                Pengumuman
+                            <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), 'bg-transparent! hover:bg-accent!')}>
+                                <Link href="/pengumuman">Pengumuman</Link>
                             </NavigationMenuLink>
                         </NavigationMenuItem>
 
                         <NavigationMenuItem>
-                            <NavigationMenuLink href="/galeri" className={cn(navigationMenuTriggerStyle())}>
-                                Galeri
+                            <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), 'bg-transparent! hover:bg-accent!')}>
+                                <Link href="/galeri">Galeri</Link>
                             </NavigationMenuLink>
                         </NavigationMenuItem>
 
                         <NavigationMenuItem>
-                            <NavigationMenuTrigger className="text-sm font-medium">Kontak</NavigationMenuTrigger>
+                            <NavigationMenuTrigger className="bg-transparent! text-sm font-medium hover:bg-accent!">Kontak</NavigationMenuTrigger>
                             <NavigationMenuContent>
                                 <ul className="grid w-40 gap-1 p-2">
-                                    {(['Facebook', 'Instagram', 'WhatsApp'] as const).map((s) => (
-                                        <li key={s}>
+                                    {kontakMenu.map((k) => (
+                                        <li key={k.label}>
                                             <NavigationMenuLink
-                                                href="#"
+                                                href={k.href}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
                                                 className="block rounded-md px-3 py-2 text-sm transition-colors"
                                                 style={{ color: 'var(--foreground)' }}
                                                 onMouseEnter={handleDropdownMouseEnter}
                                                 onMouseLeave={handleDropdownMouseLeave}
                                             >
-                                                {s}
+                                                {k.label}
                                             </NavigationMenuLink>
                                         </li>
                                     ))}
@@ -231,7 +242,7 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                         </SheetTrigger>
                         <SheetContent side="right" className="w-64">
                             <nav className="mt-8 flex flex-col gap-1">
-                                <a
+                                <Link
                                     href="/"
                                     className="rounded-lg px-4 py-3 text-sm font-medium transition-colors"
                                     style={{ color: 'var(--foreground)' }}
@@ -239,13 +250,13 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                                     onMouseLeave={handleDropdownMouseLeave}
                                 >
                                     Beranda
-                                </a>
+                                </Link>
 
                                 <p className="mt-2 px-4 text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--muted-foreground)' }}>
                                     Profile
                                 </p>
                                 {profileMenu.map((p) => (
-                                    <a
+                                    <Link
                                         key={p.label}
                                         href={p.href}
                                         className="rounded-lg px-6 py-2 text-sm transition-colors"
@@ -254,14 +265,14 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                                         onMouseLeave={handleDropdownMouseLeave}
                                     >
                                         {p.label}
-                                    </a>
+                                    </Link>
                                 ))}
 
                                 <p className="mt-2 px-4 text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--muted-foreground)' }}>
                                     Jurusan
                                 </p>
                                 {jurusanMenu.map((j) => (
-                                    <a
+                                    <Link
                                         key={j.label}
                                         href={j.href}
                                         className="rounded-lg px-6 py-2 text-sm transition-colors"
@@ -270,10 +281,10 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                                         onMouseLeave={handleDropdownMouseLeave}
                                     >
                                         {j.label}
-                                    </a>
+                                    </Link>
                                 ))}
 
-                                <a
+                                <Link
                                     href="/berita"
                                     className="mt-2 rounded-lg px-4 py-3 text-sm font-medium transition-colors"
                                     style={{ color: 'var(--foreground)' }}
@@ -281,8 +292,8 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                                     onMouseLeave={handleDropdownMouseLeave}
                                 >
                                     Berita
-                                </a>
-                                <a
+                                </Link>
+                                <Link
                                     href="/pengumuman"
                                     className="rounded-lg px-4 py-3 text-sm font-medium transition-colors"
                                     style={{ color: 'var(--foreground)' }}
@@ -290,8 +301,8 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                                     onMouseLeave={handleDropdownMouseLeave}
                                 >
                                     Pengumuman
-                                </a>
-                                <a
+                                </Link>
+                                <Link
                                     href="/galeri"
                                     className="rounded-lg px-4 py-3 text-sm font-medium transition-colors"
                                     style={{ color: 'var(--foreground)' }}
@@ -299,16 +310,25 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                                     onMouseLeave={handleDropdownMouseLeave}
                                 >
                                     Galeri
-                                </a>
-                                <a
-                                    href="#"
-                                    className="rounded-lg px-4 py-3 text-sm font-medium transition-colors"
-                                    style={{ color: 'var(--foreground)' }}
-                                    onMouseEnter={handleDropdownMouseEnter}
-                                    onMouseLeave={handleDropdownMouseLeave}
-                                >
+                                </Link>
+
+                                <p className="mt-2 px-4 text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--muted-foreground)' }}>
                                     Kontak
-                                </a>
+                                </p>
+                                {kontakMenu.map((k) => (
+                                    <a
+                                        key={k.label}
+                                        href={k.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="rounded-lg px-6 py-2 text-sm transition-colors"
+                                        style={{ color: 'var(--foreground)' }}
+                                        onMouseEnter={handleDropdownMouseEnter}
+                                        onMouseLeave={handleDropdownMouseLeave}
+                                    >
+                                        {k.label}
+                                    </a>
+                                ))}
                             </nav>
                         </SheetContent>
                     </Sheet>
@@ -408,10 +428,6 @@ function Footer() {
                     <div className="space-y-3">
                         <p className="mb-4 text-lg font-bold">SMK Islam Baidhaul Ahkam</p>
                         <div className="flex items-center gap-2 text-sm">
-                            <span>📍</span>
-                            <span>Jl. Bla bla bla</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
                             <span>✉️</span>
                             <span>Info@sekolah.sch.id</span>
                         </div>
@@ -419,20 +435,37 @@ function Footer() {
                             <span>📱</span>
                             <span>08121212112</span>
                         </div>
+                        <div
+                            className="mt-3 overflow-hidden rounded-lg"
+                            style={{ border: '1px solid color-mix(in srgb, var(--primary-foreground) 25%, transparent)' }}
+                        >
+                            <iframe
+                                src="https://maps.google.com/maps?q=SMK+Islam+Baidhaul+Ahkam&output=embed"
+                                width="100%"
+                                height="180"
+                                style={{ border: 0 }}
+                                loading="lazy"
+                                referrerPolicy="no-referrer-when-downgrade"
+                                title="Lokasi SMK Islam Baidhaul Ahkam"
+                            />
+                        </div>
                     </div>
 
                     <div>
                         <p className="mb-4 font-semibold">Media Sosial</p>
                         <div className="flex gap-3">
                             {sosmed.map((s) => (
-                                <button
+                                <a
                                     key={s.label}
+                                    href={s.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     aria-label={s.label}
-                                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-xs font-bold transition-colors hover:bg-white/20"
+                                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
                                     style={{ color: 'var(--primary-foreground)' }}
                                 >
-                                    {s.icon}
-                                </button>
+                                    <s.icon size={18} />
+                                </a>
                             ))}
                         </div>
                     </div>

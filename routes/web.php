@@ -34,7 +34,7 @@ Route::get('/berita/{slug}', [PublicBeritaController::class, 'show'])->name('pub
 Route::get('/pengumuman', [PublicPengumumanController::class, 'index'])->name('public.pengumuman');
 
 Route::get('/galeri', [PublicGaleriController::class, 'index'])->name('public.galeri');
-Route::get('/galeri/{id}', [PublicGaleriController::class, 'show'])->name('public.galeri.show');
+Route::get('/galeri/{slug}', [PublicGaleriController::class, 'show'])->name('public.galeri.show');
 
 // ==== Panel Admin: butuh login, URL dipindah ke /admin/... ====
 // Nama route (berita.index, dst) TIDAK berubah, jadi kode admin

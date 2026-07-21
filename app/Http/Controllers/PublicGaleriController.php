@@ -13,6 +13,7 @@ class PublicGaleriController extends Controller
         $search = $request->query('search', '');
 
         $galeris = Galeri::query()
+            ->with('images')
             ->when($search, function ($q) use ($search) {
                 $q->where('judul', 'like', "%{$search}%");
             })
@@ -25,6 +26,17 @@ class PublicGaleriController extends Controller
             'filters' => [
                 'search' => $search,
             ],
+        ]);
+    }
+
+    public function show(string $slug)
+    {
+        $galeri = Galeri::with('images')
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        return Inertia::render('public/galeri-detail', [
+            'galeri' => $galeri,
         ]);
     }
 }

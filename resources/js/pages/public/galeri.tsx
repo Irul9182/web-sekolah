@@ -1,12 +1,18 @@
 import { Input } from '@/components/ui/input';
 import PublicLayout, { SectionHeader } from '@/layouts/public-layout';
-import { router, usePage } from '@inertiajs/react';
 import { useRef, useState } from 'react';
+import { Link, router, usePage } from '@inertiajs/react';
+
+interface GaleriImage {
+    id: number;
+    image_url: string;
+}
 
 interface GaleriItem {
     id: number;
     judul: string;
-    gambar: string | null;
+    slug: string;
+    images: GaleriImage[];
 }
 
 interface PaginatedGaleri {
@@ -54,16 +60,16 @@ export default function PublicGaleriIndex() {
                 ) : (
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                         {galeris.data.map((g) => (
-                            <div key={g.id} className="group relative aspect-square overflow-hidden rounded-xl">
+                            <Link key={g.id} href={route('public.galeri.show', g.slug)} className="group relative aspect-square overflow-hidden rounded-xl">
                                 <img
-                                    src={g.gambar ? `/storage/${g.gambar}` : '/images/default-img.png'}
+                                    src={g.images?.[0]?.image_url || '/images/default-img.png'}
                                     alt={g.judul}
                                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
                                 />
                                 <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                                     <span className="text-sm font-medium text-white">{g.judul}</span>
                                 </div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 )}

@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { formatDate } from '@/helpers/format';
@@ -10,6 +9,7 @@ interface BeritaItem {
     id: number;
     judul: string;
     isi?: string;
+    slug: string;
     tanggal: string;
     berita_image?: { image_url: string } | null;
 }
@@ -79,49 +79,47 @@ export default function PublicBeritaIndex() {
                     <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
                         Belum ada berita.
                     </p>
-                     ) : (
+                ) : (
                     <div className="space-y-10">
-                    {groupByMonth(beritas.data).map((group) => (
-                        <div key={group.label}>
-                            <h3
-                                className="mb-4 text-lg font-semibold"
-                                style={{ color: 'var(--foreground)' }}
-                            >
-                                {group.label}
-                            </h3>
-                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                                {group.items.map((b) => (
-                                    <Card
-                                        key={b.id}
-                                        className="group overflow-hidden transition-shadow duration-300 hover:shadow-lg"
-                                        style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}
-                                    >
-                                        <div className="aspect-video overflow-hidden" style={{ backgroundColor: 'var(--muted)' }}>
-                                            <img
-                                                src={b.berita_image?.image_url || '/images/default-img.png'}
-                                                alt={b.judul}
-                                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                            />
-                                        </div>
-                                        <CardContent className="p-4">
-                                            <p className="mb-1 line-clamp-2 font-semibold" style={{ color: 'var(--card-foreground)' }}>
-                                                {b.judul}
-                                            </p>
-                                            <p className="mb-2 text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                                                {formatDate(b.tanggal)}
-                                            </p>
-                                            {b.isi && (
-                                                <p className="line-clamp-3 text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                                                    {b.isi}
-                                                </p>
-                                            )}
-                                        </CardContent>
-                                    </Card>
-                                ))}
+                        {groupByMonth(beritas.data).map((group) => (
+                            <div key={group.label}>
+                                <h3 className="mb-4 text-lg font-semibold" style={{ color: 'var(--foreground)' }}>
+                                    {group.label}
+                                </h3>
+                                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                    {group.items.map((b) => (
+                                        <Link key={b.id} href={route('public.berita.show', b.slug)}>
+                                            <Card
+                                                className="group overflow-hidden transition-shadow duration-300 hover:shadow-lg"
+                                                style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}
+                                            >
+                                                <div className="aspect-video overflow-hidden" style={{ backgroundColor: 'var(--muted)' }}>
+                                                    <img
+                                                        src={b.berita_image?.image_url || '/images/default-img.png'}
+                                                        alt={b.judul}
+                                                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                    />
+                                                </div>
+                                                <CardContent className="p-4">
+                                                    <p className="mb-1 line-clamp-2 font-semibold" style={{ color: 'var(--card-foreground)' }}>
+                                                        {b.judul}
+                                                    </p>
+                                                    <p className="mb-2 text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                                                        {formatDate(b.tanggal)}
+                                                    </p>
+                                                    {b.isi && (
+                                                        <p className="line-clamp-3 text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                                                            {b.isi}
+                                                        </p>
+                                                    )}
+                                                </CardContent>
+                                            </Card>
+                                        </Link>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
                 )}
 
                 {beritas.last_page > 1 && (
