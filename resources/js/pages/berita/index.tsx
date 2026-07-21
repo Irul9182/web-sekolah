@@ -173,9 +173,9 @@ export default function BeritaIndex() {
             render: (_: any, row: BeritaProps) => <span>{row.judul}</span>,
         },
         {
-            key: 'created_at',
-            label: 'Tanggal dibuat',
-            render: (_: any, record: BeritaProps) => <span className="text-muted-foreground text-sm">{formatDate(record?.created_at) || '-'}</span>,
+        key: 'tanggal',
+        label: 'Tanggal dibuat',
+        render: (_: any, record: BeritaProps) => <span className="text-muted-foreground text-sm">{formatDate(record?.tanggal) || '-'}</span>,
         },
         {
             key: 'action',
@@ -337,6 +337,16 @@ export default function BeritaIndex() {
                                     />
                                     {errors.isi && <p className="mt-1 text-sm text-red-500">{errors.isi}</p>}
                                 </div>
+                                <div>
+                                    <label className="mb-1 block text-sm text-gray-600">Tanggal</label>
+                                    <input
+                                        type="date"
+                                        value={data.tanggal}
+                                        onChange={(e) => setData('tanggal', e.target.value)}
+                                        className="w-full rounded-lg border border-gray-300 p-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                                    />
+                                    {errors.tanggal && <p className="mt-1 text-sm text-red-500">{errors.tanggal}</p>}
+                                </div>
 
                                 <div className="flex gap-3 pt-2">
                                     <Button
@@ -400,7 +410,7 @@ export default function BeritaIndex() {
                                     />
                                 </div>
                                 <DetailItem value={selectedData?.judul ?? ''} valueClassName="max-w-70 break-words" label="Judul" />
-                                <DetailItem value={formatDate(selectedData?.created_at) ?? '-'} label="Dibuat pada" />
+                                <DetailItem value={formatDate(selectedData?.tanggal) ?? '-'} label="Dibuat pada" />
                                 <div>
                                     <p className="mt-2 mb-2 font-semibold">Deskripsi :</p>
                                     <div className="bg-background/50 max-w-70 rounded-md p-4 text-[12px] break-words sm:max-w-100 sm:text-sm">

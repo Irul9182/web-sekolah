@@ -29,8 +29,12 @@ Route::get('/mavib', [JurusanController::class, 'mavib'])->name('jurusan.mavib')
 
 // Berita, Pengumuman, Galeri (publik, read-only — beda dari panel admin)
 Route::get('/berita', [PublicBeritaController::class, 'index'])->name('public.berita');
+Route::get('/berita/{slug}', [PublicBeritaController::class, 'show'])->name('public.berita.show');
+
 Route::get('/pengumuman', [PublicPengumumanController::class, 'index'])->name('public.pengumuman');
+
 Route::get('/galeri', [PublicGaleriController::class, 'index'])->name('public.galeri');
+Route::get('/galeri/{id}', [PublicGaleriController::class, 'show'])->name('public.galeri.show');
 
 // ==== Panel Admin: butuh login, URL dipindah ke /admin/... ====
 // Nama route (berita.index, dst) TIDAK berubah, jadi kode admin

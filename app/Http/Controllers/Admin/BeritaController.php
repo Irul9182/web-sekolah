@@ -16,12 +16,12 @@ class BeritaController extends Controller
         $perPage = $request->query('per_page', 10);
 
         $beritas = Berita::query()->with('berita_image')
-            ->when($search, function ($q) use ($search) {
-                $q->where('judul', 'like', "%{$search}%");
-            })
-            ->latest()
-            ->paginate($perPage)
-            ->withQueryString();
+        ->when($search, function ($q) use ($search) {
+            $q->where('judul', 'like', "%{$search}%");
+        })
+        ->orderBy('tanggal', 'desc')
+        ->paginate($perPage)
+        ->withQueryString();
 
         return Inertia::render('berita/index', [
             'beritas' => $beritas,
@@ -40,16 +40,17 @@ class BeritaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'judul'  => 'required',
-            'isi'    => 'required',
+            'judul'   => 'required',
+            'isi'     => 'required',
+            'tanggal' => 'nullable|date',
             'uploaded_image' => 'nullable|image|max:5120',
         ]);
 
-
-        $berita =  Berita::create([
-            'judul'  => $request->judul,
-            'isi'    => $request->isi,
-            'slug'   => Str::slug($request->judul),
+        $berita = Berita::create([
+            'judul'   => $request->judul,
+            'isi'     => $request->isi,
+            'tanggal' => $request->tanggal,
+            'slug'    => Str::slug($request->judul),
         ]);
 
         if ($request->hasFile('uploaded_image')) {
@@ -87,9 +88,9 @@ class BeritaController extends Controller
         $berita = Berita::findOrFail($id);
 
         $request->validate([
-            'judul'  => 'required',
-            'isi'    => 'required',
-            // 'gambar' => 'nullable|image|max:2048',
+            'judul'   => 'required',
+            'isi'     => 'required',
+            'tanggal' => 'nullable|date',
             'uploaded_image' => 'nullable|image|max:5120',
         ]);
 
@@ -123,10 +124,12 @@ class BeritaController extends Controller
                 'public_id' => $result['public_id'],
             ]);
         }
+
         $berita->update([
-            'judul'  => $request->judul,
-            'isi'    => $request->isi,
-            'slug'   => Str::slug($request->judul),
+            'judul'   => $request->judul,
+            'isi'     => $request->isi,
+            'tanggal' => $request->tanggal,
+            'slug'    => Str::slug($request->judul),
         ]);
 
         return back()->with('success', 'Berita berhasil diedit!');

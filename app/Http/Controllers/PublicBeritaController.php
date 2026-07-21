@@ -17,7 +17,7 @@ class PublicBeritaController extends Controller
             ->when($search, function ($q) use ($search) {
                 $q->where('judul', 'like', "%{$search}%");
             })
-            ->latest()
+            ->orderBy('tanggal', 'desc')
             ->paginate(9)
             ->withQueryString();
 
@@ -26,6 +26,24 @@ class PublicBeritaController extends Controller
             'filters' => [
                 'search' => $search,
             ],
+        ]);
+    }
+
+    public function show(string $slug)
+    {
+    $berita = Berita::with('berita_image')
+        ->where('slug', $slug)
+        ->firstOrFail();
+
+    $beritaLainnya = Berita::with('berita_image')
+        ->where('id', '!=', $berita->id)
+        ->orderBy('tanggal', 'desc')
+        ->take(3)
+        ->get();
+
+    return Inertia::render('public/berita-detail', [
+        'berita' => $berita,
+        'beritaLainnya' => $beritaLainnya,
         ]);
     }
 }

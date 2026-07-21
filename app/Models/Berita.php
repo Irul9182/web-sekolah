@@ -8,10 +8,11 @@ use App\Models\BeritaImage;
 class Berita extends Model
 {
     protected $fillable = [
-        'judul',
-        'isi',
-        'gambar',
-        'slug',
+    'judul',
+    'isi',
+    'gambar',
+    'slug',
+    'tanggal',
     ];
 
     public function berita_image()

@@ -23,7 +23,7 @@ export function NavUser() {
                             <UserInfo user={auth.user} />
                             <ChevronsUpDown className="ml-auto size-4" />
                         </SidebarMenuButton>
-                    </DropdownMenuTrigger>
+                    </DropdownMenuTrigger>  
                     <DropdownMenuContent
                         className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
                         align="end"
@@ -46,7 +46,7 @@ export function NavUser() {
                         <Button variant={'outline'} onClick={() => setIsOpen(false)}>
                             Batal
                         </Button>
-                        <Button onClick={() => router.post('logout')}>Iya</Button>
+                        <Button onClick={() => router.post('/logout')}>Iya</Button>
                     </ModalFooter>
                 </ModalContent>
             </Modal>

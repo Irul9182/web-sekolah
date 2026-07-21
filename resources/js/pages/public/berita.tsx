@@ -10,7 +10,7 @@ interface BeritaItem {
     id: number;
     judul: string;
     isi?: string;
-    created_at: string;
+    tanggal: string;
     berita_image?: { image_url: string } | null;
 }
 
@@ -24,6 +24,29 @@ interface PaginatedBerita {
 interface PageProps {
     beritas: PaginatedBerita;
     filters: { search: string };
+}
+
+const NAMA_BULAN = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+];
+
+function groupByMonth(items: BeritaItem[]) {
+    const groups: { label: string; items: BeritaItem[] }[] = [];
+
+    items.forEach((item) => {
+        const date = new Date(item.tanggal);
+        const label = `${NAMA_BULAN[date.getMonth()]} ${date.getFullYear()}`;
+
+        const existingGroup = groups.find((g) => g.label === label);
+        if (existingGroup) {
+            existingGroup.items.push(item);
+        } else {
+            groups.push({ label, items: [item] });
+        }
+    });
+
+    return groups;
 }
 
 export default function PublicBeritaIndex() {
@@ -56,37 +79,49 @@ export default function PublicBeritaIndex() {
                     <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
                         Belum ada berita.
                     </p>
-                ) : (
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        {beritas.data.map((b) => (
-                            <Card
-                                key={b.id}
-                                className="group overflow-hidden transition-shadow duration-300 hover:shadow-lg"
-                                style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}
+                     ) : (
+                    <div className="space-y-10">
+                    {groupByMonth(beritas.data).map((group) => (
+                        <div key={group.label}>
+                            <h3
+                                className="mb-4 text-lg font-semibold"
+                                style={{ color: 'var(--foreground)' }}
                             >
-                                <div className="aspect-video overflow-hidden" style={{ backgroundColor: 'var(--muted)' }}>
-                                    <img
-                                        src={b.berita_image?.image_url || '/images/default-img.png'}
-                                        alt={b.judul}
-                                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                    />
-                                </div>
-                                <CardContent className="p-4">
-                                    <p className="mb-1 line-clamp-2 font-semibold" style={{ color: 'var(--card-foreground)' }}>
-                                        {b.judul}
-                                    </p>
-                                    <p className="mb-2 text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                                        {formatDate(b.created_at)}
-                                    </p>
-                                    {b.isi && (
-                                        <p className="line-clamp-3 text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                                            {b.isi}
-                                        </p>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
+                                {group.label}
+                            </h3>
+                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                {group.items.map((b) => (
+                                    <Card
+                                        key={b.id}
+                                        className="group overflow-hidden transition-shadow duration-300 hover:shadow-lg"
+                                        style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}
+                                    >
+                                        <div className="aspect-video overflow-hidden" style={{ backgroundColor: 'var(--muted)' }}>
+                                            <img
+                                                src={b.berita_image?.image_url || '/images/default-img.png'}
+                                                alt={b.judul}
+                                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                            />
+                                        </div>
+                                        <CardContent className="p-4">
+                                            <p className="mb-1 line-clamp-2 font-semibold" style={{ color: 'var(--card-foreground)' }}>
+                                                {b.judul}
+                                            </p>
+                                            <p className="mb-2 text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                                                {formatDate(b.tanggal)}
+                                            </p>
+                                            {b.isi && (
+                                                <p className="line-clamp-3 text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                                                    {b.isi}
+                                                </p>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
                 )}
 
                 {beritas.last_page > 1 && (
