@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Database\Seeders\GaleriSeeder;
@@ -18,11 +19,17 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'herkaltest',
-            'email' => 'herkal@test.com',
-            'password' => 'herkal123',
-        ]);
+        // Pakai updateOrCreate (bukan create) supaya seeder ini AMAN dijalankan
+        // berkali-kali — tidak akan error "duplicate email" kalau akunnya
+        // sudah ada, dan password selalu ke-hash dengan benar lewat Hash::make().
+        User::updateOrCreate(
+            ['email' => 'herkal@test.com'],
+            [
+                'name' => 'herkaltest',
+                'password' => Hash::make('herkal123'),
+            ],
+        );
+
         $this->call([
             BeritaSeeder::class,
             PengumumanSeeder::class,

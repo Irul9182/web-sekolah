@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Admin\BeritaController;
 use App\Http\Controllers\Admin\GaleriController;
 use App\Http\Controllers\Admin\PengumumanController;
@@ -11,6 +13,21 @@ use App\Http\Controllers\PublicBeritaController;
 use App\Http\Controllers\PublicGaleriController;
 use App\Http\Controllers\PublicPengumumanController;
 use Illuminate\Support\Facades\Route;
+
+
+Route::middleware('guest')->group(function () {
+    Route::get('login', [AuthenticatedSessionController::class, 'create'])
+        ->name('login');
+
+    Route::post('login', [AuthenticatedSessionController::class, 'store']);
+});
+
+// Hanya route logout yang perlu login — jadi grup ini ditutup
+// segera setelahnya, tidak "membungkus" route-route publik di bawah.
+Route::middleware('auth')->group(function () {
+    Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
+        ->name('logout');
+});
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -62,6 +79,12 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::post('/galeri', [GaleriController::class, 'store'])->name('galeri.store');
     Route::post('/galeri/{id}', [GaleriController::class, 'update'])->name('galeri.update');
     Route::delete('/galeri/{id}', [GaleriController::class, 'destroy'])->name('galeri.destroy');
+
+    // Akun (tambah admin baru) =======================
+    // Dipindah dari route publik /register — sekarang cuma admin yang
+    // sudah login yang bisa menambah akun admin baru.
+    Route::get('/akun/tambah', [RegisteredUserController::class, 'create'])->name('akun.create');
+    Route::post('/akun/tambah', [RegisteredUserController::class, 'store'])->name('akun.store');
 });
 
 require __DIR__ . '/settings.php';

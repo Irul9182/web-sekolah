@@ -141,8 +141,8 @@ input[type='number']::-webkit-inner-spin-button {
     --muted-foreground: #2c5ead;
 
     /* ── Accent — Amber Gold ── */
-    --accent: #fef6e4; /* gold wash, kontras hue dari biru */
-    --accent-foreground: #7a4f0a;
+    --accent: #daeef9; 
+    --accent-foreground: #1a3a6b;
 
     /* ── Destructive — Crimson Red ── */
     --destructive: #c0392b;
@@ -219,8 +219,8 @@ input[type='number']::-webkit-inner-spin-button {
     --muted-foreground: #4bb8fa; /* Sky Blue */
 
     /* ── Accent — amber tetap hangat di dark bg ── */
-    --accent: #3a2a0a;
-    --accent-foreground: #fdc84a;
+    --accent: #1a3a6b;
+    --accent-foreground: #c4e2f5;
 
     /* ── Destructive ── */
     --destructive: #e74c3c;

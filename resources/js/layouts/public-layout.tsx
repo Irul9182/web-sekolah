@@ -16,15 +16,8 @@ import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { FaFacebook, FaInstagram, FaYoutube, FaXTwitter } from 'react-icons/fa6';
 import { Link } from '@inertiajs/react';
+import AppearanceSwitch from '@/components/appearance-switch';
 import { useEffect, useState } from 'react';
-
-// Menu dropdown "Profile" -> arahkan href sesuai routing profil sekolah kamu
-const profileMenu: Array<{ label: string; href: string }> = [
-    { label: 'Visi', href: '/profile/visi' },
-    { label: 'Misi', href: '/profile/misi' },
-    { label: 'Sejarah', href: '/profile/sejarah' },
-    { label: 'Struktur Organisasi', href: '/profile/struktur-organisasi' },
-];
 
 // Menu dropdown "Jurusan" -> TKJ, AP, AK, MAVIB
 const jurusanMenu: Array<{ label: string; href: string }> = [
@@ -122,28 +115,6 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                             </NavigationMenuLink>
                         </NavigationMenuItem>
 
-                        {/* Profile: Visi, Misi, Sejarah, Struktur Organisasi */}
-                        <NavigationMenuItem>
-                            <NavigationMenuTrigger className="bg-transparent! text-sm font-medium hover:bg-accent!">Profile</NavigationMenuTrigger>
-                            <NavigationMenuContent>
-                                <ul className="grid w-52 gap-1 p-2">
-                                    {profileMenu.map((p) => (
-                                        <li key={p.label}>
-                                            <NavigationMenuLink
-                                                asChild
-                                                className="block rounded-md px-3 py-2 text-sm transition-colors"
-                                                style={{ color: 'var(--foreground)' }}
-                                                onMouseEnter={handleDropdownMouseEnter}
-                                                onMouseLeave={handleDropdownMouseLeave}
-                                            >
-                                                <Link href={p.href}>{p.label}</Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </NavigationMenuContent>
-                        </NavigationMenuItem>
-
                         {/* Jurusan: TKJ, AP, AK, MAVIB */}
                         <NavigationMenuItem>
                             <NavigationMenuTrigger className="bg-transparent! text-sm font-medium hover:bg-accent!">Jurusan</NavigationMenuTrigger>
@@ -210,7 +181,8 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                 </NavigationMenu>
 
                 {/* Auth Buttons */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
+                    <AppearanceSwitch />
                     {!isLoggedIn ? (
                         <Link
                             href="/login"
@@ -251,22 +223,6 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                                 >
                                     Beranda
                                 </Link>
-
-                                <p className="mt-2 px-4 text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--muted-foreground)' }}>
-                                    Profile
-                                </p>
-                                {profileMenu.map((p) => (
-                                    <Link
-                                        key={p.label}
-                                        href={p.href}
-                                        className="rounded-lg px-6 py-2 text-sm transition-colors"
-                                        style={{ color: 'var(--foreground)' }}
-                                        onMouseEnter={handleDropdownMouseEnter}
-                                        onMouseLeave={handleDropdownMouseLeave}
-                                    >
-                                        {p.label}
-                                    </Link>
-                                ))}
 
                                 <p className="mt-2 px-4 text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--muted-foreground)' }}>
                                     Jurusan

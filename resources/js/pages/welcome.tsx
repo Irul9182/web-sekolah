@@ -19,6 +19,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { formatDate } from '@/helpers/format';
 import { cn } from '@/lib/utils';
 import { Link, usePage } from '@inertiajs/react';
+import AppearanceSwitch from '@/components/appearance-switch';
 import { useEffect, useState } from 'react';
 
 type ThemeColor = 'info' | 'gold' | 'success' | 'warning' | 'error' | 'default';
@@ -110,11 +111,10 @@ const sosmed: Array<{ label: string; icon: React.ElementType; href: string }> = 
     { label: 'X', icon: FaXTwitter, href: 'https://x.com/' },
 ];
 
-// Menu dropdown "Profile" -> arahkan href sesuai routing profil sekolah kamu
-const profileMenu: Array<{ label: string; href: string }> = [
-    { label: 'Visi & Misi', href: '/profile/visi-misi' },
-    { label: 'Sejarah', href: '/profile/sejarah' },
-    { label: 'Struktur Organisasi', href: '/profile/struktur-organisasi' },
+const profileMenu: Array<{ label: string; href: string}> = [
+    { label: 'Visi-Misi', href: '/visi-misi'},
+    { label: 'Sejarah', href: '/sejarah'},
+    { label: 'Stuktur Organisasi', href: '/struktur-organisasi'},
 ];
 
 // Menu dropdown "Jurusan" -> arahkan href sesuai routing jurusan kamu
@@ -224,11 +224,11 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                             </NavigationMenuLink>
                         </NavigationMenuItem>
 
-                        {/* Profile: Visi, Misi, Sejarah, Struktur Organisasi */}
+                        {/* Profile: Visi-Misi, Sejarah, Struktur Orgnisasi */}
                         <NavigationMenuItem>
                             <NavigationMenuTrigger className="bg-transparent! text-sm font-medium hover:bg-accent!">Profile</NavigationMenuTrigger>
                             <NavigationMenuContent>
-                                <ul className="grid w-52 gap-1 p-2">
+                                <ul className="grid w-40 gap-1 p-2">
                                     {profileMenu.map((p) => (
                                         <li key={p.label}>
                                             <NavigationMenuLink
@@ -312,7 +312,8 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                 </NavigationMenu>
 
                 {/* Auth Buttons */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
+                    <AppearanceSwitch />
                     {!isLoggedIn ? (
                         <Link
                             href="/login"
@@ -355,7 +356,7 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                                 </Link>
 
                                 <p className="mt-2 px-4 text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--muted-foreground)' }}>
-                                    Profile
+                                    Jurusan
                                 </p>
                                 {profileMenu.map((p) => (
                                     <Link
