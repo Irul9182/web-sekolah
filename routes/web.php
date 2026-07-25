@@ -33,10 +33,8 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // ==== Halaman publik: bisa diakses siapa saja, tanpa login ====
 
-// Profile
-Route::get('/profile/visi-misi', [ProfileController::class, 'visiMisi'])->name('profile.visi-misi');
-Route::get('/profile/sejarah', [ProfileController::class, 'sejarah'])->name('profile.sejarah');
-Route::get('/profile/struktur-organisasi', [ProfileController::class, 'struktur'])->name('profile.struktur');
+// Profile — satu halaman gabungan (Visi & Misi, Sejarah, Struktur Organisasi)
+Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
 
 // Jurusan
 Route::get('/tkj', [JurusanController::class, 'tkj'])->name('jurusan.tkj');
@@ -75,6 +73,10 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::delete('/pengumuman/{id}', [PengumumanController::class, 'destroy'])->name('pengumuman.destroy');
 
     // Galeri =======================
+    Route::get('/galeri/{id}', [GaleriController::class, 'show'])
+    ->name('galeri.show');
+    Route::get('/galeri/{id}/edit', [GaleriController::class, 'edit'])
+    ->name('galeri.edit');
     Route::get('/galeri', [GaleriController::class, 'index'])->name('galeri.index');
     Route::post('/galeri', [GaleriController::class, 'store'])->name('galeri.store');
     Route::post('/galeri/{id}', [GaleriController::class, 'update'])->name('galeri.update');

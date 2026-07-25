@@ -115,6 +115,13 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                             </NavigationMenuLink>
                         </NavigationMenuItem>
 
+                        {/* Profile: satu halaman gabungan (Visi-Misi, Sejarah, Struktur Organisasi) */}
+                        <NavigationMenuItem>
+                            <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), 'bg-transparent! hover:bg-accent!')}>
+                                <Link href="/profile">Profile</Link>
+                            </NavigationMenuLink>
+                        </NavigationMenuItem>
+
                         {/* Jurusan: TKJ, AP, AK, MAVIB */}
                         <NavigationMenuItem>
                             <NavigationMenuTrigger className="bg-transparent! text-sm font-medium hover:bg-accent!">Jurusan</NavigationMenuTrigger>
@@ -222,6 +229,16 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                                     onMouseLeave={handleDropdownMouseLeave}
                                 >
                                     Beranda
+                                </Link>
+
+                                <Link
+                                    href="/profile"
+                                    className="rounded-lg px-4 py-3 text-sm font-medium transition-colors"
+                                    style={{ color: 'var(--foreground)' }}
+                                    onMouseEnter={handleDropdownMouseEnter}
+                                    onMouseLeave={handleDropdownMouseLeave}
+                                >
+                                    Profile
                                 </Link>
 
                                 <p className="mt-2 px-4 text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--muted-foreground)' }}>

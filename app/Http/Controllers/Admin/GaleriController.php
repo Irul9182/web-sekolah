@@ -72,4 +72,22 @@ class GaleriController extends Controller
         return redirect()->route('galeri.index')
             ->with('success', 'Galeri berhasil dihapus!');
     }
+
+    public function show($id)
+    {
+    $galeri = Galeri::with('images')->findOrFail($id);
+
+    return Inertia::render('Admin/Galeri/Show', [
+        'galeri' => $galeri,
+        ]);
+    }
+
+    public function edit($id)
+    {
+    $galeri = Galeri::with('images')->findOrFail($id);
+
+    return Inertia::render('Admin/Galeri/Edit', [
+        'galeri' => $galeri,
+        ]);
+    }
 }

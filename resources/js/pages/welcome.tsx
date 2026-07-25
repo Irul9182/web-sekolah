@@ -20,7 +20,7 @@ import { formatDate } from '@/helpers/format';
 import { cn } from '@/lib/utils';
 import { Link, usePage } from '@inertiajs/react';
 import AppearanceSwitch from '@/components/appearance-switch';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 type ThemeColor = 'info' | 'gold' | 'success' | 'warning' | 'error' | 'default';
 
@@ -111,12 +111,6 @@ const sosmed: Array<{ label: string; icon: React.ElementType; href: string }> = 
     { label: 'X', icon: FaXTwitter, href: 'https://x.com/' },
 ];
 
-const profileMenu: Array<{ label: string; href: string}> = [
-    { label: 'Visi-Misi', href: '/visi-misi'},
-    { label: 'Sejarah', href: '/sejarah'},
-    { label: 'Stuktur Organisasi', href: '/struktur-organisasi'},
-];
-
 // Menu dropdown "Jurusan" -> arahkan href sesuai routing jurusan kamu
 const jurusanMenu: Array<{ label: string; href: string }> = [
     { label: 'TKJ', href: '/tkj' },
@@ -148,6 +142,39 @@ function JurusanBadge({ varColor, label }: JurusanBadgeProps) {
         >
             {label}
         </span>
+    );
+}
+
+// Membungkus section dengan efek "muncul dari bawah ke atas" saat di-scroll
+// ke dalam viewport. Memakai class .fade-up/.show yang sudah didefinisikan
+// di app.css — jadi tidak menambah sistem animasi baru, cuma menyalakan
+// yang sudah ada.
+function FadeInSection({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+    const ref = useRef<HTMLDivElement>(null);
+    const [visible, setVisible] = useState(false);
+
+    useEffect(() => {
+        const node = ref.current;
+        if (!node) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setVisible(true);
+                    observer.disconnect();
+                }
+            },
+            { threshold: 0.15 },
+        );
+
+        observer.observe(node);
+        return () => observer.disconnect();
+    }, []);
+
+    return (
+        <div ref={ref} className={cn('fade-up', visible && 'show', className)}>
+            {children}
+        </div>
     );
 }
 
@@ -224,26 +251,11 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                             </NavigationMenuLink>
                         </NavigationMenuItem>
 
-                        {/* Profile: Visi-Misi, Sejarah, Struktur Orgnisasi */}
+                        {/* Profile: sekarang satu halaman gabungan (Visi-Misi, Sejarah, Struktur Organisasi) */}
                         <NavigationMenuItem>
-                            <NavigationMenuTrigger className="bg-transparent! text-sm font-medium hover:bg-accent!">Profile</NavigationMenuTrigger>
-                            <NavigationMenuContent>
-                                <ul className="grid w-40 gap-1 p-2">
-                                    {profileMenu.map((p) => (
-                                        <li key={p.label}>
-                                            <NavigationMenuLink
-                                                asChild
-                                                className="block rounded-md px-3 py-2 text-sm transition-colors"
-                                                style={{ color: 'var(--foreground)' }}
-                                                onMouseEnter={handleDropdownMouseEnter}
-                                                onMouseLeave={handleDropdownMouseLeave}
-                                            >
-                                                <Link href={p.href}>{p.label}</Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </NavigationMenuContent>
+                            <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), 'bg-transparent! hover:bg-accent!')}>
+                                <Link href="/profile">Profile</Link>
+                            </NavigationMenuLink>
                         </NavigationMenuItem>
 
                         {/* Jurusan: TKJ, AP, AK, MAVIB */}
@@ -355,21 +367,15 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                                     Beranda
                                 </Link>
 
-                                <p className="mt-2 px-4 text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--muted-foreground)' }}>
-                                    Jurusan
-                                </p>
-                                {profileMenu.map((p) => (
-                                    <Link
-                                        key={p.label}
-                                        href={p.href}
-                                        className="rounded-lg px-6 py-2 text-sm transition-colors"
-                                        style={{ color: 'var(--foreground)' }}
-                                        onMouseEnter={handleDropdownMouseEnter}
-                                        onMouseLeave={handleDropdownMouseLeave}
-                                    >
-                                        {p.label}
-                                    </Link>
-                                ))}
+                                <Link
+                                    href="/profile"
+                                    className="rounded-lg px-4 py-3 text-sm font-medium transition-colors"
+                                    style={{ color: 'var(--foreground)' }}
+                                    onMouseEnter={handleDropdownMouseEnter}
+                                    onMouseLeave={handleDropdownMouseLeave}
+                                >
+                                    Profile
+                                </Link>
 
                                 <p className="mt-2 px-4 text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--muted-foreground)' }}>
                                     Jurusan
@@ -523,12 +529,34 @@ function LoginDialog({ open, onOpenChange, onLoginSuccess }: LoginDialogProps) {
     );
 }
 
-function HeroSection() {
+function HeroSection({ photos }: { photos: string[] }) {
+    const [activePhoto, setActivePhoto] = useState(0);
+
+    useEffect(() => {
+        if (photos.length < 2) return;
+        const interval = setInterval(() => {
+            setActivePhoto((i) => (i + 1) % photos.length);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [photos.length]);
+
     return (
-        <section
-            className="relative flex min-h-[520px] items-center justify-center overflow-hidden pt-16"
-            style={{ backgroundColor: 'var(--primary)' }}
-        >
+        <section className="relative flex min-h-[92vh] items-center justify-center overflow-hidden pt-16" style={{ backgroundColor: 'var(--primary)' }}>
+            {/* Slideshow foto-foto yang sudah diupload (dari Galeri), sebagai latar belakang Hero */}
+            {photos.length > 0 && (
+                <div className="absolute inset-0">
+                    {photos.map((src, i) => (
+                        <div
+                            key={src}
+                            className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
+                            style={{ backgroundImage: `url(${src})`, opacity: i === activePhoto ? 1 : 0 }}
+                        />
+                    ))}
+                    {/* Overlay gelap supaya teks tetap terbaca di atas foto apapun */}
+                    <div className="absolute inset-0" style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 78%, transparent)' }} />
+                </div>
+            )}
+
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-white/5" />
                 <div className="absolute bottom-0 -left-20 h-72 w-72 rounded-full bg-white/5" />
@@ -554,15 +582,67 @@ function HeroSection() {
                 <p className="mb-8 text-lg" style={{ color: 'color-mix(in srgb, var(--primary-foreground) 75%, transparent)' }}>
                     Sekolah Unggulan Berbasis Teknologi
                 </p>
-                <Button size="lg" className="font-semibold shadow-lg" style={{ backgroundColor: 'var(--background)', color: 'var(--primary)' }}>
-                    Lihat Profile Sekolah →
+                <Button asChild size="lg" className="font-semibold shadow-lg" style={{ backgroundColor: 'var(--background)', color: 'var(--primary)' }}>
+                    {/* TODO: sesuaikan href ini begitu route halaman profil gabungan (Visi-Misi + Sejarah + Struktur) sudah dibuat */}
+                    <Link href="/profile">Lihat Profile Sekolah →</Link>
                 </Button>
+            </div>
+
+            {/* Isyarat visual bahwa masih ada konten di bawah, mendorong user untuk scroll */}
+            <div className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 animate-bounce">
+                <svg
+                    className="h-6 w-6"
+                    style={{ color: 'color-mix(in srgb, var(--primary-foreground) 70%, transparent)' }}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
             </div>
         </section>
     );
 }
 
-// ==== Section yang sudah tersambung ke database ====
+// ==== Section statis: belum ada tabel/kolom di database untuk ini,
+// jadi kontennya di-hardcode dulu di sini. Kalau nanti mau bisa diedit
+// dari admin, tinggal bikin field khusus (mis. tabel "pengaturan" atau
+// kolom di tabel sekolah) dan ganti bagian statis ini jadi props dari server. ====
+function SambutanKepalaSekolahSection() {
+    return (
+        <section className="mx-auto max-w-5xl px-4 py-16" style={{ backgroundColor: 'var(--background)' }}>
+            <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-3">
+                <div className="mx-auto md:mx-0">
+                    <div
+                        className="h-40 w-40 overflow-hidden rounded-full md:h-48 md:w-48"
+                        style={{ backgroundColor: 'var(--muted)', border: '4px solid var(--border)' }}
+                    >
+                        <img src="/images/kepala-sekolah.jpg" alt="Kepala Sekolah" className="h-full w-full object-cover" />
+                    </div>
+                </div>
+                <div className="text-center md:col-span-2 md:text-left">
+                    <p className="mb-2 text-xs font-semibold tracking-[0.2em] uppercase" style={{ color: 'var(--muted-foreground)' }}>
+                        Sambutan
+                    </p>
+                    <h2 className="mb-4 text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
+                        Kepala Sekolah
+                    </h2>
+                    <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
+                        Assalamu'alaikum warahmatullahi wabarakatuh. Selamat datang di website resmi SMK Islam Baidhaul Ahkam. Kami berkomitmen
+                        mencetak generasi yang unggul dalam ilmu pengetahuan, teknologi, dan akhlak yang islami. Semoga apa yang kami sajikan di
+                        sini bermanfaat bagi seluruh siswa, orang tua, dan masyarakat.
+                    </p>
+                    <p className="mt-4 text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                        [Nama Kepala Sekolah]
+                    </p>
+                    <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                        Kepala SMK Islam Baidhaul Ahkam
+                    </p>
+                </div>
+            </div>
+        </section>
+    );
+}
 
 function BeritaSection({ data }: { data: BeritaItem[] }) {
     return (
@@ -830,6 +910,20 @@ export default function SMKBaidhaulAhkam() {
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
     const [showLogin, setShowLogin] = useState<boolean>(false);
 
+    // Gabungan foto dari Berita dan Galeri untuk slideshow latar belakang
+    // Hero — diselang-seling (bukan semua Berita dulu baru Galeri) supaya
+    // variasinya lebih merata kalau salah satu sumbernya lebih banyak.
+    const beritaPhotos = (beritas ?? []).map((b) => b.berita_image?.image_url).filter((url): url is string => Boolean(url));
+    const galeriPhotos = (galeris ?? []).map((g) => g.images?.[0]?.image_url).filter((url): url is string => Boolean(url));
+
+    const heroPhotos: string[] = [];
+    const maxLen = Math.max(beritaPhotos.length, galeriPhotos.length);
+    for (let i = 0; i < maxLen; i++) {
+        if (beritaPhotos[i]) heroPhotos.push(beritaPhotos[i]);
+        if (galeriPhotos[i]) heroPhotos.push(galeriPhotos[i]);
+    }
+    const heroPhotosLimited = heroPhotos.slice(0, 8);
+
     return (
         <div className="min-h-screen font-sans" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
             <Navbar isLoggedIn={isLoggedIn} onLoginClick={() => setShowLogin(true)} onLogout={() => setIsLoggedIn(false)} />
@@ -837,11 +931,22 @@ export default function SMKBaidhaulAhkam() {
             <LoginDialog open={showLogin} onOpenChange={setShowLogin} onLoginSuccess={() => setIsLoggedIn(true)} />
 
             <main>
-                <HeroSection />
-                <BeritaSection data={beritas ?? []} />
-                <PengumumanSection data={pengumumans ?? []} />
-                <JurusanSection />
-                <GaleriSection data={galeris ?? []} />
+                <HeroSection photos={heroPhotosLimited} />
+                <FadeInSection>
+                    <SambutanKepalaSekolahSection />
+                </FadeInSection>
+                <FadeInSection>
+                    <BeritaSection data={beritas ?? []} />
+                </FadeInSection>
+                <FadeInSection>
+                    <PengumumanSection data={pengumumans ?? []} />
+                </FadeInSection>
+                <FadeInSection>
+                    <JurusanSection />
+                </FadeInSection>
+                <FadeInSection>
+                    <GaleriSection data={galeris ?? []} />
+                </FadeInSection>
             </main>
 
             <Footer />

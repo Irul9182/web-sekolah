@@ -219,7 +219,7 @@ input[type='number']::-webkit-inner-spin-button {
     --muted-foreground: #4bb8fa; /* Sky Blue */
 
     /* ── Accent — amber tetap hangat di dark bg ── */
-    --accent: #1a3a6b;
+    --accent: #244a80;
     --accent-foreground: #c4e2f5;
 
     /* ── Destructive ── */

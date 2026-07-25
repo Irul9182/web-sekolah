@@ -6,18 +6,13 @@ use Inertia\Inertia;
 
 class ProfileController extends Controller
 {
-    public function visiMisi()
+    /**
+     * Halaman profil sekolah gabungan: Visi & Misi, Sejarah, dan Struktur
+     * Organisasi dalam satu halaman (sebelumnya tiga halaman terpisah).
+     * File React: resources/js/pages/profile/index.tsx
+     */
+    public function index()
     {
-        return Inertia::render('profile/visi-misi');
-    }
-
-    public function sejarah()
-    {
-        return Inertia::render('profile/sejarah');
-    }
-
-    public function struktur()
-    {
-        return Inertia::render('profile/struktur-organisasi');
+        return Inertia::render('profile/index');
     }
 }
