@@ -6,17 +6,16 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-   public function up(): void
+    public function up(): void
     {
         Schema::table('beritas', function (Blueprint $table) {
+            $table->date('tanggal')->nullable()->after('slug');
+
             $table->foreignId('galeri_id')
                 ->nullable()
-                ->after('id') // sesuaikan posisi kalau perlu
+                ->after('tanggal')
                 ->constrained('galeris')
-                ->nullOnDelete(); // kalau album galeri dihapus, berita tidak ikut terhapus, cuma link-nya hilang
+                ->nullOnDelete();
         });
     }
 
@@ -24,7 +23,7 @@ return new class extends Migration
     {
         Schema::table('beritas', function (Blueprint $table) {
             $table->dropForeign(['galeri_id']);
-            $table->dropColumn('galeri_id');
+            $table->dropColumn(['galeri_id', 'tanggal']);
         });
     }
 };

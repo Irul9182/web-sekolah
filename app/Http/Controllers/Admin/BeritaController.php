@@ -13,22 +13,30 @@ class BeritaController extends Controller
 {
     public function index(Request $request)
     {
-        $search  = $request->query('search', '');
+        $search = $request->query('search', '');
         $perPage = $request->query('per_page', 10);
 
-        $beritas = Berita::query()->with(['berita_image', 'galeri'])
-        ->when($search, function ($q) use ($search) {
-            $q->where('judul', 'like', "%{$search}%");
-        })
-        ->orderBy('tanggal', 'desc')
-        ->paginate($perPage)
-        ->withQueryString();
+        $beritas = Berita::query()
+            ->with([
+                'berita_image',
+                'galeri',
+            ])
+            ->when($search, function ($q) use ($search) {
+                $q->where('judul', 'like', "%{$search}%");
+            })
+            ->orderBy('tanggal', 'desc')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        $galeris = Galeri::select('id', 'judul', 'slug')
+            ->orderBy('judul')
+            ->get();
 
         return Inertia::render('berita/index', [
             'beritas' => $beritas,
-            'galeris' => Galeri::select('id', 'judul', 'slug')->latest()->get(),
+            'galeris' => $galeris,
             'filters' => [
-                'search'   => $search,
+                'search' => $search,
                 'per_page' => $perPage,
             ],
         ]);
@@ -37,23 +45,43 @@ class BeritaController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'judul'           => 'required',
-            'isi'             => 'required',
-            'tanggal'         => 'nullable|date',
-            'uploaded_image'  => 'nullable|image|max:5120',
-            'galeri_id'       => 'nullable|exists:galeris,id',
+            'judul' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'isi' => [
+                'required',
+                'string',
+            ],
+
+            'tanggal' => [
+                'required',
+                'date',
+            ],
+
+            'galeri_id' => [
+                'nullable',
+                'exists:galeris,id',
+            ],
+
+            'uploaded_image' => [
+                'nullable',
+                'image',
+                'max:5120',
+            ],
         ]);
 
         $berita = Berita::create([
-            'judul'     => $validated['judul'],
-            'isi'       => $validated['isi'],
-            'tanggal'   => $validated['tanggal'] ?? null,
+            'judul' => $validated['judul'],
+            'isi' => $validated['isi'],
+            'tanggal' => $validated['tanggal'],
             'galeri_id' => $validated['galeri_id'] ?? null,
-            'slug'      => Str::slug($validated['judul']),
+            'slug' => Str::slug($validated['judul']),
         ]);
 
         if ($request->hasFile('uploaded_image')) {
-
             $image = $request->file('uploaded_image');
 
             $cloudinary = app(\Cloudinary\Cloudinary::class);
@@ -63,7 +91,7 @@ class BeritaController extends Controller
                 ->upload(
                     $image->getRealPath(),
                     [
-                        'folder' => 'web_sekolah/berita'
+                        'folder' => 'web_sekolah/berita',
                     ]
                 );
 
@@ -73,7 +101,10 @@ class BeritaController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Berita berhasil ditambahkan!');
+        return back()->with(
+            'success',
+            'Berita berhasil ditambahkan!'
+        );
     }
 
     public function update(Request $request, string $id)
@@ -81,23 +112,53 @@ class BeritaController extends Controller
         $berita = Berita::findOrFail($id);
 
         $validated = $request->validate([
-            'judul'           => 'required',
-            'isi'             => 'required',
-            'tanggal'         => 'nullable|date',
-            'uploaded_image'  => 'nullable|image|max:5120',
-            'galeri_id'       => 'nullable|exists:galeris,id',
+            'judul' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'isi' => [
+                'required',
+                'string',
+            ],
+
+            'tanggal' => [
+                'required',
+                'date',
+            ],
+
+            'galeri_id' => [
+                'nullable',
+                'exists:galeris,id',
+            ],
+
+            'uploaded_image' => [
+                'nullable',
+                'image',
+                'max:5120',
+            ],
         ]);
 
-        // upload foto baru
-        if ($request->hasFile('uploaded_image')) {
+        /*
+        |--------------------------------------------------------------------------
+        | Upload Foto Baru
+        |--------------------------------------------------------------------------
+        */
 
+        if ($request->hasFile('uploaded_image')) {
             $cloudinary = app(\Cloudinary\Cloudinary::class);
 
-            // hapus foto lama
-            if ($berita->berita_image && $berita->berita_image->public_id) {
+            // Hapus foto lama dari Cloudinary
+            if (
+                $berita->berita_image &&
+                $berita->berita_image->public_id
+            ) {
                 $cloudinary
                     ->uploadApi()
-                    ->destroy($berita->berita_image->public_id);
+                    ->destroy(
+                        $berita->berita_image->public_id
+                    );
 
                 $berita->berita_image->delete();
             }
@@ -119,29 +180,41 @@ class BeritaController extends Controller
             ]);
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Update Data Berita
+        |--------------------------------------------------------------------------
+        */
+
         $berita->update([
-            'judul'     => $validated['judul'],
-            'isi'       => $validated['isi'],
-            'tanggal'   => $validated['tanggal'] ?? null,
+            'judul' => $validated['judul'],
+            'isi' => $validated['isi'],
+            'tanggal' => $validated['tanggal'],
             'galeri_id' => $validated['galeri_id'] ?? null,
-            'slug'      => Str::slug($validated['judul']),
+            'slug' => Str::slug($validated['judul']),
         ]);
 
-        return back()->with('success', 'Berita berhasil diedit!');
+        return back()->with(
+            'success',
+            'Berita berhasil diedit!'
+        );
     }
 
-    public function destroy($id)
+    public function destroy(string $id)
     {
         $berita = Berita::findOrFail($id);
 
         $cloudinary = app(\Cloudinary\Cloudinary::class);
 
         if ($berita->berita_image) {
-
-            if (!empty($berita->berita_image->public_id)) {
+            if (
+                !empty($berita->berita_image->public_id)
+            ) {
                 $cloudinary
                     ->uploadApi()
-                    ->destroy($berita->berita_image->public_id);
+                    ->destroy(
+                        $berita->berita_image->public_id
+                    );
             }
 
             $berita->berita_image->delete();
@@ -149,7 +222,11 @@ class BeritaController extends Controller
 
         $berita->delete();
 
-        return redirect()->route('berita.index')
-            ->with('success', 'Berita berhasil dihapus!');
+        return redirect()
+            ->route('berita.index')
+            ->with(
+                'success',
+                'Berita berhasil dihapus!'
+            );
     }
 }

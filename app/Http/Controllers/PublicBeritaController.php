@@ -13,9 +13,16 @@ class PublicBeritaController extends Controller
         $search = $request->query('search', '');
 
         $beritas = Berita::query()
-            ->with('berita_image')
+            ->with([
+                'berita_image',
+                'galeri',
+            ])
             ->when($search, function ($q) use ($search) {
-                $q->where('judul', 'like', "%{$search}%");
+                $q->where(
+                    'judul',
+                    'like',
+                    "%{$search}%"
+                );
             })
             ->orderBy('tanggal', 'desc')
             ->paginate(9)
@@ -31,19 +38,31 @@ class PublicBeritaController extends Controller
 
     public function show(string $slug)
     {
-    $berita = Berita::with('berita_image')
-        ->where('slug', $slug)
-        ->firstOrFail();
+        $berita = Berita::with([
+            'berita_image',
+            'galeri',
+        ])
+            ->where('slug', $slug)
+            ->firstOrFail();
 
-    $beritaLainnya = Berita::with('berita_image')
-        ->where('id', '!=', $berita->id)
-        ->orderBy('tanggal', 'desc')
-        ->take(3)
-        ->get();
+        $beritaLainnya = Berita::with([
+            'berita_image',
+        ])
+            ->where(
+                'id',
+                '!=',
+                $berita->id
+            )
+            ->orderBy('tanggal', 'desc')
+            ->take(3)
+            ->get();
 
-    return Inertia::render('public/berita-detail', [
-        'berita' => $berita,
-        'beritaLainnya' => $beritaLainnya,
-        ]);
+        return Inertia::render(
+            'public/berita-detail',
+            [
+                'berita' => $berita,
+                'beritaLainnya' => $beritaLainnya,
+            ]
+        );
     }
 }

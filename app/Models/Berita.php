@@ -9,12 +9,11 @@ use App\Models\Galeri;
 class Berita extends Model
 {
     protected $fillable = [
-    'judul',
-    'isi',
-    'gambar',
-    'slug',
-    'tanggal',
-    'galeri_id',
+        'judul',
+        'isi',
+        'slug',
+        'tanggal',
+        'galeri_id',
     ];
 
     public function berita_image()
@@ -24,6 +23,6 @@ class Berita extends Model
 
     public function galeri()
     {
-    return $this->belongsTo(Galeri::class);
+        return $this->belongsTo(Galeri::class);
     }
 }
