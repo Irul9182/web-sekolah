@@ -63,6 +63,46 @@ class GaleriController extends Controller
             ->with('success', 'Galeri berhasil ditambahkan!');
     }
 
+    public function update(Request $request, $id)
+    {
+        $galeri = Galeri::with('images')->findOrFail($id);
+
+        $request->validate([
+            'judul'    => 'required',
+            'bulan'    => 'required|integer|min:1|max:12',
+            'tahun'    => 'required|integer|min:2000|max:2100',
+            'gambar'   => 'nullable|array',
+            'gambar.*' => 'image|max:4096',
+        ]);
+
+        $galeri->update([
+            'judul' => $request->judul,
+            'isi'   => $request->isi ?? '',
+            'slug'  => Str::slug($request->judul . '-' . $request->bulan . '-' . $request->tahun),
+            'bulan' => $request->bulan,
+            'tahun' => $request->tahun,
+        ]);
+
+        // hapus foto lama yang dipilih untuk dihapus (kalau frontend mengirim daftar id-nya)
+        if ($request->filled('hapus_gambar')) {
+            $galeri->images()->whereIn('id', $request->input('hapus_gambar'))->delete();
+        }
+
+        // tambah foto baru kalau ada yang diupload
+        if ($request->hasFile('gambar')) {
+            foreach ($request->file('gambar') as $file) {
+                $path = $file->store('galeri', 'public');
+                GaleriImage::create([
+                    'galeri_id' => $galeri->id,
+                    'image_url' => '/storage/' . $path,
+                ]);
+            }
+        }
+
+        return redirect()->route('galeri.index')
+            ->with('success', 'Galeri berhasil diedit!');
+    }
+
     public function destroy($id)
     {
         $galeri = Galeri::with('images')->findOrFail($id);

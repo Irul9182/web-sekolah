@@ -1,6 +1,14 @@
 import PublicLayout, { SectionHeader } from '@/layouts/public-layout';
+import { Link, usePage } from '@inertiajs/react';
+import { ImageIcon } from 'lucide-react';
+
+interface PageProps {
+    galeri_slug: string | null;
+}
 
 export default function Tkj() {
+    const { galeri_slug } = usePage<PageProps>().props;
+
     return (
         <PublicLayout>
             <section className="mx-auto max-w-4xl px-4 py-16 pt-32">
@@ -31,6 +39,17 @@ export default function Tkj() {
                         </ul>
                     </div>
                 </div>
+
+                {galeri_slug && (
+                    <Link
+                        href={route('public.galeri.show', galeri_slug)}
+                        className="bg-background/50 hover:bg-muted mt-6 flex max-w-70 items-center gap-2 rounded-md border p-3 text-sm transition"
+                        style={{ borderColor: 'var(--border)' }}
+                    >
+                        <ImageIcon className="text-muted-foreground h-4 w-4 shrink-0" />
+                        <span className="truncate">Lihat Galeri Jurusan TKJ</span>
+                    </Link>
+                )}
             </section>
         </PublicLayout>
     );
