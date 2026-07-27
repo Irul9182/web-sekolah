@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Berita;
+use App\Models\Galeri;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -15,7 +16,7 @@ class BeritaController extends Controller
         $search  = $request->query('search', '');
         $perPage = $request->query('per_page', 10);
 
-        $beritas = Berita::query()->with('berita_image')
+        $beritas = Berita::query()->with(['berita_image', 'galeri'])
         ->when($search, function ($q) use ($search) {
             $q->where('judul', 'like', "%{$search}%");
         })
@@ -25,6 +26,7 @@ class BeritaController extends Controller
 
         return Inertia::render('berita/index', [
             'beritas' => $beritas,
+            'galeris' => Galeri::select('id', 'judul', 'slug')->latest()->get(),
             'filters' => [
                 'search'   => $search,
                 'per_page' => $perPage,
@@ -32,25 +34,22 @@ class BeritaController extends Controller
         ]);
     }
 
-    public function create()
-    {
-        return Inertia::render('berita/create');
-    }
-
     public function store(Request $request)
     {
-        $request->validate([
-            'judul'   => 'required',
-            'isi'     => 'required',
-            'tanggal' => 'nullable|date',
-            'uploaded_image' => 'nullable|image|max:5120',
+        $validated = $request->validate([
+            'judul'           => 'required',
+            'isi'             => 'required',
+            'tanggal'         => 'nullable|date',
+            'uploaded_image'  => 'nullable|image|max:5120',
+            'galeri_id'       => 'nullable|exists:galeris,id',
         ]);
 
         $berita = Berita::create([
-            'judul'   => $request->judul,
-            'isi'     => $request->isi,
-            'tanggal' => $request->tanggal,
-            'slug'    => Str::slug($request->judul),
+            'judul'     => $validated['judul'],
+            'isi'       => $validated['isi'],
+            'tanggal'   => $validated['tanggal'] ?? null,
+            'galeri_id' => $validated['galeri_id'] ?? null,
+            'slug'      => Str::slug($validated['judul']),
         ]);
 
         if ($request->hasFile('uploaded_image')) {
@@ -77,27 +76,22 @@ class BeritaController extends Controller
         return back()->with('success', 'Berita berhasil ditambahkan!');
     }
 
-    public function edit($id)
-    {
-        $berita = Berita::findOrFail($id);
-        return Inertia::render('berita/edit', ['berita' => $berita]);
-    }
-
     public function update(Request $request, string $id)
     {
         $berita = Berita::findOrFail($id);
 
-        $request->validate([
-            'judul'   => 'required',
-            'isi'     => 'required',
-            'tanggal' => 'nullable|date',
-            'uploaded_image' => 'nullable|image|max:5120',
+        $validated = $request->validate([
+            'judul'           => 'required',
+            'isi'             => 'required',
+            'tanggal'         => 'nullable|date',
+            'uploaded_image'  => 'nullable|image|max:5120',
+            'galeri_id'       => 'nullable|exists:galeris,id',
         ]);
-
-        $cloudinary = app(\Cloudinary\Cloudinary::class);
 
         // upload foto baru
         if ($request->hasFile('uploaded_image')) {
+
+            $cloudinary = app(\Cloudinary\Cloudinary::class);
 
             // hapus foto lama
             if ($berita->berita_image && $berita->berita_image->public_id) {
@@ -126,10 +120,11 @@ class BeritaController extends Controller
         }
 
         $berita->update([
-            'judul'   => $request->judul,
-            'isi'     => $request->isi,
-            'tanggal' => $request->tanggal,
-            'slug'    => Str::slug($request->judul),
+            'judul'     => $validated['judul'],
+            'isi'       => $validated['isi'],
+            'tanggal'   => $validated['tanggal'] ?? null,
+            'galeri_id' => $validated['galeri_id'] ?? null,
+            'slug'      => Str::slug($validated['judul']),
         ]);
 
         return back()->with('success', 'Berita berhasil diedit!');
@@ -151,7 +146,6 @@ class BeritaController extends Controller
 
             $berita->berita_image->delete();
         }
-
 
         $berita->delete();
 

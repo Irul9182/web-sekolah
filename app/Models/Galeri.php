@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Berita;
 
 class Galeri extends Model
 {
@@ -17,5 +18,10 @@ class Galeri extends Model
     public function images()
     {
         return $this->hasMany(GaleriImage::class);
+    }
+
+    public function beritas()
+    {
+        return $this->hasMany(Berita::class);
     }
 }

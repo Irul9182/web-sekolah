@@ -574,7 +574,7 @@ function HeroSection({ photos }: { photos: string[] }) {
                     🏫 Sekolah Unggulan
                 </Badge>
                 <h1
-                    className="mx-auto mb-4 max-w-2xl text-3xl leading-tight font-bold sm:text-4xl md:text-5xl"
+                    className="mx-auto mb-4 max-w-3xl text-4xl leading-tight font-bold sm:text-5xl md:text-6xl"
                     style={{ color: 'var(--primary-foreground)' }}
                 >
                     Selamat Datang Di Sekolah Baidhaul Ahkam
@@ -610,32 +610,32 @@ function HeroSection({ photos }: { photos: string[] }) {
 // kolom di tabel sekolah) dan ganti bagian statis ini jadi props dari server. ====
 function SambutanKepalaSekolahSection() {
     return (
-        <section className="mx-auto max-w-5xl px-4 py-16" style={{ backgroundColor: 'var(--background)' }}>
-            <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-3">
+        <section className="mx-auto max-w-5xl px-4 py-24" style={{ backgroundColor: 'var(--background)' }}>
+            <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-3">
                 <div className="mx-auto md:mx-0">
                     <div
-                        className="h-40 w-40 overflow-hidden rounded-full md:h-48 md:w-48"
+                        className="h-56 w-56 overflow-hidden rounded-full md:h-64 md:w-64"
                         style={{ backgroundColor: 'var(--muted)', border: '4px solid var(--border)' }}
                     >
                         <img src="/images/kepala-sekolah.jpg" alt="Kepala Sekolah" className="h-full w-full object-cover" />
                     </div>
                 </div>
                 <div className="text-center md:col-span-2 md:text-left">
-                    <p className="mb-2 text-xs font-semibold tracking-[0.2em] uppercase" style={{ color: 'var(--muted-foreground)' }}>
+                    <p className="mb-3 text-sm font-semibold tracking-[0.2em] uppercase" style={{ color: 'var(--muted-foreground)' }}>
                         Sambutan
                     </p>
-                    <h2 className="mb-4 text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
+                    <h2 className="mb-6 text-4xl font-bold" style={{ color: 'var(--foreground)' }}>
                         Kepala Sekolah
                     </h2>
-                    <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
+                    <p className="text-xl leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
                         Assalamu'alaikum warahmatullahi wabarakatuh. Selamat datang di website resmi SMK Islam Baidhaul Ahkam. Kami berkomitmen
                         mencetak generasi yang unggul dalam ilmu pengetahuan, teknologi, dan akhlak yang islami. Semoga apa yang kami sajikan di
                         sini bermanfaat bagi seluruh siswa, orang tua, dan masyarakat.
                     </p>
-                    <p className="mt-4 text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                    <p className="mt-6 text-xl font-semibold" style={{ color: 'var(--foreground)' }}>
                         [Nama Kepala Sekolah]
                     </p>
-                    <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                    <p className="text-base" style={{ color: 'var(--muted-foreground)' }}>
                         Kepala SMK Islam Baidhaul Ahkam
                     </p>
                 </div>

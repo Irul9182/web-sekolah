@@ -2,6 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { formatDate } from '@/helpers/format';
 import PublicLayout from '@/layouts/public-layout';
 import { Link, usePage } from '@inertiajs/react';
+import { Images } from 'lucide-react';
 
 interface BeritaDetailItem {
     id: number;
@@ -10,6 +11,7 @@ interface BeritaDetailItem {
     tanggal: string;
     slug: string;
     berita_image?: { image_url: string } | null;
+    galeri?: { id: string; judul: string; slug: string } | null;
 }
 
 interface PageProps {
@@ -45,6 +47,17 @@ export default function PublicBeritaDetail() {
                 <div className="prose max-w-none text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--foreground)' }}>
                     {berita.isi}
                 </div>
+
+                {berita.galeri && (
+                    <Link
+                        href={route('public.galeri.show', berita.galeri.slug)}
+                        className="mt-8 inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-opacity hover:opacity-90"
+                        style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}
+                    >
+                        <Images className="h-4 w-4" />
+                        Lihat Galeri Foto Lainnya
+                    </Link>
+                )}
 
                 {beritaLainnya.length > 0 && (
                     <div className="mt-16">

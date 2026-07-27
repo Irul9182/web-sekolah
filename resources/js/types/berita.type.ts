@@ -6,6 +6,12 @@ export interface BeritaImage {
     updated_at?: string;
 }
 
+export interface GaleriOption {
+    id: string;
+    judul: string;
+    slug: string;
+}
+
 export interface BeritaProps {
     id: string;
     gambar: string;
@@ -13,6 +19,8 @@ export interface BeritaProps {
     isi: string;
     tanggal: string;
     berita_image?: BeritaImage;
+    galeri_id?: string | null;
+    galeri?: GaleriOption | null;
     created_at?: string;
 }
 
@@ -36,6 +44,8 @@ export const initialBeritaValue: BeritaPropsForm = {
     isi: '',
     tanggal: getTodayLocal(),
     berita_image: undefined,
+    galeri_id: '',
+    galeri: undefined,
     created_at: '',
     uploaded_image: undefined,
     existing_image_id: '',
