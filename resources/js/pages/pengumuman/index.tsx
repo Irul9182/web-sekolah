@@ -52,6 +52,7 @@ export default function PengumumanIndex() {
     const [search, setSearch] = useState(filters?.search ?? '');
     const currentPerPage = new URLSearchParams(window.location.search).get('per_page') ?? '10';
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    
 
     const handleSearch = (val: string) => {
         setSearch(val);
@@ -259,6 +260,16 @@ export default function PengumumanIndex() {
                                         className="bg-background/50! h-48 w-full resize-y rounded-lg border p-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                                     />
                                     {errors.deskripsi && <p className="mt-1 text-sm text-red-500">{errors.deskripsi}</p>}
+                                </div>
+                                <div>
+                                    <label className="mb-1 block text-sm text-gray-600">Tanggal</label>
+                                    <input
+                                        type="date"
+                                        value={data.tanggal}
+                                        onChange={(e) => setData('tanggal', e.target.value)}
+                                        className="w-full rounded-lg border border-gray-300 p-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                                    />
+                                    {errors.tanggal && <p className="mt-1 text-sm text-red-500">{errors.tanggal}</p>}
                                 </div>
 
                                 <div className="flex gap-3 pt-2">

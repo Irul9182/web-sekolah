@@ -6,14 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Pengumuman extends Model
 {
-    //
-    protected $table = 'pengumuman';
+    protected $table = 'pengumumans';
     protected $primaryKey = 'id';
-    public $incrementing = false;
-    protected $keyType = 'string';
 
     protected $fillable = [
         'judul',
         'deskripsi',
+        'tanggal',
     ];
 }

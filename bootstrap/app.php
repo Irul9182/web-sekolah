@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
+        $middleware->redirectUsersTo('/admin/dashboard');  
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

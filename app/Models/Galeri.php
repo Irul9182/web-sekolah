@@ -2,21 +2,26 @@
 
 namespace App\Models;
 
-use App\Models\GaleriImage;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Berita;
 
 class Galeri extends Model
 {
     protected $fillable = [
         'judul',
         'isi',
-        'gambar',
         'slug',
+        'bulan',
+        'tahun',
     ];
 
-
-    public function galeri_image()
+    public function images()
     {
-        return $this->hasOne(GaleriImage::class);
+        return $this->hasMany(GaleriImage::class);
+    }
+
+    public function beritas()
+    {
+        return $this->hasMany(Berita::class);
     }
 }

@@ -3,22 +3,20 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Galeri;
+use App\Models\GaleriImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
-use App\Models\Galeri;
 
 class GaleriController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         $search  = $request->query('search', '');
         $perPage = $request->query('per_page', 10);
 
-        $galeris = Galeri::query()->with('galeri_image')
+        $galeris = Galeri::with('images')
             ->when($search, function ($q) use ($search) {
                 $q->where('judul', 'like', "%{$search}%");
             })
@@ -35,155 +33,101 @@ class GaleriController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
         $request->validate([
-            'judul'  => 'required',
-            'isi'    => 'required',
-            'uploaded_image' => 'nullable|image|max:5120',
+            'judul'   => 'required',
+            'bulan'   => 'required|integer|min:1|max:12',
+            'tahun'   => 'required|integer|min:2000|max:2100',
+            'gambar'  => 'required|array|min:1',
+            'gambar.*' => 'image|max:4096',
         ]);
-
-
 
         $galeri = Galeri::create([
-            'judul'  => $request->judul,
-            'isi'    => $request->isi,
-            'slug'   => Str::slug($request->judul),
+            'judul' => $request->judul,
+            'isi'   => $request->isi ?? '',
+            'slug'  => Str::slug($request->judul . '-' . $request->bulan . '-' . $request->tahun),
+            'bulan' => $request->bulan,
+            'tahun' => $request->tahun,
         ]);
 
-        if ($request->hasFile('uploaded_image')) {
-
-            $image = $request->file('uploaded_image');
-
-            $cloudinary = app(\Cloudinary\Cloudinary::class);
-
-            $result = $cloudinary
-                ->uploadApi()
-                ->upload(
-                    $image->getRealPath(),
-                    [
-                        'folder' => 'web_sekolah/galeri'
-                    ]
-                );
-
-            $galeri->galeri_image()->create([
-                'image_url' => $result['secure_url'],
-                'public_id' => $result['public_id'],
+        foreach ($request->file('gambar') as $file) {
+            $path = $file->store('galeri', 'public');
+            GaleriImage::create([
+                'galeri_id' => $galeri->id,
+                'image_url' => '/storage/' . $path,
             ]);
         }
 
-        return back()->with('success', 'Foto berhasil ditambahkan!');
+        return redirect()->route('galeri.index')
+            ->with('success', 'Galeri berhasil ditambahkan!');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function update(Request $request, $id)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-        $galeri = Galeri::findOrFail($id);
+        $galeri = Galeri::with('images')->findOrFail($id);
 
         $request->validate([
-            'judul'  => 'required',
-            // 'gambar' => 'nullable|image|max:5120',
-            'isi'    => 'required',
-            'uploaded_image' => 'nullable|image|max:5120',
+            'judul'    => 'required',
+            'bulan'    => 'required|integer|min:1|max:12',
+            'tahun'    => 'required|integer|min:2000|max:2100',
+            'gambar'   => 'nullable|array',
+            'gambar.*' => 'image|max:4096',
         ]);
 
-
-
-        $cloudinary = app(\Cloudinary\Cloudinary::class);
-
-        // upload foto baru
-        if ($request->hasFile('uploaded_image')) {
-
-            // hapus foto lama
-            if ($galeri->galeri_image && $galeri->galeri_image->public_id) {
-                $cloudinary
-                    ->uploadApi()
-                    ->destroy($galeri->galeri_image->public_id);
-
-                $galeri->galeri_image->delete();
-            }
-
-            $image = $request->file('uploaded_image');
-
-            $result = $cloudinary
-                ->uploadApi()
-                ->upload(
-                    $image->getRealPath(),
-                    [
-                        'folder' => 'web_sekolah/galeri',
-                    ]
-                );
-
-            $galeri->galeri_image()->create([
-                'image_url' => $result['secure_url'],
-                'public_id' => $result['public_id'],
-            ]);
-        }
         $galeri->update([
-            'judul'  => $request->judul,
-            'isi'    => $request->isi,
-            'slug'   => Str::slug($request->judul),
+            'judul' => $request->judul,
+            'isi'   => $request->isi ?? '',
+            'slug'  => Str::slug($request->judul . '-' . $request->bulan . '-' . $request->tahun),
+            'bulan' => $request->bulan,
+            'tahun' => $request->tahun,
         ]);
 
+        // hapus foto lama yang dipilih untuk dihapus (kalau frontend mengirim daftar id-nya)
+        if ($request->filled('hapus_gambar')) {
+            $galeri->images()->whereIn('id', $request->input('hapus_gambar'))->delete();
+        }
 
-        return back()->with('success', 'Galeri berhasil diedit!.');
+        // tambah foto baru kalau ada yang diupload
+        if ($request->hasFile('gambar')) {
+            foreach ($request->file('gambar') as $file) {
+                $path = $file->store('galeri', 'public');
+                GaleriImage::create([
+                    'galeri_id' => $galeri->id,
+                    'image_url' => '/storage/' . $path,
+                ]);
+            }
+        }
+
+        return redirect()->route('galeri.index')
+            ->with('success', 'Galeri berhasil diedit!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
-        $galeri = Galeri::findOrFail($id);
-
-        $cloudinary = app(\Cloudinary\Cloudinary::class);
-
-        if ($galeri->galeri_image) {
-
-            if (!empty($galeri->galeri_image->public_id)) {
-                $cloudinary
-                    ->uploadApi()
-                    ->destroy($galeri->galeri_image->public_id);
-            }
-
-            $galeri->galeri_image->delete();
-        }
-
+        $galeri = Galeri::with('images')->findOrFail($id);
+        $galeri->images()->delete();
         $galeri->delete();
 
         return redirect()->route('galeri.index')
             ->with('success', 'Galeri berhasil dihapus!');
+    }
+
+    public function show($id)
+    {
+    $galeri = Galeri::with('images')->findOrFail($id);
+
+    return Inertia::render('Admin/Galeri/Show', [
+        'galeri' => $galeri,
+        ]);
+    }
+
+    public function edit($id)
+    {
+    $galeri = Galeri::with('images')->findOrFail($id);
+
+    return Inertia::render('Admin/Galeri/Edit', [
+        'galeri' => $galeri,
+        ]);
     }
 }

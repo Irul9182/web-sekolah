@@ -11,11 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pengumuman', function (Blueprint $table) {
-            $table->id();
-            $table->text('deskripsi');
-            $table->string('judul');
-            $table->timestamps();
+        Schema::table('galeris', function (Blueprint $table) {
+            $table->unsignedTinyInteger('bulan')->nullable()->after('slug');
+            $table->unsignedSmallInteger('tahun')->nullable()->after('bulan');
         });
     }
 
@@ -24,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pengumumans');
+        Schema::table('galeris', function (Blueprint $table) {
+            $table->dropColumn(['bulan', 'tahun']);
+        });
     }
 };

@@ -12,7 +12,7 @@ class PengumumanSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('pengumuman')->insert([
+        DB::table('pengumumans')->insert([
             [
                 'judul' => 'Libur Hari Kemerdekaan',
                 'deskripsi' => 'Kegiatan belajar mengajar diliburkan pada tanggal 17 Agustus dalam rangka Hari Kemerdekaan Republik Indonesia.',

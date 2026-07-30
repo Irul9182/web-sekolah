@@ -9,9 +9,11 @@ export interface PengumumanProps {
 export type PengumumanPropsForm = {
     judul: string;
     deskripsi: string;
+    tanggal: string;
 };
 
 export const initialPengumumanValue: PengumumanPropsForm = {
     judul: '',
     deskripsi: '',
+    tanggal: '',
 };

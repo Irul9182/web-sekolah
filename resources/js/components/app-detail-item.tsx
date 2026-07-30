@@ -62,8 +62,8 @@ const DetailItem: React.FC<DetailItemProps> = ({
     const tone: SelectTone = toneStatus;
 
     return (
-        <div className={cn(isBordered && 'border-border border-b last:border-b-0', 'flex items-center justify-between py-2.5', className)}>
-            <span className={cn(`text-foreground text-sm font-semibold`, labelClassName)}>{label}</span>
+        <div className={cn(isBordered && 'border-border border-b last:border-b-0', 'flex items-start justify-between gap-3 py-2.5', className)}>
+            <span className={cn(`text-foreground shrink-0 text-sm font-semibold`, labelClassName)}>{label}</span>
 
             {isStatus ? (
                 <Badge

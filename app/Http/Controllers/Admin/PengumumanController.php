@@ -47,21 +47,21 @@ class PengumumanController extends Controller
      */
     public function store(Request $request)
     {
-        //
-        $request->validate([
+    $request->validate([
         'judul'     => 'required',
         'deskripsi' => 'required',
+        'tanggal'   => 'nullable|date',
     ]);
 
     Pengumuman::create([
         'judul'     => $request->judul,
         'deskripsi' => $request->deskripsi,
+        'tanggal'   => $request->tanggal,
     ]);
 
     return redirect()->route('pengumuman.index')
         ->with('success', 'Pengumuman berhasil ditambahkan!');
     }
-
     /**
      * Display the specified resource.
      */
@@ -87,11 +87,13 @@ class PengumumanController extends Controller
 
         $request->validate([
             'judul'     => 'required',
+            'tanggal'   => 'required',
             'deskripsi' => 'required',
         ]);
 
         $pengumuman->update([
             'judul'     => $request->judul,
+            'tanggal'   => $request->tanggal,
             'deskripsi' => $request->deskripsi,
         ]);
 

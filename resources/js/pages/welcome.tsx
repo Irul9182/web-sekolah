@@ -11,31 +11,51 @@ import {
     NavigationMenuLink,
     NavigationMenuList,
     NavigationMenuTrigger,
+    navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
+import { FaFacebook, FaInstagram, FaYoutube, FaXTwitter } from 'react-icons/fa6';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Link } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { formatDate } from '@/helpers/format';
+import { cn } from '@/lib/utils';
+import { Link, usePage } from '@inertiajs/react';
+import AppearanceSwitch from '@/components/appearance-switch';
+import { useEffect, useRef, useState } from 'react';
 
 type ThemeColor = 'info' | 'gold' | 'success' | 'warning' | 'error' | 'default';
 
+// ==== Tipe data sesuai kolom asli di database ====
 interface BeritaItem {
     id: number;
     judul: string;
+    slug: string;
     tanggal: string;
-    img: string;
+    berita_image?: { image_url: string } | null;
 }
 
 interface PengumumanItem {
     id: number;
     judul: string;
-    isi: string;
+    deskripsi: string;
+    created_at: string;
+}
+
+interface GaleriImage {
+    id: number;
+    image_url: string;
 }
 
 interface GaleriItem {
     id: number;
-    nama: string;
-    img: string;
+    judul: string;
+    slug: string;
+    images: GaleriImage[];
+}
+
+interface PageProps {
+    beritas: BeritaItem[];
+    pengumumans: PengumumanItem[];
+    galeris: GaleriItem[];
 }
 
 interface JurusanData {
@@ -48,25 +68,7 @@ interface JurusanData {
 
 type JurusanKey = 'tkj' | 'dkv' | 'akuntansi' | 'perkantoran';
 
-const berita: BeritaItem[] = [
-    { id: 1, judul: 'Kegiatan Study Tour Bandung', tanggal: '12 Mei 2025', img: '/images/card1.jpg' },
-    { id: 2, judul: 'Lomba Sains Antar Sekolah', tanggal: '8 Mei 2025', img: '/images/card2.png' },
-    { id: 3, judul: 'Peringatan Hari Kartini', tanggal: '21 April 2025', img: '/images/card3.jpg' },
-    { id: 4, judul: 'Pengumuman PPDB', tanggal: '10 Juni 2025', img: '/images/ppdb.jpg' },
-];
-
-const pengumuman: PengumumanItem[] = [
-    { id: 1, judul: 'Penerimaan Siswa Baru 2025', isi: 'Pendaftaran Dibuka Mulai 1 Juni 2025' },
-    { id: 2, judul: 'Jadwal Ujian Akhir Semester', isi: 'Ujian Akhir Semester Akan Dimulai pada 20 Juni 2025' },
-];
-
-const galeri: GaleriItem[] = [
-    { id: 1, nama: 'Perpustakaan', img: '/images/perpus.jpg' },
-    { id: 2, nama: 'Wisuda', img: '/images/wisuda.png' },
-    { id: 3, nama: 'Olahraga', img: '/images/olahraga.webp' },
-    { id: 4, nama: 'Kegiatan Praktikum', img: '/images/praktikum.jpeg' },
-];
-
+// Jurusan masih statis (bukan dari database) karena kontennya jarang berubah.
 const dataJurusan: Record<JurusanKey, JurusanData> = {
     tkj: {
         judul: 'Teknik Komputer & Jaringan',
@@ -102,11 +104,26 @@ const dataJurusan: Record<JurusanKey, JurusanData> = {
     },
 };
 
-const sosmed: Array<{ label: string; icon: string }> = [
-    { label: 'Facebook', icon: 'f' },
-    { label: 'Instagram', icon: 'in' },
-    { label: 'YouTube', icon: 'yt' },
-    { label: 'Twitter/X', icon: 'x' },
+const sosmed: Array<{ label: string; icon: React.ElementType; href: string }> = [
+    { label: 'Facebook', icon: FaFacebook, href: 'https://www.facebook.com/profile.php?id=100052537687507' },
+    { label: 'Instagram', icon: FaInstagram, href: 'https://www.instagram.com/khoirulmauludi/' },
+    { label: 'YouTube', icon: FaYoutube, href: 'https://youtube.com' },
+    { label: 'X', icon: FaXTwitter, href: 'https://x.com/' },
+];
+
+// Menu dropdown "Jurusan" -> arahkan href sesuai routing jurusan kamu
+const jurusanMenu: Array<{ label: string; href: string }> = [
+    { label: 'TKJ', href: '/tkj' },
+    { label: 'AP', href: '/ap' },
+    { label: 'AK', href: '/ak' },
+    { label: 'MAVIB', href: '/mavib' },
+];
+
+// Menu dropdown "Kontak" -> link sosial media/kontak sekolah (dibuka di tab baru)
+const kontakMenu: Array<{ label: string; href: string }> = [
+    { label: 'Facebook', href: 'https://www.facebook.com/profile.php?id=100052537687507' },
+    { label: 'Instagram', href: 'https://www.instagram.com/khoirulmauludi/' },
+    { label: 'WhatsApp', href: 'https://wa.me/6285778601851' },
 ];
 
 interface JurusanBadgeProps {
@@ -125,6 +142,39 @@ function JurusanBadge({ varColor, label }: JurusanBadgeProps) {
         >
             {label}
         </span>
+    );
+}
+
+// Membungkus section dengan efek "muncul dari bawah ke atas" saat di-scroll
+// ke dalam viewport. Memakai class .fade-up/.show yang sudah didefinisikan
+// di app.css — jadi tidak menambah sistem animasi baru, cuma menyalakan
+// yang sudah ada.
+function FadeInSection({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+    const ref = useRef<HTMLDivElement>(null);
+    const [visible, setVisible] = useState(false);
+
+    useEffect(() => {
+        const node = ref.current;
+        if (!node) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setVisible(true);
+                    observer.disconnect();
+                }
+            },
+            { threshold: 0.15 },
+        );
+
+        observer.observe(node);
+        return () => observer.disconnect();
+    }, []);
+
+    return (
+        <div ref={ref} className={cn('fade-up', visible && 'show', className)}>
+            {children}
+        </div>
     );
 }
 
@@ -196,29 +246,33 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                 <NavigationMenu className="hidden lg:flex">
                     <NavigationMenuList>
                         <NavigationMenuItem>
-                            <NavigationMenuLink
-                                href="#"
-                                className="px-4 py-2 text-sm font-medium transition-colors"
-                                style={{ color: 'var(--foreground)' }}
-                            >
-                                Beranda
+                            <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), 'bg-transparent! hover:bg-accent!')}>
+                                <Link href="/">Beranda</Link>
                             </NavigationMenuLink>
                         </NavigationMenuItem>
 
+                        {/* Profile: sekarang satu halaman gabungan (Visi-Misi, Sejarah, Struktur Organisasi) */}
                         <NavigationMenuItem>
-                            <NavigationMenuTrigger className="text-sm font-medium">Profile</NavigationMenuTrigger>
+                            <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), 'bg-transparent! hover:bg-accent!')}>
+                                <Link href="/profile">Profile</Link>
+                            </NavigationMenuLink>
+                        </NavigationMenuItem>
+
+                        {/* Jurusan: TKJ, AP, AK, MAVIB */}
+                        <NavigationMenuItem>
+                            <NavigationMenuTrigger className="bg-transparent! text-sm font-medium hover:bg-accent!">Jurusan</NavigationMenuTrigger>
                             <NavigationMenuContent>
                                 <ul className="grid w-40 gap-1 p-2">
-                                    {(['TKJ', 'AP', 'AK', 'MAVIB'] as const).map((j) => (
-                                        <li key={j}>
+                                    {jurusanMenu.map((j) => (
+                                        <li key={j.label}>
                                             <NavigationMenuLink
-                                                href="#"
+                                                asChild
                                                 className="block rounded-md px-3 py-2 text-sm transition-colors"
                                                 style={{ color: 'var(--foreground)' }}
                                                 onMouseEnter={handleDropdownMouseEnter}
                                                 onMouseLeave={handleDropdownMouseLeave}
                                             >
-                                                {j}
+                                                <Link href={j.href}>{j.label}</Link>
                                             </NavigationMenuLink>
                                         </li>
                                     ))}
@@ -226,32 +280,40 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                             </NavigationMenuContent>
                         </NavigationMenuItem>
 
-                        {(['Berita', 'Galeri'] as const).map((item) => (
-                            <NavigationMenuItem key={item}>
-                                <NavigationMenuLink
-                                    href="#"
-                                    className="px-4 py-2 text-sm font-medium transition-colors"
-                                    style={{ color: 'var(--foreground)' }}
-                                >
-                                    {item}
-                                </NavigationMenuLink>
-                            </NavigationMenuItem>
-                        ))}
+                        <NavigationMenuItem>
+                            <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), 'bg-transparent! hover:bg-accent!')}>
+                                <Link href="/berita">Berita</Link>
+                            </NavigationMenuLink>
+                        </NavigationMenuItem>
 
                         <NavigationMenuItem>
-                            <NavigationMenuTrigger className="text-sm font-medium">Kontak</NavigationMenuTrigger>
+                            <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), 'bg-transparent! hover:bg-accent!')}>
+                                <Link href="/pengumuman">Pengumuman</Link>
+                            </NavigationMenuLink>
+                        </NavigationMenuItem>
+
+                        <NavigationMenuItem>
+                            <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), 'bg-transparent! hover:bg-accent!')}>
+                                <Link href="/galeri">Galeri</Link>
+                            </NavigationMenuLink>
+                        </NavigationMenuItem>
+
+                        <NavigationMenuItem>
+                            <NavigationMenuTrigger className="bg-transparent! text-sm font-medium hover:bg-accent!">Kontak</NavigationMenuTrigger>
                             <NavigationMenuContent>
                                 <ul className="grid w-40 gap-1 p-2">
-                                    {(['Facebook', 'Instagram', 'WhatsApp'] as const).map((s) => (
-                                        <li key={s}>
+                                    {kontakMenu.map((k) => (
+                                        <li key={k.label}>
                                             <NavigationMenuLink
-                                                href="#"
+                                                href={k.href}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
                                                 className="block rounded-md px-3 py-2 text-sm transition-colors"
                                                 style={{ color: 'var(--foreground)' }}
                                                 onMouseEnter={handleDropdownMouseEnter}
                                                 onMouseLeave={handleDropdownMouseLeave}
                                             >
-                                                {s}
+                                                {k.label}
                                             </NavigationMenuLink>
                                         </li>
                                     ))}
@@ -262,7 +324,8 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                 </NavigationMenu>
 
                 {/* Auth Buttons */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
+                    <AppearanceSwitch />
                     {!isLoggedIn ? (
                         <Link
                             href="/login"
@@ -294,22 +357,85 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                         </SheetTrigger>
                         <SheetContent side="right" className="w-64">
                             <nav className="mt-8 flex flex-col gap-1">
-                                {(['Beranda', 'Profile', 'Berita', 'Galeri', 'Kontak'] as const).map((m) => (
-                                    <a
-                                        key={m}
-                                        href="#"
-                                        className="rounded-lg px-4 py-3 text-sm font-medium transition-colors"
+                                <Link
+                                    href="/"
+                                    className="rounded-lg px-4 py-3 text-sm font-medium transition-colors"
+                                    style={{ color: 'var(--foreground)' }}
+                                    onMouseEnter={handleDropdownMouseEnter}
+                                    onMouseLeave={handleDropdownMouseLeave}
+                                >
+                                    Beranda
+                                </Link>
+
+                                <Link
+                                    href="/profile"
+                                    className="rounded-lg px-4 py-3 text-sm font-medium transition-colors"
+                                    style={{ color: 'var(--foreground)' }}
+                                    onMouseEnter={handleDropdownMouseEnter}
+                                    onMouseLeave={handleDropdownMouseLeave}
+                                >
+                                    Profile
+                                </Link>
+
+                                <p className="mt-2 px-4 text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--muted-foreground)' }}>
+                                    Jurusan
+                                </p>
+                                {jurusanMenu.map((j) => (
+                                    <Link
+                                        key={j.label}
+                                        href={j.href}
+                                        className="rounded-lg px-6 py-2 text-sm transition-colors"
                                         style={{ color: 'var(--foreground)' }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.backgroundColor = 'var(--accent)';
-                                            e.currentTarget.style.color = 'var(--accent-foreground)';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.backgroundColor = '';
-                                            e.currentTarget.style.color = 'var(--foreground)';
-                                        }}
+                                        onMouseEnter={handleDropdownMouseEnter}
+                                        onMouseLeave={handleDropdownMouseLeave}
                                     >
-                                        {m}
+                                        {j.label}
+                                    </Link>
+                                ))}
+
+                                <Link
+                                    href="/berita"
+                                    className="mt-2 rounded-lg px-4 py-3 text-sm font-medium transition-colors"
+                                    style={{ color: 'var(--foreground)' }}
+                                    onMouseEnter={handleDropdownMouseEnter}
+                                    onMouseLeave={handleDropdownMouseLeave}
+                                >
+                                    Berita
+                                </Link>
+                                <Link
+                                    href="/pengumuman"
+                                    className="rounded-lg px-4 py-3 text-sm font-medium transition-colors"
+                                    style={{ color: 'var(--foreground)' }}
+                                    onMouseEnter={handleDropdownMouseEnter}
+                                    onMouseLeave={handleDropdownMouseLeave}
+                                >
+                                    Pengumuman
+                                </Link>
+                                <Link
+                                    href="/galeri"
+                                    className="rounded-lg px-4 py-3 text-sm font-medium transition-colors"
+                                    style={{ color: 'var(--foreground)' }}
+                                    onMouseEnter={handleDropdownMouseEnter}
+                                    onMouseLeave={handleDropdownMouseLeave}
+                                >
+                                    Galeri
+                                </Link>
+
+                                <p className="mt-2 px-4 text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--muted-foreground)' }}>
+                                    Kontak
+                                </p>
+                                {kontakMenu.map((k) => (
+                                    <a
+                                        key={k.label}
+                                        href={k.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="rounded-lg px-6 py-2 text-sm transition-colors"
+                                        style={{ color: 'var(--foreground)' }}
+                                        onMouseEnter={handleDropdownMouseEnter}
+                                        onMouseLeave={handleDropdownMouseLeave}
+                                    >
+                                        {k.label}
                                     </a>
                                 ))}
                             </nav>
@@ -403,12 +529,34 @@ function LoginDialog({ open, onOpenChange, onLoginSuccess }: LoginDialogProps) {
     );
 }
 
-function HeroSection() {
+function HeroSection({ photos }: { photos: string[] }) {
+    const [activePhoto, setActivePhoto] = useState(0);
+
+    useEffect(() => {
+        if (photos.length < 2) return;
+        const interval = setInterval(() => {
+            setActivePhoto((i) => (i + 1) % photos.length);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [photos.length]);
+
     return (
-        <section
-            className="relative flex min-h-[520px] items-center justify-center overflow-hidden pt-16"
-            style={{ backgroundColor: 'var(--primary)' }}
-        >
+        <section className="relative flex min-h-[92vh] items-center justify-center overflow-hidden pt-16" style={{ backgroundColor: 'var(--primary)' }}>
+            {/* Slideshow foto-foto yang sudah diupload (dari Galeri), sebagai latar belakang Hero */}
+            {photos.length > 0 && (
+                <div className="absolute inset-0">
+                    {photos.map((src, i) => (
+                        <div
+                            key={src}
+                            className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
+                            style={{ backgroundImage: `url(${src})`, opacity: i === activePhoto ? 1 : 0 }}
+                        />
+                    ))}
+                    {/* Overlay gelap supaya teks tetap terbaca di atas foto apapun */}
+                    <div className="absolute inset-0" style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 78%, transparent)' }} />
+                </div>
+            )}
+
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-white/5" />
                 <div className="absolute bottom-0 -left-20 h-72 w-72 rounded-full bg-white/5" />
@@ -426,7 +574,7 @@ function HeroSection() {
                     🏫 Sekolah Unggulan
                 </Badge>
                 <h1
-                    className="mx-auto mb-4 max-w-2xl text-3xl leading-tight font-bold sm:text-4xl md:text-5xl"
+                    className="mx-auto mb-4 max-w-3xl text-4xl leading-tight font-bold sm:text-5xl md:text-6xl"
                     style={{ color: 'var(--primary-foreground)' }}
                 >
                     Selamat Datang Di Sekolah Baidhaul Ahkam
@@ -434,84 +582,162 @@ function HeroSection() {
                 <p className="mb-8 text-lg" style={{ color: 'color-mix(in srgb, var(--primary-foreground) 75%, transparent)' }}>
                     Sekolah Unggulan Berbasis Teknologi
                 </p>
-                <Button size="lg" className="font-semibold shadow-lg" style={{ backgroundColor: 'var(--background)', color: 'var(--primary)' }}>
-                    Lihat Profile Sekolah →
+                <Button asChild size="lg" className="font-semibold shadow-lg" style={{ backgroundColor: 'var(--background)', color: 'var(--primary)' }}>
+                    {/* TODO: sesuaikan href ini begitu route halaman profil gabungan (Visi-Misi + Sejarah + Struktur) sudah dibuat */}
+                    <Link href="/profile">Lihat Profile Sekolah →</Link>
                 </Button>
+            </div>
+
+            {/* Isyarat visual bahwa masih ada konten di bawah, mendorong user untuk scroll */}
+            <div className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 animate-bounce">
+                <svg
+                    className="h-6 w-6"
+                    style={{ color: 'color-mix(in srgb, var(--primary-foreground) 70%, transparent)' }}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
             </div>
         </section>
     );
 }
 
-function BeritaSection() {
+// ==== Section statis: belum ada tabel/kolom di database untuk ini,
+// jadi kontennya di-hardcode dulu di sini. Kalau nanti mau bisa diedit
+// dari admin, tinggal bikin field khusus (mis. tabel "pengaturan" atau
+// kolom di tabel sekolah) dan ganti bagian statis ini jadi props dari server. ====
+function SambutanKepalaSekolahSection() {
+    return (
+        <section className="mx-auto max-w-5xl px-4 py-24" style={{ backgroundColor: 'var(--background)' }}>
+            <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-3">
+                <div className="mx-auto md:mx-0">
+                    <div
+                        className="h-56 w-56 overflow-hidden rounded-full md:h-64 md:w-64"
+                        style={{ backgroundColor: 'var(--muted)', border: '4px solid var(--border)' }}
+                    >
+                        <img src="/images/kepala-sekolah.jpg" alt="Kepala Sekolah" className="h-full w-full object-cover" />
+                    </div>
+                </div>
+                <div className="text-center md:col-span-2 md:text-left">
+                    <p className="mb-3 text-sm font-semibold tracking-[0.2em] uppercase" style={{ color: 'var(--muted-foreground)' }}>
+                        Sambutan
+                    </p>
+                    <h2 className="mb-6 text-4xl font-bold" style={{ color: 'var(--foreground)' }}>
+                        Kepala Sekolah
+                    </h2>
+                    <p className="text-xl leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
+                        Assalamu'alaikum warahmatullahi wabarakatuh. Selamat datang di website resmi SMK Islam Baidhaul Ahkam. Kami berkomitmen
+                        mencetak generasi yang unggul dalam ilmu pengetahuan, teknologi, dan akhlak yang islami. Semoga apa yang kami sajikan di
+                        sini bermanfaat bagi seluruh siswa, orang tua, dan masyarakat.
+                    </p>
+                    <p className="mt-6 text-xl font-semibold" style={{ color: 'var(--foreground)' }}>
+                        [Nama Kepala Sekolah]
+                    </p>
+                    <p className="text-base" style={{ color: 'var(--muted-foreground)' }}>
+                        Kepala SMK Islam Baidhaul Ahkam
+                    </p>
+                </div>
+            </div>
+        </section>
+    );
+}
+
+function BeritaSection({ data }: { data: BeritaItem[] }) {
     return (
         <section className="mx-auto max-w-7xl px-4 py-12" style={{ backgroundColor: 'var(--background)' }}>
             <SectionHeader title="Berita Terbaru" />
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                {berita.map((b) => (
-                    <Card
-                        key={b.id}
-                        className="group cursor-pointer overflow-hidden transition-shadow duration-300 hover:shadow-lg"
-                        style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}
-                    >
-                        <div className="aspect-video overflow-hidden" style={{ backgroundColor: 'var(--muted)' }}>
-                            <img
-                                src={b.img}
-                                alt={b.judul}
-                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                onError={(e: React.SyntheticEvent<HTMLImageElement>) => {}}
-                            />
-                        </div>
-                        <CardContent className="p-4">
-                            <p className="mb-1 line-clamp-2 text-sm font-semibold" style={{ color: 'var(--card-foreground)' }}>
-                                {b.judul}
-                            </p>
-                            <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                                {b.tanggal}
-                            </p>
-                        </CardContent>
-                    </Card>
-                ))}
+            {data.length === 0 ? (
+                <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                    Belum ada berita.
+                </p>
+            ) : (
+                <div className="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                    {data.map((b) => (
+                        <Link key={b.id} href={route('public.berita.show', b.slug)}>
+                            <Card
+                                className="group cursor-pointer overflow-hidden transition-shadow duration-300 hover:shadow-lg"
+                                style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}
+                            >
+                                <div className="aspect-video overflow-hidden" style={{ backgroundColor: 'var(--muted)' }}>
+                                    <img
+                                        src={b.berita_image?.image_url || '/images/default-img.png'}
+                                        alt={b.judul}
+                                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                    />
+                                </div>
+                                <CardContent className="p-4">
+                                    <p className="mb-1 line-clamp-2 text-sm font-semibold" style={{ color: 'var(--card-foreground)' }}>
+                                        {b.judul}
+                                    </p>
+                                    <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                                        {formatDate(b.tanggal)}
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </Link>
+                    ))}
+                </div>
+            )}
+            <div className="text-center">
+                <Link
+                    href="/berita"
+                    className="inline-block rounded-md border px-4 py-2 text-sm font-medium"
+                    style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}
+                >
+                    Lihat Semua Berita →
+                </Link>
             </div>
         </section>
     );
 }
 
-function PengumumanSection() {
+function PengumumanSection({ data }: { data: PengumumanItem[] }) {
     return (
         <section className="py-12" style={{ backgroundColor: 'var(--secondary)' }}>
             <div className="mx-auto max-w-7xl px-4">
                 <SectionHeader title="Pengumuman Sekolah" />
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                    {pengumuman.map((p) => (
-                        <Card
-                            key={p.id}
-                            className="border-l-4"
-                            style={{
-                                borderLeftColor: 'var(--primary)',
-                                borderColor: 'var(--border)',
-                                backgroundColor: 'var(--card)',
-                            }}
-                        >
-                            <CardContent className="p-5">
-                                <Badge
-                                    className="mb-2 border-0"
-                                    style={{
-                                        backgroundColor: 'color-mix(in srgb, var(--color-info) 15%, transparent)',
-                                        color: 'var(--color-info)',
-                                    }}
-                                >
-                                    Pengumuman
-                                </Badge>
-                                <p className="mb-1 font-bold" style={{ color: 'var(--card-foreground)' }}>
-                                    {p.judul}
-                                </p>
-                                <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                                    {p.isi}
-                                </p>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
+                {data.length === 0 ? (
+                    <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                        Belum ada pengumuman.
+                    </p>
+                ) : (
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                        {data.map((p) => (
+                            <Card
+                                key={p.id}
+                                className="border-l-4"
+                                style={{
+                                    borderLeftColor: 'var(--primary)',
+                                    borderColor: 'var(--border)',
+                                    backgroundColor: 'var(--card)',
+                                }}
+                            >
+                                <CardContent className="p-5">
+                                    <Badge
+                                        className="mb-2 border-0"
+                                        style={{
+                                            backgroundColor: 'color-mix(in srgb, var(--color-info) 15%, transparent)',
+                                            color: 'var(--color-info)',
+                                        }}
+                                    >
+                                        Pengumuman
+                                    </Badge>
+                                    <p className="mb-1 font-bold" style={{ color: 'var(--card-foreground)' }}>
+                                        {p.judul}
+                                    </p>
+                                    <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                                        {p.deskripsi}
+                                    </p>
+                                    <p className="mt-2 text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                                        {formatDate(p.created_at)}
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                )}
             </div>
         </section>
     );
@@ -539,7 +765,6 @@ function JurusanSection() {
                                     src={j.img}
                                     alt={j.judul}
                                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                    onError={(e: React.SyntheticEvent<HTMLImageElement>) => {}}
                                 />
                             </div>
                             <CardContent className="p-4 text-center">
@@ -562,14 +787,13 @@ function JurusanSection() {
                             src={dataJurusan[activeJurusan].img}
                             alt={dataJurusan[activeJurusan].judul}
                             className="mb-2 h-48 w-full rounded-lg object-cover"
-                            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {}}
                         />
                         <DialogHeader>
                             <DialogTitle>{dataJurusan[activeJurusan].judul}</DialogTitle>
                             <DialogDescription>{dataJurusan[activeJurusan].deskripsi}</DialogDescription>
                         </DialogHeader>
                         <Button asChild className="mt-2" style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}>
-                            <a href={dataJurusan[activeJurusan].link}>Lihat Detail Jurusan →</a>
+                            <Link href={dataJurusan[activeJurusan].link}>Lihat Detail Jurusan →</Link>
                         </Button>
                     </DialogContent>
                 )}
@@ -578,30 +802,43 @@ function JurusanSection() {
     );
 }
 
-function GaleriSection() {
+function GaleriSection({ data }: { data: GaleriItem[] }) {
     return (
         <section className="py-12" style={{ backgroundColor: 'var(--secondary)' }}>
             <div className="mx-auto max-w-7xl px-4">
                 <SectionHeader title="Galeri Sekolah" />
-                <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                    {galeri.map((g) => (
-                        <div key={g.id} className="group relative aspect-square cursor-pointer overflow-hidden rounded-xl">
-                            <img
-                                src={g.img}
-                                alt={g.nama}
-                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-                                onError={(e: React.SyntheticEvent<HTMLImageElement>) => {}}
-                            />
-                            <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                                <span className="text-sm font-medium text-white">{g.nama}</span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                {data.length === 0 ? (
+                    <p className="mb-8 text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                        Belum ada foto galeri.
+                    </p>
+                ) : (
+                    <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                        {data.map((g) => (
+                            <Link
+                                key={g.id}
+                                href={route('public.galeri.show', g.slug)}
+                                className="group relative aspect-square block overflow-hidden rounded-xl"
+                            >
+                                <img
+                                    src={g.images?.[0]?.image_url || '/images/default-img.png'}
+                                    alt={g.judul}
+                                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                />
+                                <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                                    <span className="text-sm font-medium text-white">{g.judul}</span>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                )}
                 <div className="text-center">
-                    <Button variant="outline" style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}>
+                    <Link
+                        href="/galeri"
+                        className="inline-block rounded-md border px-4 py-2 text-sm font-medium"
+                        style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}
+                    >
                         Lihat Semua Foto →
-                    </Button>
+                    </Link>
                 </div>
             </div>
         </section>
@@ -611,43 +848,56 @@ function GaleriSection() {
 function Footer() {
     return (
         <footer style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}>
-            <div className="mx-auto max-w-7xl px-4 py-10">
-                <div className="flex flex-col justify-between gap-8 sm:flex-row">
-                    <div className="space-y-3">
-                        <p className="mb-4 text-lg font-bold">SMK Islam Baidhaul Ahkam</p>
-                        <div className="flex items-center gap-2 text-sm">
-                            <span>📍</span>
-                            <span>Jl. Bla bla bla</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
+            <div className="mx-auto max-w-7xl px-4 py-6">
+                <div className="flex flex-col justify-between gap-6 sm:flex-row">
+                    <div className="space-y-2">
+                        <p className="mb-2 text-base font-bold">SMK Islam Baidhaul Ahkam</p>
+                        <div className="flex items-center gap-2 text-xs">
                             <span>✉️</span>
                             <span>Info@sekolah.sch.id</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm">
+                        <div className="flex items-center gap-2 text-xs">
                             <span>📱</span>
                             <span>08121212112</span>
+                        </div>
+                        <div
+                            className="mt-2 overflow-hidden rounded-lg"
+                            style={{ border: '1px solid color-mix(in srgb, var(--primary-foreground) 25%, transparent)' }}
+                        >
+                            <iframe
+                                src="https://maps.google.com/maps?q=SMK+Islam+Baidhaul+Ahkam&output=embed"
+                                width="100%"
+                                height="120"
+                                style={{ border: 0 }}
+                                loading="lazy"
+                                referrerPolicy="no-referrer-when-downgrade"
+                                title="Lokasi SMK Islam Baidhaul Ahkam"
+                            />
                         </div>
                     </div>
 
                     <div>
-                        <p className="mb-4 font-semibold">Media Sosial</p>
-                        <div className="flex gap-3">
+                        <p className="mb-2 text-sm font-semibold">Media Sosial</p>
+                        <div className="flex gap-2">
                             {sosmed.map((s) => (
-                                <button
+                                <a
                                     key={s.label}
+                                    href={s.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     aria-label={s.label}
-                                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-xs font-bold transition-colors hover:bg-white/20"
+                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
                                     style={{ color: 'var(--primary-foreground)' }}
                                 >
-                                    {s.icon}
-                                </button>
+                                    <s.icon size={15} />
+                                </a>
                             ))}
                         </div>
                     </div>
                 </div>
 
-                <Separator className="my-6" style={{ backgroundColor: 'color-mix(in srgb, var(--primary-foreground) 25%, transparent)' }} />
-                <p className="text-center text-sm" style={{ color: 'color-mix(in srgb, var(--primary-foreground) 65%, transparent)' }}>
+                <Separator className="my-4" style={{ backgroundColor: 'color-mix(in srgb, var(--primary-foreground) 25%, transparent)' }} />
+                <p className="text-center text-xs" style={{ color: 'color-mix(in srgb, var(--primary-foreground) 65%, transparent)' }}>
                     © Copyright 2025 SMK Baidhaul Ahkam
                 </p>
             </div>
@@ -656,8 +906,23 @@ function Footer() {
 }
 
 export default function SMKBaidhaulAhkam() {
+    const { beritas, pengumumans, galeris } = usePage<PageProps>().props;
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
     const [showLogin, setShowLogin] = useState<boolean>(false);
+
+    // Gabungan foto dari Berita dan Galeri untuk slideshow latar belakang
+    // Hero — diselang-seling (bukan semua Berita dulu baru Galeri) supaya
+    // variasinya lebih merata kalau salah satu sumbernya lebih banyak.
+    const beritaPhotos = (beritas ?? []).map((b) => b.berita_image?.image_url).filter((url): url is string => Boolean(url));
+    const galeriPhotos = (galeris ?? []).map((g) => g.images?.[0]?.image_url).filter((url): url is string => Boolean(url));
+
+    const heroPhotos: string[] = [];
+    const maxLen = Math.max(beritaPhotos.length, galeriPhotos.length);
+    for (let i = 0; i < maxLen; i++) {
+        if (beritaPhotos[i]) heroPhotos.push(beritaPhotos[i]);
+        if (galeriPhotos[i]) heroPhotos.push(galeriPhotos[i]);
+    }
+    const heroPhotosLimited = heroPhotos.slice(0, 8);
 
     return (
         <div className="min-h-screen font-sans" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
@@ -666,11 +931,22 @@ export default function SMKBaidhaulAhkam() {
             <LoginDialog open={showLogin} onOpenChange={setShowLogin} onLoginSuccess={() => setIsLoggedIn(true)} />
 
             <main>
-                <HeroSection />
-                <BeritaSection />
-                <PengumumanSection />
-                <JurusanSection />
-                <GaleriSection />
+                <HeroSection photos={heroPhotosLimited} />
+                <FadeInSection>
+                    <SambutanKepalaSekolahSection />
+                </FadeInSection>
+                <FadeInSection>
+                    <BeritaSection data={beritas ?? []} />
+                </FadeInSection>
+                <FadeInSection>
+                    <PengumumanSection data={pengumumans ?? []} />
+                </FadeInSection>
+                <FadeInSection>
+                    <JurusanSection />
+                </FadeInSection>
+                <FadeInSection>
+                    <GaleriSection data={galeris ?? []} />
+                </FadeInSection>
             </main>
 
             <Footer />
