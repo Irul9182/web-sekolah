@@ -11,15 +11,15 @@ return new class extends Migration
      */
    public function up(): void
     {
-        Schema::table('beritas', function (Blueprint $table) {
-            $table->date('tanggal')->nullable()->after('judul');
-        });
+      //  Schema::table('beritas', function (Blueprint $table) {
+     //       $table->date('tanggal')->nullable()->after('judul');
+       // });
     }
 
     public function down(): void
     {
-        Schema::table('beritas', function (Blueprint $table) {
-            $table->dropColumn('tanggal');
-        });
+       // Schema::table('beritas', function (Blueprint $table) {
+         //   $table->dropColumn('tanggal');
+    //    });
     }
 };
