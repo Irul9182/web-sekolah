@@ -10,7 +10,7 @@ class JurusanController extends Controller
     {
         return Inertia::render('jurusan/tkj', [
             // isi dengan slug galeri kalau albumnya sudah dibuat di admin, misal: 'kegiatan-praktikum-tkj'
-            'galeri_slug' => null,
+            'galeri_slug' => 'kegiatan-praktek-dan-pembelajaran-jurusan-teknik-komputer-jaringan-7-2026',
         ]);
     }
 
@@ -31,7 +31,7 @@ class JurusanController extends Controller
     public function mavib()
     {
         return Inertia::render('jurusan/mavib', [
-            'galeri_slug' => null,
+            'galeri_slug' => 'kegiatan-praktek-dan-pembelajaran-jurusan-multimedia-audio-visual-broadcasting-7-2026',
         ]);
     }
 }

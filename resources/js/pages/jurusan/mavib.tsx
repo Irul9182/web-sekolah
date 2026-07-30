@@ -15,7 +15,7 @@ export default function Mavib() {
                 <SectionHeader title="Multimedia Audio Visual & Broadcasting (MAVIB)" />
                 <div className="mb-6 aspect-video overflow-hidden rounded-lg" style={{ backgroundColor: 'var(--muted)' }}>
                     <img
-                        src="/images/mavib.jpg"
+                        src="/images/dkv.jpg"
                         alt="MAVIB"
                         className="h-full w-full object-cover"
                         onError={(e: React.SyntheticEvent<HTMLImageElement>) => {

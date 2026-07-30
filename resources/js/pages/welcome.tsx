@@ -848,26 +848,26 @@ function GaleriSection({ data }: { data: GaleriItem[] }) {
 function Footer() {
     return (
         <footer style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}>
-            <div className="mx-auto max-w-7xl px-4 py-10">
-                <div className="flex flex-col justify-between gap-8 sm:flex-row">
-                    <div className="space-y-3">
-                        <p className="mb-4 text-lg font-bold">SMK Islam Baidhaul Ahkam</p>
-                        <div className="flex items-center gap-2 text-sm">
+            <div className="mx-auto max-w-7xl px-4 py-6">
+                <div className="flex flex-col justify-between gap-6 sm:flex-row">
+                    <div className="space-y-2">
+                        <p className="mb-2 text-base font-bold">SMK Islam Baidhaul Ahkam</p>
+                        <div className="flex items-center gap-2 text-xs">
                             <span>✉️</span>
                             <span>Info@sekolah.sch.id</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm">
+                        <div className="flex items-center gap-2 text-xs">
                             <span>📱</span>
                             <span>08121212112</span>
                         </div>
                         <div
-                            className="mt-3 overflow-hidden rounded-lg"
+                            className="mt-2 overflow-hidden rounded-lg"
                             style={{ border: '1px solid color-mix(in srgb, var(--primary-foreground) 25%, transparent)' }}
                         >
                             <iframe
                                 src="https://maps.google.com/maps?q=SMK+Islam+Baidhaul+Ahkam&output=embed"
                                 width="100%"
-                                height="180"
+                                height="120"
                                 style={{ border: 0 }}
                                 loading="lazy"
                                 referrerPolicy="no-referrer-when-downgrade"
@@ -877,8 +877,8 @@ function Footer() {
                     </div>
 
                     <div>
-                        <p className="mb-4 font-semibold">Media Sosial</p>
-                        <div className="flex gap-3">
+                        <p className="mb-2 text-sm font-semibold">Media Sosial</p>
+                        <div className="flex gap-2">
                             {sosmed.map((s) => (
                                 <a
                                     key={s.label}
@@ -886,18 +886,18 @@ function Footer() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     aria-label={s.label}
-                                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
+                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
                                     style={{ color: 'var(--primary-foreground)' }}
                                 >
-                                    <s.icon size={18} />
+                                    <s.icon size={15} />
                                 </a>
                             ))}
                         </div>
                     </div>
                 </div>
 
-                <Separator className="my-6" style={{ backgroundColor: 'color-mix(in srgb, var(--primary-foreground) 25%, transparent)' }} />
-                <p className="text-center text-sm" style={{ color: 'color-mix(in srgb, var(--primary-foreground) 65%, transparent)' }}>
+                <Separator className="my-4" style={{ backgroundColor: 'color-mix(in srgb, var(--primary-foreground) 25%, transparent)' }} />
+                <p className="text-center text-xs" style={{ color: 'color-mix(in srgb, var(--primary-foreground) 65%, transparent)' }}>
                     © Copyright 2025 SMK Baidhaul Ahkam
                 </p>
             </div>

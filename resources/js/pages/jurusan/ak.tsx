@@ -15,7 +15,7 @@ export default function Ak() {
                 <SectionHeader title="Akuntansi & Keuangan (AK)" />
                 <div className="mb-6 aspect-video overflow-hidden rounded-lg" style={{ backgroundColor: 'var(--muted)' }}>
                     <img
-                        src="/images/ak.jpg"
+                        src="/images/akuntansi.jpg"
                         alt="AK"
                         className="h-full w-full object-cover"
                         onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
