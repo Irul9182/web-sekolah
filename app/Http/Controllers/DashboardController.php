@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Berita;
 use App\Models\Pengumuman;
 use App\Models\Galeri;
+use App\Models\StrukturOrganisasi;
 use Inertia\Inertia;
 use Throwable;
 
@@ -17,6 +18,7 @@ class DashboardController extends Controller
             'recentBerita' => $this->recentBerita(),
             'recentPengumuman' => $this->recentPengumuman(),
             'recentGaleri' => $this->recentGaleri(),
+            'strukturOrganisasi' => $this->strukturOrganisasi(),
         ]);
     }
 
@@ -59,11 +61,6 @@ class DashboardController extends Controller
         }
     }
 
-    /**
-     * 5 berita paling baru, lengkap dengan gambar (kalau ada), untuk ditampilkan
-     * di dashboard. Diurutkan pakai kolom "tanggal" karena itu yang sudah dipakai
-     * di halaman publik berita.
-     */
     private function recentBerita()
     {
         try {
@@ -76,12 +73,6 @@ class DashboardController extends Controller
         }
     }
 
-    /**
-     * 5 pengumuman paling baru. Diurutkan pakai created_at (bukan "tanggal")
-     * karena tabel pengumuman semula tidak punya kolom tanggal terpisah —
-     * kalau ternyata sekarang sudah ada kolom "tanggal" di tabelmu, tinggal
-     * ganti latest() jadi latest('tanggal') di bawah.
-     */
     private function recentPengumuman()
     {
         try {
@@ -93,10 +84,6 @@ class DashboardController extends Controller
         }
     }
 
-    /**
-     * 5 galeri (album) paling baru, lengkap dengan foto pertama tiap album
-     * sebagai thumbnail.
-     */
     private function recentGaleri()
     {
         try {
@@ -106,6 +93,29 @@ class DashboardController extends Controller
                 ->get(['id', 'judul', 'slug']);
         } catch (Throwable $e) {
             return [];
+        }
+    }
+
+    /**
+     * Cuma butuh 2 posisi teratas (Ketua Yayasan & Kepala Sekolah) untuk preview
+     * di card dashboard -- bukan seluruh 11 posisi. Tabelnya cuma 1 baris (id=1).
+     * updated_at dipakai buat subtitle di card ringkasan baris atas.
+     */
+    private function strukturOrganisasi(): array
+    {
+        try {
+            $struktur = StrukturOrganisasi::first();
+            return [
+                'ketua_yayasan' => $struktur?->ketua_yayasan ?? '-',
+                'kepala_sekolah' => $struktur?->kepala_sekolah ?? '-',
+                'updated_at' => $struktur?->updated_at?->toIso8601String(),
+            ];
+        } catch (Throwable $e) {
+            return [
+                'ketua_yayasan' => '-',
+                'kepala_sekolah' => '-',
+                'updated_at' => null,
+            ];
         }
     }
 }

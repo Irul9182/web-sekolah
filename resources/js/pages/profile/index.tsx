@@ -1,104 +1,232 @@
 import PublicLayout, { SectionHeader } from '@/layouts/public-layout';
+import { useLayoutEffect, useRef, useState } from 'react';
 
 // Ganti array ini dengan poin-poin misi resmi sekolah
 const misiItems: string[] = ['[Placeholder] Poin misi pertama.', '[Placeholder] Poin misi kedua.', '[Placeholder] Poin misi ketiga.'];
 
-// Ganti dengan data struktur organisasi resmi.
-// Susunan bertingkat (parent -> children) supaya bisa dirender jadi bagan.
 interface StrukturNode {
     jabatan: string;
     nama: string;
-    children?: StrukturNode[];
 }
 
-const strukturTree: StrukturNode = {
-    jabatan: 'Ketua Yayasan',
-    nama: 'Dr. H. A. Baidowi, S.Ag., M.Pd',
-    children: [
-        {
-            jabatan: 'Kepala Sekolah',
-            nama: 'Ahmad Jajuli, SE., M.Pd',
-            children: [
-                {
-                    jabatan: 'Wakasek Bidang Kurikulum',
-                    nama: 'Mulyadi, M.Pd',
-                    children: [
-                        { jabatan: 'Kaprodi Akuntansi', nama: 'Indras Susilowati, SE., M.Pd' },
-                        { jabatan: 'Kaprodi Manajemen Perkantoran', nama: 'Siti Rofiah, SE' },
-                        { jabatan: 'Kaprodi TJKT', nama: 'Rajikh Burhanuddin Fath A.J., S.Kom' },
-                        { jabatan: 'Kaprodi DKV', nama: 'Arief Fadilah Siregar, S.I.Kom' },
-                    ],
-                },
-                {
-                    jabatan: 'Wakasek Bidang Kesiswaan',
-                    nama: 'Marisa Maulidya, S.Pd / Madhensia Putri Pratiwi, S.Pd',
-                },
-                { jabatan: 'Badan Konseling', nama: 'Azra Rara Tazkia, S.Psi' },
-                { jabatan: 'Operator Sekolah', nama: 'Saepulloh, S.Pd' },
-            ],
-        },
-    ],
+// Data posisi -- nanti ini yang akan diambil dari database (via admin panel).
+// Key di object ini dipakai juga sebagai "id" node untuk penggambaran garis SVG.
+const posisi: Record<string, StrukturNode> = {
+    ketuaYayasan: { jabatan: 'Ketua Yayasan', nama: 'Dr. H. A. Baidowi, S.Ag., M.Pd' },
+    kepalaSekolah: { jabatan: 'Kepala Sekolah', nama: 'Ahmad Jajuli, SE., M.Pd' },
+    komiteSekolah: { jabatan: 'Komite Sekolah', nama: 'Karsita, S.Pd' },
+    wakasekKurikulum: { jabatan: 'Wakasek Bidang Kurikulum', nama: 'Mulyadi, M.Pd' },
+    wakasekKesiswaan: { jabatan: 'Wakasek Bidang Kesiswaan', nama: 'Marisa Maulidya, S.Pd / Madhensia Putri Pratiwi, S.Pd' },
+    kaprodiAkuntansi: { jabatan: 'Kaprodi Akuntansi', nama: 'Indras Susilowati, SE., M.Pd' },
+    kaprodiManajemenPerkantoran: { jabatan: 'Kaprodi Manajemen Perkantoran', nama: 'Siti Rofiah, SE' },
+    kaprodiTjkt: { jabatan: 'Kaprodi Teknik Jaringan Komputer dan Telekomunikasi', nama: 'Rajikh Burhanuddin Fath A.J., S.Kom' },
+    kaprodiDkv: { jabatan: 'Kaprodi Desain Komunikasi Visual', nama: 'Arief Fadilah Siregar, S.I.Kom' },
+    badanKonseling: { jabatan: 'Badan Konseling', nama: 'Azra Rara Tazkia, S.Psi' },
+    operatorSekolah: { jabatan: 'Operator Sekolah', nama: 'Saepulloh, S.Pd' },
 };
 
-// Komite Sekolah bukan bawahan Kepala Sekolah, tapi mitra sejajar —
-// dirender terpisah di samping dengan garis putus-putus, bukan garis turun biasa.
-const komiteSekolah: StrukturNode = { jabatan: 'Komite Sekolah', nama: 'Karsita, S.Pd' };
+const kaprodiIds = ['kaprodiAkuntansi', 'kaprodiManajemenPerkantoran', 'kaprodiTjkt', 'kaprodiDkv'];
+const konselingIds = ['badanKonseling', 'operatorSekolah'];
 
-function StrukturCard({ jabatan, nama }: { jabatan: string; nama: string }) {
+// Bentuk "pita" untuk label jabatan: sisi kiri cekung (notch), sisi kanan lancip (arrow tip).
+// Ini yang bikin kartu terlihat mirip desain org chart aslinya.
+const RIBBON_CLIP = 'polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%, 10px 50%)';
+
+// Kartu jabatan bergaya "pita" -- label jabatan jadi ribbon berwarna, nama di kotak putih di bawahnya.
+// registerRef dipakai supaya posisi kotak ini bisa diukur untuk menggambar garis SVG.
+function StrukturCard({
+    id,
+    jabatan,
+    nama,
+    registerRef,
+}: StrukturNode & { id: string; registerRef: (id: string, el: HTMLDivElement | null) => void }) {
+    // Beberapa jabatan (mis. Wakasek Kesiswaan) diisi dua nama dipisah " / " -- tampilkan sebagai baris terpisah.
+    const namaLines = nama.split(' / ');
+
     return (
-        <div
-            className="w-28 shrink-0 rounded-lg border px-2 py-2 text-center shadow-sm sm:w-36 sm:px-3 sm:py-2.5"
-            style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}
-        >
-            <p className="text-[11px] font-semibold sm:text-sm" style={{ color: 'var(--primary)' }}>
-                {jabatan}
-            </p>
-            {nama && (
-                <p className="mt-0.5 text-[10px] sm:text-xs" style={{ color: 'var(--card-foreground)' }}>
-                    {nama}
-                </p>
-            )}
+        <div ref={(el) => registerRef(id, el)} className="w-32 shrink-0 sm:w-44">
+            {/* Ribbon jabatan */}
+            <div
+                className="relative z-10 mx-[-8px] flex h-6 items-center justify-center px-3 sm:h-7"
+                style={{ backgroundColor: 'var(--primary)', clipPath: RIBBON_CLIP }}
+            >
+                <p className="truncate text-[8px] font-semibold tracking-wide text-white uppercase sm:text-[9px]">{jabatan}</p>
+            </div>
+
+            {/* Body nama */}
+            <div
+                className="rounded-b-sm border px-2 pt-2.5 pb-2 text-center shadow-sm sm:px-3 sm:pb-2.5"
+                style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}
+            >
+                {namaLines.map((line, i) => (
+                    <p key={i} className="text-[10px] leading-snug font-bold sm:text-xs" style={{ color: 'var(--card-foreground)' }}>
+                        {line}
+                    </p>
+                ))}
+            </div>
         </div>
     );
 }
 
-// Merender satu node beserta children-nya secara rekursif.
-// Garis penghubung dibuat dari border-top pada wrapper children,
-// plus border-top kecil di atas tiap child sebagai "cabang" vertikal.
-function StrukturNodeView({ node }: { node: StrukturNode }) {
+interface Rect {
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+    centerX: number;
+}
+
+interface PathDef {
+    d: string;
+    dashed?: boolean;
+}
+
+function StrukturOrganisasiChart() {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const boxRefs = useRef<Record<string, HTMLDivElement | null>>({});
+    const [paths, setPaths] = useState<PathDef[]>([]);
+    const [svgSize, setSvgSize] = useState({ width: 0, height: 0 });
+
+    const registerRef = (id: string, el: HTMLDivElement | null) => {
+        boxRefs.current[id] = el;
+    };
+
+    useLayoutEffect(() => {
+        function compute() {
+            const container = containerRef.current;
+            if (!container) return;
+            const contRect = container.getBoundingClientRect();
+
+            const rect = (id: string): Rect | null => {
+                const el = boxRefs.current[id];
+                if (!el) return null;
+                const r = el.getBoundingClientRect();
+                return {
+                    top: r.top - contRect.top,
+                    bottom: r.bottom - contRect.top,
+                    left: r.left - contRect.left,
+                    right: r.right - contRect.left,
+                    centerX: r.left - contRect.left + r.width / 2,
+                };
+            };
+
+            const newPaths: PathDef[] = [];
+
+            // Garis "siku": turun dari satu titik, melebar horizontal, lalu turun lagi ke tiap child
+            const elbow = (parentPoint: { x: number; y: number }, childIds: string[]) => {
+                const children = childIds.map(rect).filter((r): r is Rect => r !== null);
+                if (children.length === 0) return;
+                const dropY = parentPoint.y + 14;
+                newPaths.push({ d: `M ${parentPoint.x} ${parentPoint.y} L ${parentPoint.x} ${dropY}` });
+                const xs = children.map((c) => c.centerX);
+                const minX = Math.min(parentPoint.x, ...xs);
+                const maxX = Math.max(parentPoint.x, ...xs);
+                newPaths.push({ d: `M ${minX} ${dropY} L ${maxX} ${dropY}` });
+                children.forEach((c) => {
+                    newPaths.push({ d: `M ${c.centerX} ${dropY} L ${c.centerX} ${c.top}` });
+                });
+            };
+
+            const ky = rect('ketuaYayasan');
+            const ks = rect('kepalaSekolah');
+            const komite = rect('komiteSekolah');
+            const wk = rect('wakasekKurikulum');
+            const wsis = rect('wakasekKesiswaan');
+
+            if (ky && ks) {
+                const trunkX = ky.centerX;
+
+                // Trunk lurus satu jalur: turun dari Ketua Yayasan langsung ke Kepala Sekolah
+                // (Kepala Sekolah sekarang center-aligned dengan Ketua Yayasan, jadi tidak perlu elbow)
+                newPaths.push({ d: `M ${trunkX} ${ky.bottom} L ${trunkX} ${ks.top}` });
+
+                // Cabang putus-putus (mitra) ke Komite Sekolah, bercabang dari tengah trunk
+                if (komite) {
+                    const branchY = (ky.bottom + ks.top) / 2;
+                    newPaths.push({
+                        d: `M ${trunkX} ${branchY} L ${komite.centerX} ${branchY} L ${komite.centerX} ${komite.top}`,
+                        dashed: true,
+                    });
+                }
+            }
+
+            if (ks) {
+                elbow({ x: ks.centerX, y: ks.bottom }, ['wakasekKurikulum', 'wakasekKesiswaan']);
+            }
+
+            if (wk && wsis) {
+                const midX = (wk.centerX + wsis.centerX) / 2;
+                const y = Math.max(wk.bottom, wsis.bottom);
+                elbow({ x: midX, y }, kaprodiIds);
+            }
+
+            const kaprodiRects = kaprodiIds.map(rect).filter((r): r is Rect => r !== null);
+            if (kaprodiRects.length) {
+                const xs = kaprodiRects.map((r) => r.centerX);
+                const midX = (Math.min(...xs) + Math.max(...xs)) / 2;
+                const y = Math.max(...kaprodiRects.map((r) => r.bottom));
+                elbow({ x: midX, y }, konselingIds);
+            }
+
+            setPaths(newPaths);
+            setSvgSize({ width: container.scrollWidth, height: container.scrollHeight });
+        }
+
+        compute();
+        window.addEventListener('resize', compute);
+        return () => window.removeEventListener('resize', compute);
+    }, []);
+
     return (
-        <div className="flex flex-col items-center">
-            <StrukturCard jabatan={node.jabatan} nama={node.nama} />
+        <div ref={containerRef} className="relative inline-block">
+            <svg
+                className="pointer-events-none absolute top-0 left-0"
+                width={svgSize.width}
+                height={svgSize.height}
+                style={{ overflow: 'visible' }}
+            >
+                {paths.map((p, i) => (
+                    <path
+                        key={i}
+                        d={p.d}
+                        fill="none"
+                        stroke="var(--border)"
+                        strokeWidth={1}
+                        strokeDasharray={p.dashed ? '4 3' : undefined}
+                    />
+                ))}
+            </svg>
 
-            {node.children && node.children.length > 0 && (
-                <>
-                    {/* garis vertikal turun dari card parent */}
-                    <div className="h-6 w-px" style={{ backgroundColor: 'var(--border)' }} />
+            <div className="flex flex-col items-center gap-10">
+                <StrukturCard id="ketuaYayasan" {...posisi.ketuaYayasan} registerRef={registerRef} />
 
-                    <div className="flex">
-                        {node.children.map((child, idx) => (
-                            <div key={idx} className="flex flex-col items-center px-1.5 sm:px-2">
-                                {/* garis horizontal penghubung antar-saudara, disambung garis vertikal turun ke card */}
-                                <div className="relative h-6 w-full">
-                                    <div
-                                        className="absolute top-0 right-1/2 left-1/2 h-px"
-                                        style={{
-                                            backgroundColor: 'var(--border)',
-                                            left: idx === 0 ? '50%' : 0,
-                                            right: idx === node.children!.length - 1 ? '50%' : 0,
-                                        }}
-                                    />
-                                    <div
-                                        className="absolute top-0 left-1/2 h-6 w-px -translate-x-1/2"
-                                        style={{ backgroundColor: 'var(--border)' }}
-                                    />
-                                </div>
-                                <StrukturNodeView node={child} />
-                            </div>
-                        ))}
+                <div className="relative">
+                    <StrukturCard id="kepalaSekolah" {...posisi.kepalaSekolah} registerRef={registerRef} />
+                    <div className="absolute top-0 left-full ml-10 sm:ml-16">
+                        <p className="mb-1 text-center text-[10px] italic sm:text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                            mitra
+                        </p>
+                        <StrukturCard id="komiteSekolah" {...posisi.komiteSekolah} registerRef={registerRef} />
                     </div>
-                </>
-            )}
+                </div>
+
+                <div className="flex gap-6 sm:gap-10">
+                    <StrukturCard id="wakasekKurikulum" {...posisi.wakasekKurikulum} registerRef={registerRef} />
+                    <StrukturCard id="wakasekKesiswaan" {...posisi.wakasekKesiswaan} registerRef={registerRef} />
+                </div>
+
+                <div className="flex gap-4 sm:gap-6">
+                    {kaprodiIds.map((id) => (
+                        <StrukturCard key={id} id={id} {...posisi[id]} registerRef={registerRef} />
+                    ))}
+                </div>
+
+                <div className="flex gap-4 sm:gap-6">
+                    {konselingIds.map((id) => (
+                        <StrukturCard key={id} id={id} {...posisi[id]} registerRef={registerRef} />
+                    ))}
+                </div>
+            </div>
         </div>
     );
 }
@@ -143,43 +271,16 @@ export default function ProfileSekolah() {
                 </div>
             </section>
 
-            {/* ==== Struktur Organisasi (Bagan) ====
-                 Dipisah dari section di atas & pakai max-w-6xl (bukan max-w-4xl)
-                 supaya bagan yang melebar (banyak kartu sejajar) tidak sempit. */}
+            {/* ==== Struktur Organisasi (Bagan, garis dihitung otomatis lewat SVG) ==== */}
             <section className="mx-auto max-w-6xl px-4 pb-16">
                 <div id="struktur-organisasi">
                     <SectionHeader title="Struktur Organisasi" />
-                    <div className="overflow-x-auto rounded-lg border p-6" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--secondary)' }}>
+                    <div
+                        className="overflow-x-auto rounded-lg border p-8"
+                        style={{ borderColor: 'var(--border)', backgroundColor: '#f5f4fb' }}
+                    >
                         <div className="flex min-w-max justify-center">
-                            <div className="flex flex-col items-center">
-                                <StrukturCard jabatan={strukturTree.jabatan} nama={strukturTree.nama} />
-
-                                <div className="h-6 w-px" style={{ backgroundColor: 'var(--border)' }} />
-
-                                <div className="flex items-start">
-                                    <div className="flex flex-col items-center px-1.5 sm:px-2">
-                                        <div className="relative h-6 w-full">
-                                            <div className="absolute top-0 left-1/2 h-px w-1/2" style={{ backgroundColor: 'var(--border)' }} />
-                                            <div
-                                                className="absolute top-0 left-1/2 h-6 w-px -translate-x-1/2"
-                                                style={{ backgroundColor: 'var(--border)' }}
-                                            />
-                                        </div>
-                                        <StrukturNodeView node={strukturTree.children![0]} />
-                                    </div>
-
-                                    {/* Komite Sekolah: mitra, bukan bawahan — garis putus-putus horizontal */}
-                                    <div className="ml-4 flex items-center gap-2 self-start pt-14 sm:pt-16">
-                                        <div className="h-px w-6" style={{ borderTop: '1px dashed var(--border)' }} />
-                                        <div className="flex flex-col items-center">
-                                            <p className="mb-1 text-[10px] italic sm:text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                                                mitra
-                                            </p>
-                                            <StrukturCard jabatan={komiteSekolah.jabatan} nama={komiteSekolah.nama} />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <StrukturOrganisasiChart />
                         </div>
                     </div>
                 </div>

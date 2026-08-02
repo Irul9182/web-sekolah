@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class StrukturOrganisasi extends Model
 {
+    // Nama tabel di migration singular ('struktur_organisasi'), bukan hasil guess default Eloquent
+    // ('struktur_organisasis'), jadi harus di-set manual.
     protected $table = 'struktur_organisasi';
 
     protected $fillable = [

@@ -217,16 +217,9 @@ export default function LoginAdmin() {
                         </Button>
                     </form>
 
-                    <p className="mt-6 text-center text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                        Belum punya akun?{' '}
-                        <Link href="/register" className="font-medium hover:underline" style={{ color: 'var(--primary)' }}>
-                            Daftar di sini
-                        </Link>
-                    </p>
-
                     <Link
                         href="/"
-                        className="mt-4 block text-center text-sm font-medium hover:underline"
+                        className="mt-6 block text-center text-sm font-medium hover:underline"
                         style={{ color: 'var(--muted-foreground)' }}
                     >
                         ← Kembali ke beranda

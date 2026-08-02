@@ -2,7 +2,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ImageIcon } from 'lucide-react';
+import { ImageIcon, Network } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
 
@@ -39,11 +39,19 @@ interface RecentGaleri {
     images: RecentGaleriImage[];
 }
 
+// Ringkasan struktur organisasi -- cuma butuh 2 posisi teratas untuk preview, bukan semua 11.
+interface StrukturOrganisasiSummary {
+    ketua_yayasan: string;
+    kepala_sekolah: string;
+    updated_at: string | null;
+}
+
 interface DashboardPageProps {
     stats: Stat[];
     recentBerita: RecentBerita[];
     recentPengumuman: RecentPengumuman[];
     recentGaleri: RecentGaleri[];
+    strukturOrganisasi: StrukturOrganisasiSummary;
     [key: string]: unknown;
 }
 
@@ -62,7 +70,7 @@ function formatDate(dateString: string) {
     return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(dateString));
 }
 
-// Thumbnail kecil dipakai berulang di 2 daftar (Berita & Galeri) —
+// Thumbnail kecil dipakai berulang di 2 daftar (Berita & Galeri) --
 // dipisah jadi komponen kecil biar tidak duplikat markup yang sama.
 function Thumbnail({ src, alt }: { src?: string | null; alt: string }) {
     return (
@@ -83,7 +91,7 @@ function EmptyState({ text }: { text: string }) {
 }
 
 export default function Dashboard() {
-    const { stats, recentBerita, recentPengumuman, recentGaleri } = usePage<DashboardPageProps>().props;
+    const { stats, recentBerita, recentPengumuman, recentGaleri, strukturOrganisasi } = usePage<DashboardPageProps>().props;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -100,15 +108,29 @@ export default function Dashboard() {
                             {stat.description && <CardContent className="text-muted-foreground text-xs">{stat.description}</CardContent>}
                         </Card>
                     ))}
+
+                    {/* Struktur Organisasi -- bukan angka, jadi bukan bagian dari `stats` generic,
+                        tapi tetap ditaruh di baris yang sama biar baris atas simetris 4-kolom. */}
+                    <Card className="border-primary border-2">
+                        <CardHeader className="pb-2">
+                            <CardDescription className="flex items-center gap-1.5">
+                                <Network className="h-3.5 w-3.5" />
+                                Struktur Organisasi
+                            </CardDescription>
+                            <CardTitle className="text-sm font-medium">
+                                {strukturOrganisasi?.updated_at ? `Diperbarui ${formatDate(strukturOrganisasi.updated_at)}` : 'Belum ada perubahan'}
+                            </CardTitle>
+                        </CardHeader>
+                    </Card>
                 </div>
 
                 {/* Konten terbaru */}
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
                     {/* Berita terbaru */}
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-base">Berita Terbaru</CardTitle>
-                            <Link href={route('berita.index')} className="text-primary text-xs font-medium hover:underline">
+                        <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+                            <CardTitle className="text-base truncate">Berita Terbaru</CardTitle>
+                            <Link href={route('berita.index')} className="text-primary shrink-0 text-xs font-medium whitespace-nowrap hover:underline">
                                 Lihat semua
                             </Link>
                         </CardHeader>
@@ -131,9 +153,9 @@ export default function Dashboard() {
 
                     {/* Pengumuman terbaru */}
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-base">Pengumuman Terbaru</CardTitle>
-                            <Link href={route('pengumuman.index')} className="text-primary text-xs font-medium hover:underline">
+                        <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+                            <CardTitle className="text-base truncate">Pengumuman Terbaru</CardTitle>
+                            <Link href={route('pengumuman.index')} className="text-primary shrink-0 text-xs font-medium whitespace-nowrap hover:underline">
                                 Lihat semua
                             </Link>
                         </CardHeader>
@@ -153,9 +175,9 @@ export default function Dashboard() {
 
                     {/* Galeri terbaru */}
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-base">Galeri Terbaru</CardTitle>
-                            <Link href={route('galeri.index')} className="text-primary text-xs font-medium hover:underline">
+                        <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+                            <CardTitle className="text-base truncate">Galeri Terbaru</CardTitle>
+                            <Link href={route('galeri.index')} className="text-primary shrink-0 text-xs font-medium whitespace-nowrap hover:underline">
                                 Lihat semua
                             </Link>
                         </CardHeader>
@@ -170,6 +192,29 @@ export default function Dashboard() {
                             ) : (
                                 <EmptyState text="Belum ada galeri." />
                             )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Struktur Organisasi -- bukan daftar, cuma shortcut + preview 2 posisi teratas */}
+                    <Card className="border-primary border-2">
+                        <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+                            <CardTitle className="text-base flex items-center gap-2 truncate">
+                                <Network className="text-primary h-4 w-4" />
+                                Struktur Organisasi
+                            </CardTitle>
+                            <Link href={route('struktur-organisasi.index')} className="text-primary shrink-0 text-xs font-medium whitespace-nowrap hover:underline">
+                                Kelola
+                            </Link>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                            <p className="text-sm">
+                                <span className="text-muted-foreground">Ketua Yayasan: </span>
+                                {strukturOrganisasi?.ketua_yayasan ?? '-'}
+                            </p>
+                            <p className="text-sm">
+                                <span className="text-muted-foreground">Kepala Sekolah: </span>
+                                {strukturOrganisasi?.kepala_sekolah ?? '-'}
+                            </p>
                         </CardContent>
                     </Card>
                 </div>

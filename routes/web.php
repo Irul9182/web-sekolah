@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Admin\BeritaController;
 use App\Http\Controllers\Admin\GaleriController;
 use App\Http\Controllers\Admin\PengumumanController;
+use App\Http\Controllers\Admin\StrukturOrganisasiController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\JurusanController;
@@ -87,6 +88,9 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     // sudah login yang bisa menambah akun admin baru.
     Route::get('/akun/tambah', [RegisteredUserController::class, 'create'])->name('akun.create');
     Route::post('/akun/tambah', [RegisteredUserController::class, 'store'])->name('akun.store');
+
+    Route::get('struktur-organisasi', [StrukturOrganisasiController::class, 'index'])->name('struktur-organisasi.index');
+    Route::put('struktur-organisasi', [StrukturOrganisasiController::class, 'update'])->name('struktur-organisasi.update');
 });
 
 require __DIR__ . '/settings.php';
