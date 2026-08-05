@@ -152,7 +152,7 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
 
                         <NavigationMenuItem>
                             <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), 'bg-transparent! hover:bg-accent!')}>
-                                <Link href="/pengumuman">Pengumuman</Link>
+                                <Link href="/ekstrakulikuler">Ekstrakulikuler</Link>
                             </NavigationMenuLink>
                         </NavigationMenuItem>
 
@@ -267,13 +267,13 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                                     Berita
                                 </Link>
                                 <Link
-                                    href="/pengumuman"
+                                    href="/ekstrakulikuler"
                                     className="rounded-lg px-4 py-3 text-sm font-medium transition-colors"
                                     style={{ color: 'var(--foreground)' }}
                                     onMouseEnter={handleDropdownMouseEnter}
                                     onMouseLeave={handleDropdownMouseLeave}
                                 >
-                                    Pengumuman
+                                    Ekstrakulikuler
                                 </Link>
                                 <Link
                                     href="/galeri"

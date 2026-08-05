@@ -7,27 +7,6 @@ import { useEffect, useState } from 'react';
 import AppLogo from './app-logo';
 import { NavFooter } from './nav-footer';
 
-// const mainNavItemsAffren: NavGroup[] = [
-//     {
-//         title: 'Dashboard',
-//         url: '/admin/dashboard',
-//         icon: LayoutGrid,
-//     },
-//     {
-//         title: 'Berita',
-//         url: '/admin/berita',
-//         icon: Newspaper,
-//     },
-//     {
-//         title: 'Pengumuman',
-//         url: '/admin/pengumuman',
-//         icon: Megaphone,
-//     },
-//     {
-//         title: 'Galeri',
-//         url: '/admin/galeri',
-//         icon: BookImage,
-//     },
 const mainNavItemsAffren: NavGroup[] = [
     {
         title: 'Dashboard',
@@ -40,8 +19,8 @@ const mainNavItemsAffren: NavGroup[] = [
         icon: Newspaper,
     },
     {
-        title: 'Pengumuman',
-        url: route('pengumuman.index'),
+        title: 'Ekstrakulikuler',
+        url: route('ekstrakulikuler.index'),
         icon: Megaphone,
     },
     {
@@ -50,9 +29,9 @@ const mainNavItemsAffren: NavGroup[] = [
         icon: BookImage,
     },
     {
-    title: 'Struktur Organisasi',
-    url: route('struktur-organisasi.index'),
-    icon: Network,
+        title: 'Struktur Organisasi',
+        url: route('struktur-organisasi.index'),
+        icon: Network,
     },
 ];
 

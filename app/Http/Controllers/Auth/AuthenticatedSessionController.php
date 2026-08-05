@@ -13,17 +13,12 @@ use Inertia\Response;
 class AuthenticatedSessionController extends Controller
 {
     /**
-     * Tampilkan halaman login admin (Inertia).
-     * File React: resources/js/pages/auth/login.tsx
-     */
+     * Tampilkan halaman login admin (Inertia)./** */
     public function create(): Response
     {
         return Inertia::render('auth/login');
     }
 
-    /**
-     * Proses login admin.
-     */
     public function store(Request $request): RedirectResponse
     {
         $credentials = $request->validate([

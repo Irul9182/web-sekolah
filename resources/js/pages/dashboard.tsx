@@ -21,11 +21,6 @@ interface RecentBerita {
     berita_image?: { image_url: string } | null;
 }
 
-interface RecentPengumuman {
-    id: number;
-    judul: string;
-    created_at: string;
-}
 
 interface RecentGaleriImage {
     id: number;
@@ -49,7 +44,6 @@ interface StrukturOrganisasiSummary {
 interface DashboardPageProps {
     stats: Stat[];
     recentBerita: RecentBerita[];
-    recentPengumuman: RecentPengumuman[];
     recentGaleri: RecentGaleri[];
     strukturOrganisasi: StrukturOrganisasiSummary;
     [key: string]: unknown;
@@ -91,7 +85,7 @@ function EmptyState({ text }: { text: string }) {
 }
 
 export default function Dashboard() {
-    const { stats, recentBerita, recentPengumuman, recentGaleri, strukturOrganisasi } = usePage<DashboardPageProps>().props;
+    const { stats, recentBerita,  recentGaleri, strukturOrganisasi } = usePage<DashboardPageProps>().props;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -147,28 +141,6 @@ export default function Dashboard() {
                                 ))
                             ) : (
                                 <EmptyState text="Belum ada berita." />
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    {/* Pengumuman terbaru */}
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-                            <CardTitle className="text-base truncate">Pengumuman Terbaru</CardTitle>
-                            <Link href={route('pengumuman.index')} className="text-primary shrink-0 text-xs font-medium whitespace-nowrap hover:underline">
-                                Lihat semua
-                            </Link>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                            {recentPengumuman?.length ? (
-                                recentPengumuman.map((p) => (
-                                    <div key={p.id}>
-                                        <p className="truncate text-sm font-medium">{p.judul}</p>
-                                        <p className="text-muted-foreground text-xs">{formatDate(p.created_at)}</p>
-                                    </div>
-                                ))
-                            ) : (
-                                <EmptyState text="Belum ada pengumuman." />
                             )}
                         </CardContent>
                     </Card>
