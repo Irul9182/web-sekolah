@@ -6,9 +6,11 @@ use App\Http\Controllers\Admin\BeritaController;
 use App\Http\Controllers\Admin\GaleriController;
 use App\Http\Controllers\Admin\StrukturOrganisasiController;
 use App\Http\Controllers\Admin\EkstrakulikulerController;
-use App\Http\Controllers\Admin\PrestasiController;
+use App\Http\Controllers\Admin\FasilitasController;
+use App\Http\Controllers\Admin\JurusanController as AdminJurusanController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PublicFasilitasController;
 use App\Http\Controllers\JurusanController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicBeritaController;
@@ -54,6 +56,8 @@ Route::get('/galeri/{slug}', [PublicGaleriController::class, 'show'])->name('pub
 Route::get('/ekstrakulikuler', [PublicEkstrakulikulerController::class, 'index'])->name('public.ekstrakulikuler');
 Route::get('/ekstrakulikuler/{slug}', [PublicEkstrakulikulerController::class, 'show'])->name('public.ekstrakulikuler.show');
 
+Route::get('/fasilitas/{slug}', [PublicFasilitasController::class, 'show'])->name('public.fasilitas.show');
+
 // ==== Panel Admin: butuh login, URL dipindah ke /admin/... ====
 // Nama route (berita.index, dst) TIDAK berubah, jadi kode admin
 // yang sudah pakai route('berita.index') dkk tetap jalan normal.
@@ -82,16 +86,18 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
 
     // Ekstrakulikuler
     Route::get('/ekstrakulikuler', [EkstrakulikulerController::class, 'index'])->name('ekstrakulikuler.index');
-    Route::post('/ekstrakulikuler', [EkstrakulikulerController::class, 'store'])->name('ekstrakulikuler.store');
-    Route::get('/ekstrakulikuler/{id}', [EkstrakulikulerController::class, 'show'])->name('ekstrakulikuler.show');
-    Route::post('/ekstrakulikuler/{id}', [EkstrakulikulerController::class, 'update'])->name('ekstrakulikuler.update');
-    Route::delete('/ekstrakulikuler/{id}', [EkstrakulikulerController::class, 'destroy'])->name('ekstrakulikuler.destroy');
-    Route::get('/ekstrakulikuler/{id}/edit', [EkstrakulikulerController::class, 'edit'])->name('ekstrakulikuler.edit');
+    Route::put('/ekstrakulikuler', [EkstrakulikulerController::class, 'update'])->name('ekstrakulikuler.update');
 
-    Route::post('/ekstrakulikuler/{ekstrakulikulerId}/prestasi', [PrestasiController::class, 'store'])->name('prestasi.store');
-    Route::post('/prestasi/{id}', [PrestasiController::class, 'update'])->name('prestasi.update');
-    Route::delete('/prestasi/{id}', [PrestasiController::class, 'destroy'])->name('prestasi.destroy');
+    // Fasilitas
+    Route::get('/fasilitas', [FasilitasController::class, 'index'])->name('fasilitas.index');
+    Route::post('/fasilitas/{slug}/foto', [FasilitasController::class, 'uploadFoto'])->name('fasilitas.foto.store');
+    Route::delete('/fasilitas/{slug}/foto/{imageId}', [FasilitasController::class, 'hapusFoto'])->name('fasilitas.foto.destroy');
     
+    // Jurusan
+    Route::get('/jurusan', [\App\Http\Controllers\Admin\JurusanController::class, 'index'])->name('jurusan.index');
+    Route::post('/jurusan/{slug}/foto', [\App\Http\Controllers\Admin\JurusanController::class, 'uploadFoto'])->name('jurusan.foto.store');
+    Route::delete('/jurusan/{slug}/foto/{imageId}', [\App\Http\Controllers\Admin\JurusanController::class, 'hapusFoto'])->name('jurusan.foto.destroy');
+
     // Akun (tambah admin baru) =======================
     // Dipindah dari route publik /register — sekarang cuma admin yang
     // sudah login yang bisa menambah akun admin baru.

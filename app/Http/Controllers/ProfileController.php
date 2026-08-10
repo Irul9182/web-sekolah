@@ -2,17 +2,32 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Admin\FasilitasController;
+use App\Models\Fasilitas;
 use Inertia\Inertia;
 
 class ProfileController extends Controller
 {
-    /**
-     * Halaman profil sekolah gabungan: Visi & Misi, Sejarah, dan Struktur
-     * Organisasi dalam satu halaman (sebelumnya tiga halaman terpisah).
-     * File React: resources/js/pages/profile/index.tsx
-     */
     public function index()
     {
-        return Inertia::render('profile/index');
+        $fasilitas = Fasilitas::with('images')
+            ->whereIn('slug', array_keys(FasilitasController::DAFTAR_FASILITAS))
+            ->get()
+            ->keyBy('slug');
+
+        $fasilitasData = collect(FasilitasController::DAFTAR_FASILITAS)->map(function ($info, $slug) use ($fasilitas) {
+            $row = $fasilitas->get($slug);
+
+            return [
+                'slug' => $slug,
+                'nama' => $info['nama'],
+                'deskripsi' => $info['deskripsi'],
+                'images' => $row?->images->pluck('image_url')->values() ?? [],
+            ];
+        })->values();
+
+        return Inertia::render('profile/index', [
+            'fasilitas' => $fasilitasData,
+        ]);
     }
 }

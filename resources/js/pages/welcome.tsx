@@ -33,13 +33,6 @@ interface BeritaItem {
     berita_image?: { image_url: string } | null;
 }
 
-interface PengumumanItem {
-    id: number;
-    judul: string;
-    deskripsi: string;
-    created_at: string;
-}
-
 interface GaleriImage {
     id: number;
     image_url: string;
@@ -52,10 +45,17 @@ interface GaleriItem {
     images: GaleriImage[];
 }
 
+interface EkstrakulikulerItem {
+    slug: string;
+    nama: string;
+    deskripsi: string | null;
+    thumbnail?: string | null;
+}
+
 interface PageProps {
     beritas: BeritaItem[];
-    pengumumans: PengumumanItem[];
     galeris: GaleriItem[];
+    ekstrakulikulers: EkstrakulikulerItem[];
 }
 
 interface JurusanData {
@@ -288,7 +288,7 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
 
                         <NavigationMenuItem>
                             <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), 'bg-transparent! hover:bg-accent!')}>
-                                <Link href="/pengumuman">Pengumuman</Link>
+                                <Link href="/ekstrakulikuler">Ekstrakulikuler</Link>
                             </NavigationMenuLink>
                         </NavigationMenuItem>
 
@@ -403,13 +403,13 @@ function Navbar({ isLoggedIn, onLoginClick, onLogout }: NavbarProps) {
                                     Berita
                                 </Link>
                                 <Link
-                                    href="/pengumuman"
+                                    href="/ekstrakulikuler"
                                     className="rounded-lg px-4 py-3 text-sm font-medium transition-colors"
                                     style={{ color: 'var(--foreground)' }}
                                     onMouseEnter={handleDropdownMouseEnter}
                                     onMouseLeave={handleDropdownMouseLeave}
                                 >
-                                    Pengumuman
+                                    Ekstrakulikuler
                                 </Link>
                                 <Link
                                     href="/galeri"
@@ -693,51 +693,43 @@ function BeritaSection({ data }: { data: BeritaItem[] }) {
     );
 }
 
-function PengumumanSection({ data }: { data: PengumumanItem[] }) {
+function EkstrakulikulerSection({ data }: { data: EkstrakulikulerItem[] }) {
     return (
         <section className="py-12" style={{ backgroundColor: 'var(--secondary)' }}>
             <div className="mx-auto max-w-7xl px-4">
-                <SectionHeader title="Pengumuman Sekolah" />
-                {data.length === 0 ? (
-                    <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                        Belum ada pengumuman.
-                    </p>
-                ) : (
-                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                        {data.map((p) => (
+                <SectionHeader title="Ekstrakulikuler" />
+                <div className="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
+                    {data.map((e) => (
+                        <Link key={e.slug} href={route('public.ekstrakulikuler.show', e.slug)}>
                             <Card
-                                key={p.id}
-                                className="border-l-4"
-                                style={{
-                                    borderLeftColor: 'var(--primary)',
-                                    borderColor: 'var(--border)',
-                                    backgroundColor: 'var(--card)',
-                                }}
+                                className="group cursor-pointer overflow-hidden transition-shadow duration-300 hover:shadow-lg"
+                                style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}
                             >
-                                <CardContent className="p-5">
-                                    <Badge
-                                        className="mb-2 border-0"
-                                        style={{
-                                            backgroundColor: 'color-mix(in srgb, var(--color-info) 15%, transparent)',
-                                            color: 'var(--color-info)',
-                                        }}
-                                    >
-                                        Pengumuman
-                                    </Badge>
-                                    <p className="mb-1 font-bold" style={{ color: 'var(--card-foreground)' }}>
-                                        {p.judul}
-                                    </p>
-                                    <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                                        {p.deskripsi}
-                                    </p>
-                                    <p className="mt-2 text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                                        {formatDate(p.created_at)}
+                                <div className="aspect-square overflow-hidden" style={{ backgroundColor: 'var(--muted)' }}>
+                                    <img
+                                        src={e.thumbnail || '/images/default-img.png'}
+                                        alt={e.nama}
+                                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                    />
+                                </div>
+                                <CardContent className="p-3 text-center">
+                                    <p className="text-sm font-semibold" style={{ color: 'var(--card-foreground)' }}>
+                                        {e.nama}
                                     </p>
                                 </CardContent>
                             </Card>
-                        ))}
-                    </div>
-                )}
+                        </Link>
+                    ))}
+                </div>
+                <div className="text-center">
+                    <Link
+                        href="/ekstrakulikuler"
+                        className="inline-block rounded-md border px-4 py-2 text-sm font-medium"
+                        style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}
+                    >
+                        Lihat Semua Ekstrakulikuler →
+                    </Link>
+                </div>
             </div>
         </section>
     );
@@ -906,7 +898,7 @@ function Footer() {
 }
 
 export default function SMKBaidhaulAhkam() {
-    const { beritas, pengumumans, galeris } = usePage<PageProps>().props;
+    const { beritas, galeris, ekstrakulikulers } = usePage<PageProps>().props;
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
     const [showLogin, setShowLogin] = useState<boolean>(false);
 
@@ -939,7 +931,7 @@ export default function SMKBaidhaulAhkam() {
                     <BeritaSection data={beritas ?? []} />
                 </FadeInSection>
                 <FadeInSection>
-                    <PengumumanSection data={pengumumans ?? []} />
+                    <EkstrakulikulerSection data={ekstrakulikulers ?? []} />
                 </FadeInSection>
                 <FadeInSection>
                     <JurusanSection />

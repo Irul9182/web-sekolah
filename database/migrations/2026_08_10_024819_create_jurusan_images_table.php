@@ -9,19 +9,18 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-   public function up(): void
+    public function up(): void
     {
-        Schema::create('ekstrakulikuler_images', function (Blueprint $table) {
+        Schema::create('jurusan_images', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('ekstrakulikuler_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('jurusan_id')->constrained()->cascadeOnDelete();
             $table->string('image_url');
-            $table->string('public_id');
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('ekstrakulikuler_images');
+        Schema::dropIfExists('jurusan_images');
     }
 };

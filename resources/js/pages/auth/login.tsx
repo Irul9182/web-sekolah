@@ -92,7 +92,7 @@ export default function LoginAdmin() {
                         Kelola informasi sekolah, satu pintu masuk yang terpercaya.
                     </h1>
                     <p className="max-w-xs text-sm leading-relaxed" style={{ color: 'color-mix(in srgb, var(--primary-foreground) 70%, transparent)' }}>
-                        Berita, pengumuman, galeri, dan data jurusan — semua terhubung dari akun admin Anda.
+                        Berita, Ekstrakurikuler, galeri, data-data jurusan, foto-foto fasilitas, dan semua terhubung dari akun admin Anda.
                     </p>
                 </div>
 

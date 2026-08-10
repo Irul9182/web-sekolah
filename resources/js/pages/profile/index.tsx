@@ -1,5 +1,6 @@
 import PublicLayout, { SectionHeader } from '@/layouts/public-layout';
 import { useLayoutEffect, useRef, useState } from 'react';
+import { Link, usePage } from '@inertiajs/react';
 
 // Ganti array ini dengan poin-poin misi resmi sekolah
 const misiItems: string[] = ['[Placeholder] Poin misi pertama.', '[Placeholder] Poin misi kedua.', '[Placeholder] Poin misi ketiga.'];
@@ -7,6 +8,17 @@ const misiItems: string[] = ['[Placeholder] Poin misi pertama.', '[Placeholder] 
 interface StrukturNode {
     jabatan: string;
     nama: string;
+}
+
+interface FasilitasItem {
+    slug: string;
+    nama: string;
+    deskripsi: string;
+    images: string[];
+}
+
+interface ProfileProps {
+    fasilitas: FasilitasItem[];
 }
 
 // Data posisi -- nanti ini yang akan diambil dari database (via admin panel).
@@ -232,6 +244,7 @@ function StrukturOrganisasiChart() {
 }
 
 export default function ProfileSekolah() {
+    const { fasilitas } = usePage<ProfileProps>().props;
     return (
         <PublicLayout>
             <section className="mx-auto max-w-4xl space-y-16 px-4 py-16 pt-32">
@@ -282,6 +295,56 @@ export default function ProfileSekolah() {
                         <div className="flex min-w-max justify-center">
                             <StrukturOrganisasiChart />
                         </div>
+                    </div>
+                </div>
+            </section>
+            {/* ==== Fasilitas Sekolah ==== */}
+            <section className="mx-auto max-w-6xl px-4 pb-16">
+                <div id="fasilitas">
+                    <SectionHeader title="Fasilitas Sekolah" />
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        {fasilitas.map((f) => (
+                            <div
+                                key={f.slug}
+                                className="overflow-hidden rounded-lg border"
+                                style={{ borderColor: 'var(--border)', backgroundColor: 'var(--card)' }}
+                            >
+                                {f.images.length > 0 ? (
+                                    <div className="grid grid-cols-2 gap-0.5">
+                                        {f.images.slice(0, 4).map((src, i) => (
+                                            <div
+                                                key={i}
+                                                className={`aspect-square overflow-hidden ${f.images.length === 1 ? 'col-span-2' : ''}`}
+                                                style={{ backgroundColor: 'var(--muted)' }}
+                                            >
+                                                <img src={src} alt={f.nama} className="h-full w-full object-cover" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="aspect-video flex items-center justify-center" style={{ backgroundColor: 'var(--muted)' }}>
+                                        <img src="/images/default-img.png" alt={f.nama} className="h-full w-full object-cover" />
+                                    </div>
+                                )}
+                                <div className="p-4">
+                                    <p className="mb-1 font-semibold" style={{ color: 'var(--card-foreground)' }}>
+                                        {f.nama}
+                                    </p>
+                                    <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                                        {f.deskripsi}
+                                    </p>
+                                    {f.images.length > 0 && (
+                                        <Link
+                                            href={route('public.fasilitas.show', f.slug)}
+                                            className="mt-2 inline-block text-xs font-medium"
+                                            style={{ color: 'var(--primary)' }}
+                                        >
+                                            Lihat semua foto →
+                                        </Link>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>

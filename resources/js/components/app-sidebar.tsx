@@ -2,16 +2,22 @@ import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { NavGroup } from '@/types';
-import { BookImage, LayoutGrid, Megaphone, Network, Newspaper, Pickaxe, Wallet } from 'lucide-react';
+import { BookImage, Building2, LayoutGrid, Megaphone, Network, Newspaper, Pickaxe, Wallet } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import AppLogo from './app-logo';
 import { NavFooter } from './nav-footer';
+
 
 const mainNavItemsAffren: NavGroup[] = [
     {
         title: 'Dashboard',
         url: route('dashboard.index'),
         icon: LayoutGrid,
+    },
+    {
+        title: 'Fasilitas',
+        url: route('fasilitas.index'),
+        icon: Building2,
     },
     {
         title: 'Berita',

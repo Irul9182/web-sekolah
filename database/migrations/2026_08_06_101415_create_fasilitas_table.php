@@ -8,12 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('ekstrakulikulers', function (Blueprint $table) {
+        Schema::create('fasilitas', function (Blueprint $table) {
             $table->id();
             $table->string('slug')->unique();
-            $table->string('nama');
-            $table->text('deskripsi')->nullable();
-            $table->text('prestasi')->nullable();
             $table->string('galeri_slug')->nullable();
             $table->timestamps();
         });
@@ -21,6 +18,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('ekstrakulikulers');
+        Schema::dropIfExists('fasilitas');
     }
 };

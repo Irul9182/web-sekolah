@@ -4,142 +4,73 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Ekstrakulikuler;
-use App\Models\EkstrakulikulerImage;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class EkstrakulikulerController extends Controller
 {
-    public function index(Request $request)
-    {
-        $search  = $request->query('search', '');
-        $perPage = $request->query('per_page', 10);
+    // Daftar fixed ekskul -- persis pola 4 Jurusan yang hardcode di JurusanController,
+    // cuma di sini bentuknya array karena field-nya seragam (bukan 4 method beda).
+    public const DAFTAR_EKSKUL = [
+        'futsal' => [
+            'nama' => 'Futsal',
+            'deskripsi' => 'Ekstrakulikuler yang melatih kemampuan bermain futsal, kerja sama tim, dan sportivitas siswa melalui latihan rutin dan pertandingan persahabatan.',
+        ],
+        'tari-tradisional' => [
+            'nama' => 'Tari Tradisional',
+            'deskripsi' => 'Melestarikan dan mengembangkan bakat seni tari daerah, sekaligus menumbuhkan kecintaan siswa terhadap budaya Indonesia.',
+        ],
+        'pramuka' => [
+            'nama' => 'Pramuka',
+            'deskripsi' => 'Membentuk karakter disiplin, kemandirian, dan jiwa kepemimpinan siswa melalui kegiatan kepramukaan.',
+        ],
+        'marawis' => [
+            'nama' => 'Marawis',
+            'deskripsi' => 'Mengasah bakat seni musik islami siswa melalui latihan rebana dan marawis, sering tampil di acara-acara keagamaan sekolah.',
+        ],
+        'paskibra' => [
+            'nama' => 'Paskibra',
+            'deskripsi' => 'Melatih kedisiplinan, ketegasan, dan kekompakan siswa melalui latihan baris-berbaris dan pengibaran bendera.',
+        ],
+    ];
 
-        $ekstrakulikulers = Ekstrakulikuler::with('images')
-            ->withCount('prestasis')
-            ->when($search, function ($q) use ($search) {
-                $q->where('nama', 'like', "%{$search}%");
-            })
-            ->latest()
-            ->paginate($perPage)
-            ->withQueryString();
+    public function index()
+    {
+        foreach (self::DAFTAR_EKSKUL as $slug => $info) {
+            Ekstrakulikuler::firstOrCreate(['slug' => $slug], ['nama' => $info['nama']]);
+        }
+
+        $ekstrakulikulers = Ekstrakulikuler::orderByRaw(
+            "FIELD(slug, '" . implode("','", array_keys(self::DAFTAR_EKSKUL)) . "')"
+        )->get()->map(function ($e) {
+            $e->deskripsi = self::DAFTAR_EKSKUL[$e->slug]['deskripsi'];
+            return $e;
+        });
+
+        $galeris = \App\Models\Galeri::select('id', 'judul', 'slug')->orderBy('judul')->get();
 
         return Inertia::render('ekstrakulikuler/index', [
             'ekstrakulikulers' => $ekstrakulikulers,
-            'filters' => [
-                'search'   => $search,
-                'per_page' => $perPage,
-            ],
+            'galeris' => $galeris,
         ]);
     }
 
-    public function store(Request $request)
+    public function update(Request $request)
     {
-        $request->validate([
-            'nama'      => 'required',
-            'deskripsi' => 'required',
-            'thumbnail' => 'nullable|image|max:4096',
-            'foto'      => 'nullable|array',
-            'foto.*'    => 'image|max:4096',
+        $validated = $request->validate([
+            'ekstrakulikulers' => 'required|array',
+            'ekstrakulikulers.*.slug' => 'required|string|in:' . implode(',', array_keys(self::DAFTAR_EKSKUL)),
+            'ekstrakulikulers.*.prestasi' => 'nullable|string',
+            'ekstrakulikulers.*.galeri_slug' => 'nullable|string',
         ]);
 
-        $data = [
-            'nama'      => $request->nama,
-            'slug'      => Str::slug($request->nama),
-            'deskripsi' => $request->deskripsi,
-        ];
-
-        if ($request->hasFile('thumbnail')) {
-            $path = $request->file('thumbnail')->store('ekstrakulikuler', 'public');
-            $data['thumbnail'] = '/storage/' . $path;
+        foreach ($validated['ekstrakulikulers'] as $item) {
+            Ekstrakulikuler::where('slug', $item['slug'])->update([
+                'prestasi' => $item['prestasi'] ?? null,
+                'galeri_slug' => $item['galeri_slug'] ?? null,
+            ]);
         }
 
-        $ekstrakulikuler = Ekstrakulikuler::create($data);
-
-        if ($request->hasFile('foto')) {
-            foreach ($request->file('foto') as $file) {
-                $path = $file->store('ekstrakulikuler', 'public');
-                EkstrakulikulerImage::create([
-                    'ekstrakulikuler_id' => $ekstrakulikuler->id,
-                    'image_url' => '/storage/' . $path,
-                ]);
-            }
-        }
-
-        return redirect()->route('ekstrakulikuler.index')
-            ->with('success', 'Ekstrakulikuler berhasil ditambahkan!');
-    }
-
-    public function update(Request $request, $id)
-    {
-        $ekstrakulikuler = Ekstrakulikuler::with('images')->findOrFail($id);
-
-        $request->validate([
-            'nama'      => 'required',
-            'deskripsi' => 'required',
-            'thumbnail' => 'nullable|image|max:4096',
-            'foto'      => 'nullable|array',
-            'foto.*'    => 'image|max:4096',
-        ]);
-
-        $data = [
-            'nama'      => $request->nama,
-            'slug'      => Str::slug($request->nama),
-            'deskripsi' => $request->deskripsi,
-        ];
-
-        if ($request->hasFile('thumbnail')) {
-            $path = $request->file('thumbnail')->store('ekstrakulikuler', 'public');
-            $data['thumbnail'] = '/storage/' . $path;
-        }
-
-        $ekstrakulikuler->update($data);
-
-        if ($request->filled('hapus_foto')) {
-            $ekstrakulikuler->images()->whereIn('id', $request->input('hapus_foto'))->delete();
-        }
-
-        if ($request->hasFile('foto')) {
-            foreach ($request->file('foto') as $file) {
-                $path = $file->store('ekstrakulikuler', 'public');
-                EkstrakulikulerImage::create([
-                    'ekstrakulikuler_id' => $ekstrakulikuler->id,
-                    'image_url' => '/storage/' . $path,
-                ]);
-            }
-        }
-
-        return redirect()->route('ekstrakulikuler.index')
-            ->with('success', 'Ekstrakulikuler berhasil diedit!');
-    }
-
-    public function destroy($id)
-    {
-        $ekstrakulikuler = Ekstrakulikuler::with('images')->findOrFail($id);
-        $ekstrakulikuler->images()->delete();
-        $ekstrakulikuler->prestasis()->delete();
-        $ekstrakulikuler->delete();
-
-        return redirect()->route('ekstrakulikuler.index')
-            ->with('success', 'Ekstrakulikuler berhasil dihapus!');
-    }
-
-    public function show($id)
-    {
-        $ekstrakulikuler = Ekstrakulikuler::with(['images', 'prestasis'])->findOrFail($id);
-
-        return Inertia::render('Admin/Ekstrakulikuler/Show', [
-            'ekstrakulikuler' => $ekstrakulikuler,
-        ]);
-    }
-
-    public function edit($id)
-    {
-        $ekstrakulikuler = Ekstrakulikuler::with(['images', 'prestasis'])->findOrFail($id);
-
-        return Inertia::render('Admin/Ekstrakulikuler/Edit', [
-            'ekstrakulikuler' => $ekstrakulikuler,
-        ]);
+        return redirect()->back()->with('success', 'Ekstrakulikuler berhasil diperbarui.');
     }
 }

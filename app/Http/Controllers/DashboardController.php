@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Admin\EkstrakulikulerController;
+use App\Http\Controllers\Admin\FasilitasController;
 use App\Models\Berita;
-use App\Models\Pengumuman;
 use App\Models\Galeri;
 use App\Models\StrukturOrganisasi;
 use Inertia\Inertia;
@@ -16,7 +17,6 @@ class DashboardController extends Controller
         return Inertia::render('dashboard', [
             'stats' => $this->getStats(),
             'recentBerita' => $this->recentBerita(),
-            'recentPengumuman' => $this->recentPengumuman(),
             'recentGaleri' => $this->recentGaleri(),
             'strukturOrganisasi' => $this->strukturOrganisasi(),
         ]);
@@ -31,9 +31,12 @@ class DashboardController extends Controller
                 'description' => $this->publishedDescription(Berita::class),
             ],
             [
-                'label'       => 'Total Pengumuman',
-                'value'       => $this->safeCount(Pengumuman::class),
-                'description' => $this->publishedDescription(Pengumuman::class),
+                'label' => 'Total Ekstrakulikuler',
+                'value' => count(EkstrakulikulerController::DAFTAR_EKSKUL),
+            ],
+            [
+                'label' => 'Total Fasilitas',
+                'value' => count(FasilitasController::DAFTAR_FASILITAS),
             ],
             [
                 'label' => 'Total Galeri',
@@ -68,17 +71,6 @@ class DashboardController extends Controller
                 ->latest('tanggal')
                 ->take(5)
                 ->get(['id', 'judul', 'slug', 'tanggal']);
-        } catch (Throwable $e) {
-            return [];
-        }
-    }
-
-    private function recentPengumuman()
-    {
-        try {
-            return Pengumuman::latest()
-                ->take(5)
-                ->get(['id', 'judul', 'created_at']);
         } catch (Throwable $e) {
             return [];
         }
